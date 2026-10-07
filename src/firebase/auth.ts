@@ -14,7 +14,7 @@ import {
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import { UserProfile } from '../types';
 
@@ -166,5 +166,18 @@ export const fetchUserProfileFromFirestore = async (
   } catch (err) {
     console.warn('Firestore profile fetch warning:', err);
     return null;
+  }
+};
+
+
+export const fetchStudentProfilesFromFirestore = async (): Promise<UserProfile[]> => {
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, 'users'), where('role', '==', 'student'))
+    );
+    return snapshot.docs.map((item) => item.data() as UserProfile);
+  } catch (err) {
+    console.warn('Firestore student roster fetch warning:', err);
+    return [];
   }
 };
