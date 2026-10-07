@@ -1,4 +1,45 @@
-import React, { useState } from 'react';
+import React, { Component, ErrorInfo, useEffect, useState } from 'react';
+
+class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; message: string }> {
+  state = { hasError: false, message: '' };
+
+  static getDerivedStateFromError(error: unknown) {
+    const message = error instanceof Error
+      ? `${error.name}: ${error.message}${error.stack ? `\\n\\n${error.stack}` : ''}`
+      : typeof error === 'string'
+        ? error
+        : (() => { try { return JSON.stringify(error, null, 2); } catch { return String(error); } })();
+    return { hasError: true, message: message || 'Unknown application error' };
+  }
+
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    console.error('Math Adventure Kids runtime error:', error, info);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div className="min-h-screen bg-[#f4f8fd] flex items-center justify-center p-6">
+        <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-xl text-center">
+          <div className="text-6xl mb-4">🧭</div>
+          <h1 className="text-2xl font-extrabold text-slate-800">Mini đang khởi động lại</h1>
+          <p className="mt-3 text-slate-500">Ứng dụng gặp lỗi khi tải dữ liệu. Vui lòng tải lại trang.</p>
+          <details className="mt-5 text-left text-xs text-slate-400">
+            <summary className="cursor-pointer">Chi tiết kỹ thuật</summary>
+            <pre className="mt-2 whitespace-pre-wrap break-words">{this.state.message}</pre>
+          </details>
+          <button
+            className="mt-6 rounded-2xl bg-slate-900 px-6 py-3 font-bold text-white"
+            onClick={() => window.location.reload()}
+          >
+            Tải lại trang
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
 import { GameProvider, useGame } from './context/GameContext';
 import { Sidebar } from './components/common/Sidebar';
 import { Header } from './components/common/Header';
@@ -32,11 +73,29 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResendConfirmationPage } from './pages/ResendConfirmationPage';
 
 const AppContent: React.FC = () => {
-  const { activeTab, navigateTo } = useGame();
+  const { activeTab, navigateTo, user, isAuthenticated, authReady } = useGame();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const isAuthRoute = ['login', 'register', 'forgot-password', 'resend-confirmation'].includes(activeTab);
+  const protectedRouteRole = activeTab === 'admin' ? 'admin' : activeTab === 'teacher' ? 'teacher' : activeTab === 'parent' ? 'parent' : null;
+  const requiresAuth = !isAuthRoute && (protectedRouteRole !== null || activeTab === 'child/home' || activeTab === 'home' || activeTab.startsWith('world/') || activeTab.startsWith('lesson/'));
+
+  useEffect(() => {
+    if (!authReady || !requiresAuth) return;
+    if (!isAuthenticated) {
+      navigateTo('login');
+      return;
+    }
+    if (protectedRouteRole && user.role !== protectedRouteRole) {
+      navigateTo(user.role === 'admin' ? 'admin' : user.role === 'teacher' ? 'teacher' : user.role === 'parent' ? 'parent' : 'child/home');
+    }
+  }, [authReady, requiresAuth, isAuthenticated, protectedRouteRole, user.role, navigateTo]);
+
+  if (requiresAuth && !authReady) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f4f8fd]"><div className="rounded-2xl bg-white px-6 py-4 shadow-sm font-bold text-slate-600">Đang kiểm tra phiên đăng nhập...</div></div>;
+  }
+
 
   const renderCurrentView = () => {
     switch (activeTab) {
@@ -137,8 +196,10 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <GameProvider>
-      <AppContent />
-    </GameProvider>
+    <AppErrorBoundary>
+      <GameProvider>
+        <AppContent />
+      </GameProvider>
+    </AppErrorBoundary>
   );
 }

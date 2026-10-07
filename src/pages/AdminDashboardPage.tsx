@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ShieldAlert, 
   Settings, 
@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
+import { fetchAllUserProfilesFromFirestore } from '../firebase/auth';
+import { INITIAL_LESSONS } from '../data/mockData';
 
 export const AdminDashboardPage: React.FC = () => {
   const { setActiveTab, switchRole } = useGame();
@@ -25,6 +27,22 @@ export const AdminDashboardPage: React.FC = () => {
   const [safeModeEnabled, setSafeModeEnabled] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [savedSettings, setSavedSettings] = useState(false);
+  const [accountCount, setAccountCount] = useState<number | null>(null);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchAllUserProfilesFromFirestore().then((profiles) => {
+      if (!mounted) return;
+      setAccountCount(profiles.length);
+      setStudentCount(profiles.filter((profile) => profile.role === 'student').length);
+    }).catch(() => {
+      if (!mounted) return;
+      setAccountCount(null);
+      setStudentCount(null);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const handleSaveConfig = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +111,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">12,480</div>
+          <div className="text-h1 font-extrabold text-slate-800">{accountCount === null ? '—' : accountCount}</div>
           <p className="text-caption font-semibold text-emerald-600 mt-1">
-            +328 bé mới đăng ký trong tuần
+            {studentCount === null ? 'Chưa có dữ liệu tài khoản' : `${studentCount} tài khoản học sinh`}
           </p>
         </div>
 
@@ -106,9 +124,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Database className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">450 bài</div>
+          <div className="text-h1 font-extrabold text-slate-800">{INITIAL_LESSONS.length} bài</div>
           <p className="text-caption font-semibold text-indigo-600 mt-1">
-            1,850+ câu hỏi tương tác đạt chuẩn
+            Nội dung hiện có trong ngân hàng bài học của ứng dụng
           </p>
         </div>
 
@@ -119,9 +137,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Server className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">99.98%</div>
+          <div className="text-h1 font-extrabold text-slate-800">—</div>
           <p className="text-caption font-semibold text-emerald-600 mt-1">
-            Độ trễ trung bình: 18ms
+            Chưa kết nối hệ thống giám sát máy chủ
           </p>
         </div>
 
@@ -132,9 +150,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Sparkles className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">99.2%</div>
+          <div className="text-h1 font-extrabold text-slate-800">—</div>
           <p className="text-caption font-semibold text-amber-700 mt-1">
-            Từ 8,400+ đánh giá phụ huynh
+            Chưa có dữ liệu khảo sát thực tế
           </p>
         </div>
 
@@ -259,22 +277,12 @@ export const AdminDashboardPage: React.FC = () => {
               Nhật Ký Hoạt Động Gần Nhất
             </h3>
             <div className="space-y-3">
-              {[
-                { text: 'Thêm 12 câu hỏi trắc nghiệm hình học 3D mới', time: '10 phút trước', tag: 'Content' },
-                { text: 'Đồng bộ sao lưu cơ sở dữ liệu học tập Cloud', time: '45 phút trước', tag: 'Backup' },
-                { text: 'Cập nhật hệ thống âm thanh Web Audio API v2', time: '2 giờ trước', tag: 'Core' },
-                { text: 'Phụ huynh xác nhận kích hoạt gói VIP Family', time: '3 giờ trước', tag: 'Billing' },
-              ].map((log, i) => (
-                <div key={i} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      {log.tag}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-semibold">{log.time}</span>
-                  </div>
-                  <p className="text-caption text-slate-700 font-medium">{log.text}</p>
-                </div>
-              ))}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-caption text-slate-600 font-medium leading-relaxed">
+                  Chưa có nhật ký audit server-side. Phần này sẽ chỉ hiển thị sự kiện thực tế sau khi
+                  hệ thống Cloud Functions/Audit Log được kết nối; không dùng dữ liệu mẫu.
+                </p>
+              </div>
             </div>
           </div>
 

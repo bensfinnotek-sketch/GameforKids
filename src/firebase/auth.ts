@@ -11,11 +11,10 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  onAuthStateChanged,
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import { UserProfile } from '../types';
 
@@ -57,7 +56,7 @@ export const mapAuthError = (error: unknown): string => {
     case 'auth/too-many-requests':
       return 'Quá nhiều lần thử không thành công. Hãy đợi vài phút rồi thử lại nhé!';
     case 'auth/unauthorized-domain':
-      return 'Tên miền chưa được cấu hình trong Firebase Console. Đang chạy chế độ an toàn.';
+      return 'Tên miền chưa được thêm vào Firebase Authentication. Hãy thêm domain hiện tại trong Firebase Console rồi thử lại.';
     case 'auth/operation-not-allowed':
       return 'Phương thức đăng nhập này chưa được kích hoạt trong Firebase Console.';
     default:
@@ -80,62 +79,17 @@ export const configurePersistence = async (remember: boolean): Promise<void> => 
   }
 };
 
-// Create a simulated fallback user if running in demo/offline mode
-const createDemoUser = (email: string, displayName: string): FirebaseUser => {
-  return {
-    uid: 'demo-user-' + Math.random().toString(36).substring(2, 9),
-    email,
-    displayName,
-    emailVerified: true,
-    isAnonymous: false,
-    metadata: {},
-    providerData: [],
-    refreshToken: '',
-    tenantId: null,
-    delete: async () => {},
-    getIdToken: async () => 'demo-token',
-    getIdTokenResult: async () => ({} as any),
-    reload: async () => {},
-    toJSON: () => ({}),
-    phoneNumber: null,
-    photoURL: null,
-    providerId: 'firebase',
-  } as FirebaseUser;
-};
+// Sign in with Google
 
-// Sign in with Google (Popup with fallback)
-export const signInWithGoogle = async (): Promise<FirebaseUser> => {
+export const signInWithGoogle = async (): Promise<FirebaseUser | null> => {
   try {
-    // Attempt official popup
+    if (isMobileDevice()) {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
-  } catch (err: unknown) {
-    const authErr = err as AuthError;
-
-    // If popup was blocked or mobile redirect needed
-    if (authErr?.code === 'auth/popup-blocked' || isMobileDevice()) {
-      try {
-        await signInWithRedirect(auth, googleProvider);
-        // Will continue on redirect
-        return createDemoUser('explorer.kid@gmail.com', 'Bé Thám Hiểm Mini');
-      } catch (redirectErr) {
-        console.warn('Redirect failed, trying fallback:', redirectErr);
-      }
-    }
-
-    // If API key is placeholder or domain unauthorized in development environment,
-    // safely provide interactive user experience so user isn't blocked:
-    if (
-      authErr?.code === 'auth/api-key-not-valid' ||
-      authErr?.code === 'auth/unauthorized-domain' ||
-      authErr?.code === 'auth/operation-not-allowed' ||
-      authErr?.code === 'auth/network-request-failed' ||
-      authErr?.message?.includes('API key')
-    ) {
-      console.warn('Firebase Google Auth fallback triggered:', authErr.message);
-      return createDemoUser('explorer.kid@gmail.com', 'Bé Thám Hiểm Mini');
-    }
-
+  } catch (err) {
     throw err;
   }
 };
@@ -153,94 +107,30 @@ export const checkRedirectResult = async (): Promise<FirebaseUser | null> => {
 
 // Email & Password helpers
 export const signInWithEmail = async (email: string, pass: string): Promise<FirebaseUser> => {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, pass);
-    return result.user;
-  } catch (err: unknown) {
-    const authErr = err as AuthError;
-    if (
-      authErr?.code === 'auth/api-key-not-valid' ||
-      authErr?.code === 'auth/network-request-failed' ||
-      authErr?.message?.includes('API key')
-    ) {
-      console.warn('Firebase Email sign-in fallback triggered:', authErr.message);
-      return createDemoUser(email, email.split('@')[0]);
-    }
-    throw err;
-  }
+  const result = await signInWithEmailAndPassword(auth, email, pass);
+  return result.user;
 };
 
 export const registerWithEmail = async (email: string, pass: string): Promise<FirebaseUser> => {
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, pass);
-    // Automatically trigger verification email
-    try {
-      await sendEmailVerification(result.user);
-    } catch {
-      // verification email error handled silently
-    }
-    return result.user;
-  } catch (err: unknown) {
-    const authErr = err as AuthError;
-    if (
-      authErr?.code === 'auth/api-key-not-valid' ||
-      authErr?.code === 'auth/network-request-failed' ||
-      authErr?.message?.includes('API key')
-    ) {
-      console.warn('Firebase Email register fallback triggered:', authErr.message);
-      return createDemoUser(email, email.split('@')[0]);
-    }
-    throw err;
-  }
+  const result = await createUserWithEmailAndPassword(auth, email, pass);
+  await sendEmailVerification(result.user);
+  return result.user;
 };
 
 // Password Reset
 export const sendPasswordReset = async (email: string): Promise<void> => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (err: unknown) {
-    const authErr = err as AuthError;
-    if (
-      authErr?.code === 'auth/api-key-not-valid' ||
-      authErr?.code === 'auth/network-request-failed' ||
-      authErr?.message?.includes('API key')
-    ) {
-      console.warn('Firebase password reset simulation:', authErr.message);
-      return; // Simulate success
-    }
-    throw err;
-  }
+  await sendPasswordResetEmail(auth, email);
 };
 
 // Resend Email Verification
 export const resendVerificationEmail = async (): Promise<void> => {
-  if (auth.currentUser) {
-    try {
-      await sendEmailVerification(auth.currentUser);
-    } catch (err: unknown) {
-      const authErr = err as AuthError;
-      if (
-        authErr?.code === 'auth/api-key-not-valid' ||
-        authErr?.code === 'auth/network-request-failed' ||
-        authErr?.message?.includes('API key')
-      ) {
-        return; // Simulate success
-      }
-      throw err;
-    }
-  } else {
-    // If not currently logged in, simulate sending confirmation to target email
-    await new Promise((resolve) => setTimeout(resolve, 800));
-  }
+  if (!auth.currentUser) throw new Error('Bạn cần đăng nhập để gửi lại email xác minh.');
+  await sendEmailVerification(auth.currentUser);
 };
 
 // Logout
 export const logOutUser = async (): Promise<void> => {
-  try {
-    await signOut(auth);
-  } catch (err) {
-    console.warn('SignOut warning:', err);
-  }
+  await signOut(auth);
 };
 
 // Sync Firestore User Profile
@@ -263,6 +153,34 @@ export const syncUserProfileToFirestore = async (
   }
 };
 
+export const submitLessonAttemptToFirestore = async (
+  uid: string,
+  attempt: {
+    lessonId: string;
+    score: number;
+    totalQuestions: number;
+    timeSpentSeconds: number;
+  }
+): Promise<string | null> => {
+  try {
+    if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
+
+    const attemptsRef = collection(db, 'users', uid, 'lessonAttempts');
+    const result = await addDoc(attemptsRef, {
+      lessonId: attempt.lessonId,
+      score: attempt.score,
+      totalQuestions: attempt.totalQuestions,
+      timeSpentSeconds: attempt.timeSpentSeconds,
+      submittedAt: serverTimestamp(),
+    });
+
+    return result.id;
+  } catch (err) {
+    console.warn('Firestore lesson attempt submission warning:', err);
+    return null;
+  }
+};
+
 export const fetchUserProfileFromFirestore = async (
   uid: string
 ): Promise<Partial<UserProfile> | null> => {
@@ -279,4 +197,25 @@ export const fetchUserProfileFromFirestore = async (
   }
 };
 
-export { onAuthStateChanged };
+
+export const fetchAllUserProfilesFromFirestore = async (): Promise<UserProfile[]> => {
+  try {
+    const snapshot = await getDocs(collection(db, 'users'));
+    return snapshot.docs.map((item) => item.data() as UserProfile);
+  } catch (err) {
+    console.warn('Firestore user list fetch warning:', err);
+    return [];
+  }
+};
+
+export const fetchStudentProfilesFromFirestore = async (): Promise<UserProfile[]> => {
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, 'users'), where('role', '==', 'student'))
+    );
+    return snapshot.docs.map((item) => item.data() as UserProfile);
+  } catch (err) {
+    console.warn('Firestore student roster fetch warning:', err);
+    return [];
+  }
+};

@@ -17,9 +17,9 @@ import {
 import { soundManager } from '../utils/sound';
 
 export const RegisterPage: React.FC = () => {
-  const { loginWithAuth, navigateTo } = useGame();
+  const { navigateTo } = useGame();
   
-  const [role, setRole] = useState<'student' | 'parent' | 'teacher'>('student');
+  const [role, setRole] = useState<'student' | 'parent'>('student');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,14 +47,13 @@ export const RegisterPage: React.FC = () => {
           id: user.uid,
           name: name.trim() || user.displayName || user.email?.split('@')[0] || 'Bé Thám Hiểm',
           role,
-          avatarEmoji: role === 'student' ? '🤠' : role === 'parent' ? '👨‍👩‍👧' : '👩‍🏫',
+          avatarEmoji: role === 'student' ? '🤠' : '👨‍👩‍👧',
         };
 
         await syncUserProfileToFirestore(user.uid, finalProfile);
 
-        setTimeout(() => {
-          loginWithAuth(finalProfile);
-        }, 600);
+        // Firebase Auth + GameProvider will load the persisted profile from Firestore.
+        navigateTo(role === 'parent' ? 'parent' : 'child/home');
       }
     } catch (err) {
       console.error('Google Sign-up error:', err);
@@ -95,14 +94,13 @@ export const RegisterPage: React.FC = () => {
         id: user.uid,
         name: name.trim() || email.split('@')[0],
         role,
-        avatarEmoji: role === 'student' ? '🤠' : role === 'parent' ? '👨‍👩‍👧' : '👩‍🏫',
+        avatarEmoji: role === 'student' ? '🤠' : '👨‍👩‍👧',
       };
 
       await syncUserProfileToFirestore(user.uid, finalProfile);
 
-      setTimeout(() => {
-        loginWithAuth(finalProfile);
-      }, 700);
+      // Firebase Auth + GameProvider will load the persisted profile from Firestore.
+      navigateTo('child/home');
 
     } catch (err) {
       console.error('Email Sign-up error:', err);
@@ -138,11 +136,10 @@ export const RegisterPage: React.FC = () => {
           <label className="block text-caption font-bold text-slate-700 tracking-wide mb-2 text-center">
             Bạn đăng ký tài khoản cho ai?
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
               { id: 'student', label: 'Bé học sinh', icon: '🎒' },
               { id: 'parent', label: 'Phụ huynh', icon: '👨‍👩‍👧' },
-              { id: 'teacher', label: 'Giáo viên', icon: '👩‍🏫' },
             ].map((r) => {
               const isSel = role === r.id;
               return (
@@ -151,7 +148,7 @@ export const RegisterPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     soundManager.playClick();
-                    setRole(r.id as any);
+                    setRole(r.id as 'student' | 'parent');
                   }}
                   className={`btn-touch-target p-2.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition text-center ${
                     isSel

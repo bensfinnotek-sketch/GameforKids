@@ -1,3 +1,6 @@
+import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore } from '../firebase/auth';
+import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { 
@@ -70,6 +73,7 @@ interface GameContextType {
   markAllNotificationsRead: () => void;
   addNotification: (title: string, message: string, icon: string, type: NotificationItem['type']) => void;
   isAuthenticated: boolean;
+  authReady: boolean;
   loginWithAuth: (profile: Partial<UserProfile>) => void;
   logout: () => Promise<void>;
   navigateTo: (routeOrTab: string) => void;
@@ -82,25 +86,7 @@ const TREASURE_STORAGE_KEY = 'math_adventure_kids_treasure_v2';
 const CHALLENGES_STORAGE_KEY = 'math_adventure_kids_challenges_v2';
 
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Load saved user state or fallback to INITIAL_USER
-  const [user, setUser] = useState<UserProfile>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return { 
-          ...INITIAL_USER, 
-          ...parsed,
-          lessonStars: parsed.lessonStars || INITIAL_USER.lessonStars || {},
-          notifications: parsed.notifications || INITIAL_USER.notifications || [],
-        };
-      }
-    } catch {
-      // fallback
-    }
-    return INITIAL_USER;
-  });
-
+  // Firebase is the authentication source of truth. Local storage is used only for UI preferences/cache.
   const [lessons] = useState<Lesson[]>(INITIAL_LESSONS);
   const [badges] = useState<Badge[]>(INITIAL_BADGES);
   const [worlds] = useState<World[]>(INITIAL_WORLDS);
@@ -141,8 +127,29 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('math_adventure_kids_auth_token');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState<UserProfile>(() => {
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Partial<UserProfile>;
+        return {
+          ...INITIAL_USER,
+          ...parsed,
+          completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : INITIAL_USER.completedLessons,
+          lessonStars: parsed.lessonStars && typeof parsed.lessonStars === 'object' ? parsed.lessonStars : INITIAL_USER.lessonStars,
+          unlockedBadges: Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : INITIAL_USER.unlockedBadges,
+          inventory: Array.isArray(parsed.inventory) ? parsed.inventory : INITIAL_USER.inventory,
+          history: Array.isArray(parsed.history) ? parsed.history : INITIAL_USER.history,
+          highScores: parsed.highScores && typeof parsed.highScores === 'object' ? parsed.highScores : INITIAL_USER.highScores,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_USER.notifications,
+        } as UserProfile;
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    return INITIAL_USER;
   });
 
   const navigateTo = useCallback((tabOrRoute: string) => {
@@ -177,6 +184,65 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentReward, setCurrentReward] = useState<RewardNotification | null>(null);
   const [levelUpModalData, setLevelUpModalData] = useState<{ oldLevel: number; newLevel: number; title: string } | null>(null);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const unsubscribe = firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
+      if (!mounted) return;
+
+      if (!firebaseUser) {
+        setIsAuthenticated(false);
+        setAuthReady(true);
+        return;
+      }
+
+      const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
+      if (!mounted) return;
+
+      const fallbackName =
+        firebaseUser.displayName ||
+        firebaseUser.email?.split('@')[0] ||
+        'Bé Thám Hiểm';
+
+      const mergedProfile: UserProfile = {
+        ...INITIAL_USER,
+        ...(existingProfile || {}),
+        id: firebaseUser.uid,
+        name: existingProfile?.name || fallbackName,
+        role: existingProfile?.role || 'student',
+        avatarEmoji: existingProfile?.avatarEmoji || INITIAL_USER.avatarEmoji,
+      };
+
+      setUser(mergedProfile);
+      setIsAuthenticated(true);
+      setAuthReady(true);
+
+      // First login / Google redirect: create a real Firestore profile.
+      if (!existingProfile) {
+        await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  // Firestore is the source of truth for account/progress data.
+  // localStorage remains only a best-effort UI cache for faster rendering.
+  useEffect(() => {
+    if (!isAuthenticated || !auth.currentUser || !authReady) return;
+
+    const timer = window.setTimeout(() => {
+      syncUserProfileToFirestore(auth.currentUser!.uid, user).catch((error) => {
+        console.warn('Unable to persist user progress to Firestore:', error);
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [user, isAuthenticated, authReady]);
+
   // Sync sound manager with user preference
   useEffect(() => {
     soundManager.setEnabled(user.soundEnabled);
@@ -184,12 +250,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Persist user to localStorage
   useEffect(() => {
+    if (!isAuthenticated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } catch (e) {
-      console.error('Failed to save to localStorage', e);
+      console.error('Failed to cache user UI state', e);
     }
-  }, [user]);
+  }, [user, isAuthenticated]);
 
   // Persist treasure items
   useEffect(() => {
@@ -319,6 +386,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const lesson = lessons.find((l) => l.id === lessonId);
     if (!lesson) return;
 
+    if (
+      !Number.isInteger(score) ||
+      !Number.isInteger(totalQuestions) ||
+      !Number.isInteger(timeSpentSeconds) ||
+      totalQuestions <= 0 ||
+      score < 0 ||
+      score > totalQuestions ||
+      timeSpentSeconds < 0 ||
+      timeSpentSeconds > 86400
+    ) {
+      return;
+    }
+
     const accuracy = Math.round((score / totalQuestions) * 100);
     
     // Star Calculation:
@@ -328,6 +408,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let stars = 1;
     if (accuracy >= 95) stars = 3;
     else if (accuracy >= 80) stars = 2;
+
+    if (auth.currentUser) {
+      void submitLessonAttemptToFirestore(auth.currentUser.uid, {
+        lessonId,
+        score,
+        totalQuestions,
+        timeSpentSeconds,
+      });
+    }
 
     const xpBonus = lesson.xpReward + (stars === 3 ? 20 : stars === 2 ? 10 : 0);
     const coinBonus = lesson.coinReward;
@@ -523,9 +612,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
-  const switchRole = useCallback((role: 'student' | 'parent' | 'teacher' | 'admin') => {
+  const switchRole = useCallback((_role: 'student' | 'parent' | 'teacher' | 'admin') => {
     soundManager.playClick();
-    setUser((prev) => ({ ...prev, role }));
+    // Role changes are server-controlled. This action is intentionally a no-op for clients.
   }, []);
 
   const updateUserName = useCallback((name: string) => {
@@ -552,7 +641,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const loginWithAuth = useCallback((profile: Partial<UserProfile>) => {
-    localStorage.setItem('math_adventure_kids_auth_token', 'true');
     setIsAuthenticated(true);
     setUser((prev) => ({
       ...prev,
@@ -572,10 +660,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(async () => {
     try {
-      const { logOutUser } = await import('../firebase/auth');
       await logOutUser();
     } catch {}
-    localStorage.removeItem('math_adventure_kids_auth_token');
     setIsAuthenticated(false);
     navigateTo('login');
   }, [navigateTo]);
@@ -626,6 +712,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         markAllNotificationsRead,
         addNotification,
         isAuthenticated,
+        authReady,
         loginWithAuth,
         logout,
         navigateTo,

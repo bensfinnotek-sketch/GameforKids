@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   GraduationCap, 
   Users, 
@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
+import { fetchStudentProfilesFromFirestore } from '../firebase/auth';
+import { UserProfile } from '../types';
 
 interface StudentRosterItem {
   id: string;
@@ -41,80 +43,54 @@ export const TeacherDashboardPage: React.FC = () => {
   const [taskSubject, setTaskSubject] = useState('Phép nhân trong phạm vi 5');
   const [taskDueDate, setTaskDueDate] = useState('2026-10-15');
 
-  const students: StudentRosterItem[] = [
-    {
-      id: 'st-1',
-      name: 'Nguyễn Bảo Nam',
-      avatar: '🤠',
-      age: '7 tuổi',
-      lessonsDone: 28,
-      accuracy: 96,
-      xp: 2840,
-      streak: 12,
-      status: 'Xuất sắc',
-      lastActive: '15 phút trước'
-    },
-    {
-      id: 'st-2',
-      name: 'Trần Ngọc Linh',
-      avatar: '👧',
-      age: '7 tuổi',
-      lessonsDone: 25,
-      accuracy: 94,
-      xp: 2490,
-      streak: 9,
-      status: 'Xuất sắc',
-      lastActive: 'Hôm nay'
-    },
-    {
-      id: 'st-3',
-      name: 'Lê Hoàng Minh Khôi',
-      avatar: '👦',
-      age: '7 tuổi',
-      lessonsDone: 19,
-      accuracy: 88,
-      xp: 1950,
-      streak: 5,
-      status: 'Đạt yêu cầu',
-      lastActive: 'Hôm qua'
-    },
-    {
-      id: 'st-4',
-      name: 'Phạm Quỳnh Anh',
-      avatar: '🐱',
-      age: '7 tuổi',
-      lessonsDone: 22,
-      accuracy: 92,
-      xp: 2180,
-      streak: 7,
-      status: 'Xuất sắc',
-      lastActive: 'Hôm nay'
-    },
-    {
-      id: 'st-5',
-      name: 'Vũ Đức Trí',
-      avatar: '🦁',
-      age: '8 tuổi',
-      lessonsDone: 14,
-      accuracy: 74,
-      xp: 1420,
-      streak: 2,
-      status: 'Cần rèn luyện thêm',
-      lastActive: '3 ngày trước'
-    },
-    {
-      id: 'st-6',
-      name: 'Đặng Mai Phương',
-      avatar: '⭐',
-      age: '7 tuổi',
-      lessonsDone: 21,
-      accuracy: 89,
-      xp: 2040,
-      streak: 6,
-      status: 'Đạt yêu cầu',
-      lastActive: 'Hôm nay'
-    }
-  ];
+  const [students, setStudents] = useState<StudentRosterItem[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStudents = async () => {
+      setLoadingStudents(true);
+      const profiles = await fetchStudentProfilesFromFirestore();
+      if (!mounted) return;
+
+      const roster = profiles.map((profile: UserProfile) => {
+        const history = Array.isArray(profile.history) ? profile.history : [];
+        const accuracy = history.length
+          ? Math.round(history.reduce((sum, item) => sum + item.accuracy, 0) / history.length)
+          : 0;
+        const lessonsDone = Array.isArray(profile.completedLessons) ? profile.completedLessons.length : 0;
+        const status: StudentRosterItem['status'] =
+          accuracy >= 90 ? 'Xuất sắc' :
+          accuracy >= 75 ? 'Đạt yêu cầu' :
+          'Cần rèn luyện thêm';
+
+        return {
+          id: profile.id,
+          name: profile.name || 'Học sinh',
+          avatar: profile.avatarEmoji || '🎒',
+          age: profile.selectedAgeGroup || '—',
+          lessonsDone,
+          accuracy,
+          xp: profile.xp || 0,
+          streak: profile.streak || 0,
+          status,
+          lastActive: profile.lastActiveDate || 'Chưa có dữ liệu',
+        };
+      });
+
+      setStudents(roster);
+      setLoadingStudents(false);
+    };
+
+    loadStudents().catch(() => {
+      if (mounted) {
+        setStudents([]);
+        setLoadingStudents(false);
+      }
+    });
+
+    return () => { mounted = false; };
+  }, []);
 
   const filteredStudents = students.filter((s) => {
     const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -203,9 +179,9 @@ export const TeacherDashboardPage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">26 em</div>
+          <div className="text-h1 font-extrabold text-slate-800">{loadingStudents ? '…' : students.length} em</div>
           <p className="text-caption font-semibold text-emerald-600 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> 100% tài khoản đang hoạt động
+            <TrendingUp className="w-3.5 h-3.5" /> Dữ liệu trực tiếp từ Firestore
           </p>
         </div>
 
@@ -216,9 +192,11 @@ export const TeacherDashboardPage: React.FC = () => {
               <Award className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">88.5%</div>
+          <div className="text-h1 font-extrabold text-slate-800">
+            {loadingStudents ? '…' : students.length ? `${Math.round(students.reduce((sum, s) => sum + s.accuracy, 0) / students.length)}%` : '—'}
+          </div>
           <p className="text-caption font-semibold text-sky-600 mt-1">
-            Tăng +3.2% so với tháng trước
+            Tính từ lịch sử làm bài đã lưu
           </p>
         </div>
 
@@ -229,9 +207,11 @@ export const TeacherDashboardPage: React.FC = () => {
               <BookOpen className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">142 bài</div>
+          <div className="text-h1 font-extrabold text-slate-800">
+            {loadingStudents ? '…' : students.reduce((sum, s) => sum + s.lessonsDone, 0)} bài
+          </div>
           <p className="text-caption font-semibold text-emerald-600 mt-1">
-            Trung bình 5.4 bài/học sinh
+            Tổng số bài đã hoàn thành của học sinh
           </p>
         </div>
 
@@ -242,9 +222,11 @@ export const TeacherDashboardPage: React.FC = () => {
               <AlertCircle className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">2 em</div>
+          <div className="text-h1 font-extrabold text-slate-800">
+            {loadingStudents ? '…' : students.filter((s) => s.status === 'Cần rèn luyện thêm').length} em
+          </div>
           <p className="text-caption font-semibold text-amber-700 mt-1">
-            Chủ đề: Hình học & Phép trừ nhớ
+            Dựa trên độ chính xác thực tế
           </p>
         </div>
 

@@ -1,21 +1,5 @@
 import React from 'react';
-import { 
-  Flame, 
-  Star, 
-  Trophy, 
-  Target, 
-  ArrowRight, 
-  Play, 
-  Sparkles, 
-  CheckCircle2, 
-  Lock, 
-  Compass, 
-  ChevronRight,
-  Award,
-  Gamepad2,
-  Gift,
-  BookOpen
-} from 'lucide-react';
+import { Flame, Star, Target, ArrowRight, Play, Sparkles, ChevronRight, Gift } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { getFullLevelDetails } from '../utils/levelUtils';
 import { soundManager } from '../utils/sound';
@@ -55,7 +39,9 @@ export const ChildHomePage: React.FC = () => {
       totalQuestions: 5,
     };
 
-  const currentLessonProgressPercent = completedIds.includes(nextLesson.id) ? 100 : 75;
+  const currentLessonProgressPercent = completedIds.includes(nextLesson.id) ? 100 : 0;
+  const completedToday = dailyChallenges.filter((challenge) => challenge.completed).length;
+  const totalToday = dailyChallenges.length || 3;
 
   const handleContinueLearning = () => {
     soundManager.playLevelUp();
@@ -184,90 +170,30 @@ export const ChildHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. QUICK STATS ROW (4 CARDS) */}
-      <section aria-label="Chỉ số học tập">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          
-          {/* Streak Card */}
-          <div 
-            onClick={() => {
-              soundManager.playClick();
-              navigateTo('challenges');
-            }}
-            className="bg-white p-5 rounded-3xl border-2 border-rose-100 shadow-xs hover:border-rose-300 hover:shadow-md cursor-pointer transition-all hover:scale-[1.02]"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-caption font-extrabold text-slate-400 uppercase tracking-wider">Chuỗi Học</span>
-              <div className="p-2 rounded-xl bg-rose-50 text-rose-500">
-                <Flame className="w-5 h-5 fill-rose-500" />
-              </div>
+      {/* 3. QUICK STATS — gọn, dễ nhìn */}
+      <section aria-label="Tiến độ của bé">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button onClick={() => navigateTo('challenges')} className="text-left bg-white p-5 rounded-3xl border-2 border-rose-100 shadow-sm hover:border-rose-300 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center"><Flame className="w-5 h-5 fill-current" /></div>
+              <div><p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Chuỗi học</p><p className="text-xl font-black text-slate-900">{user.streak} ngày</p></div>
             </div>
-            <div className="text-h1 font-black text-slate-900">{user.streak} ngày</div>
-            <p className="text-[11px] font-bold text-rose-600 mt-1">
-              🔥 Giữ vững phong độ mỗi ngày!
-            </p>
-          </div>
-
-          {/* XP Card */}
-          <div 
-            onClick={() => {
-              soundManager.playClick();
-              navigateTo('achievements');
-            }}
-            className="bg-white p-5 rounded-3xl border-2 border-amber-100 shadow-xs hover:border-amber-300 hover:shadow-md cursor-pointer transition-all hover:scale-[1.02]"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-caption font-extrabold text-slate-400 uppercase tracking-wider">Kinh Nghiệm</span>
-              <div className="p-2 rounded-xl bg-amber-50 text-amber-500">
-                <Star className="w-5 h-5 fill-amber-400" />
-              </div>
+            <p className="mt-3 text-xs font-bold text-rose-600">🔥 Cùng Mini giữ chuỗi nhé!</p>
+          </button>
+          <button onClick={() => navigateTo('achievements')} className="text-left bg-white p-5 rounded-3xl border-2 border-amber-100 shadow-sm hover:border-amber-300 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center"><Star className="w-5 h-5 fill-current" /></div>
+              <div><p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Kinh nghiệm</p><p className="text-xl font-black text-slate-900">{user.xp.toLocaleString()} XP</p></div>
             </div>
-            <div className="text-h1 font-black text-slate-900">{user.xp.toLocaleString()} XP</div>
-            <p className="text-[11px] font-bold text-amber-600 mt-1">
-              Còn {levelInfo.remainingXp} XP để lên Cấp {levelInfo.level + 1}
-            </p>
-          </div>
-
-          {/* Level Card */}
-          <div 
-            onClick={() => {
-              soundManager.playClick();
-              navigateTo('profile');
-            }}
-            className="bg-white p-5 rounded-3xl border-2 border-sky-100 shadow-xs hover:border-sky-300 hover:shadow-md cursor-pointer transition-all hover:scale-[1.02]"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-caption font-extrabold text-slate-400 uppercase tracking-wider">Cấp Độ</span>
-              <div className="p-2 rounded-xl bg-sky-50 text-sky-500">
-                <Trophy className="w-5 h-5" />
-              </div>
+            <p className="mt-3 text-xs font-bold text-amber-600">⭐ Còn {levelInfo.remainingXp} XP để lên cấp</p>
+          </button>
+          <button onClick={() => navigateTo('challenges')} className="text-left bg-white p-5 rounded-3xl border-2 border-emerald-100 shadow-sm hover:border-emerald-300 transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center"><Target className="w-5 h-5" /></div>
+              <div><p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Nhiệm vụ hôm nay</p><p className="text-xl font-black text-slate-900">{completedToday} / {totalToday}</p></div>
             </div>
-            <div className="text-h1 font-black text-slate-900">Cấp {levelInfo.level}</div>
-            <p className="text-[11px] font-bold text-sky-600 mt-1 truncate">
-              {levelInfo.title}
-            </p>
-          </div>
-
-          {/* Today Goal Card */}
-          <div 
-            onClick={() => {
-              soundManager.playClick();
-              navigateTo('challenges');
-            }}
-            className="bg-white p-5 rounded-3xl border-2 border-emerald-100 shadow-xs hover:border-emerald-300 hover:shadow-md cursor-pointer transition-all hover:scale-[1.02]"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-caption font-extrabold text-slate-400 uppercase tracking-wider">Mục Tiêu Hôm Nay</span>
-              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-500">
-                <Target className="w-5 h-5" />
-              </div>
-            </div>
-            <div className="text-h1 font-black text-slate-900">3 / 5 câu</div>
-            <p className="text-[11px] font-bold text-emerald-600 mt-1">
-              🎯 Sắp hoàn thành mục tiêu ngày!
-            </p>
-          </div>
-
+            <p className="mt-3 text-xs font-bold text-emerald-600">🎯 Làm thêm một nhiệm vụ nhé!</p>
+          </button>
         </div>
       </section>
 
@@ -438,30 +364,16 @@ export const ChildHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. NEW BADGES & REWARDS SHOWCASE */}
-      <section aria-label="Huy hiệu & Phần thưởng">
-        <div className="bg-gradient-to-r from-purple-500 via-indigo-600 to-sky-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-caption font-extrabold uppercase tracking-wider text-amber-300">
-              <Award className="w-4 h-4" />
-              <span>Huy Hiệu & Kho Báu Độc Quyền</span>
+      {/* 6. KHO BÁU — một lời mời đơn giản */}
+      <section aria-label="Kho báu">
+        <div className="rounded-3xl border-2 border-purple-100 bg-gradient-to-r from-purple-50 via-white to-sky-50 p-6 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-purple-700"><Gift className="w-4 h-4" />Kho báu của bé</div>
+              <h2 className="mt-3 text-2xl font-black text-slate-900">Mở rương và xem phần thưởng 🎁</h2>
+              <p className="mt-1 text-sm font-medium text-slate-500">Khi hoàn thành bài học, bé có thể khám phá thêm huy hiệu và vật phẩm.</p>
             </div>
-            <h2 className="text-h2 font-black text-white">
-              Bé Đã Đạt Được 8 Huy Hiệu Danh Giá! 🏅
-            </h2>
-            <p className="text-body-sm text-purple-100 font-medium max-w-xl">
-              Đổi xu vàng lấy mũ thám hiểm, ba lô phản lực và trang phục phát sáng trong Cửa hàng Kho báu.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleOpenRewards}
-              className="btn-touch-target px-6 py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-body-sm shadow-md transition flex items-center gap-2 cursor-pointer"
-            >
-              <Gift className="w-4 h-4" />
-              <span>Mở Kho Báu Ngay</span>
-            </button>
+            <button onClick={handleOpenRewards} className="btn-touch-target shrink-0 rounded-2xl bg-purple-600 px-6 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-purple-700 active:scale-95 flex items-center justify-center gap-2"><Gift className="w-4 h-4" />Xem kho báu</button>
           </div>
         </div>
       </section>
