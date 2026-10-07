@@ -129,9 +129,22 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<UserProfile>(() => {
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) return { ...INITIAL_USER, ...JSON.parse(cached) } as UserProfile;
+      if (cached) {
+        const parsed = JSON.parse(cached) as Partial<UserProfile>;
+        return {
+          ...INITIAL_USER,
+          ...parsed,
+          completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : INITIAL_USER.completedLessons,
+          lessonStars: parsed.lessonStars && typeof parsed.lessonStars === 'object' ? parsed.lessonStars : INITIAL_USER.lessonStars,
+          unlockedBadges: Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : INITIAL_USER.unlockedBadges,
+          inventory: Array.isArray(parsed.inventory) ? parsed.inventory : INITIAL_USER.inventory,
+          history: Array.isArray(parsed.history) ? parsed.history : INITIAL_USER.history,
+          highScores: parsed.highScores && typeof parsed.highScores === 'object' ? parsed.highScores : INITIAL_USER.highScores,
+          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_USER.notifications,
+        } as UserProfile;
+      }
     } catch {
-      // Ignore malformed/stale local cache and use the safe default profile.
+      localStorage.removeItem(STORAGE_KEY);
     }
     return INITIAL_USER;
   });
