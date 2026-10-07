@@ -43,6 +43,25 @@ service cloud.firestore {
         allow write: if isAdmin();
       }
 
+      // Learning submissions are append-only. They provide an auditable activity trail
+      // while reward calculation remains a separate trusted-backend concern.
+      match /lessonAttempts/{attemptId} {
+        allow read: if isSelf(userId) || isTeacher();
+        allow create: if isSelf(userId)
+          && request.resource.data.lessonId is string
+          && request.resource.data.lessonId.size() > 0
+          && request.resource.data.score is int
+          && request.resource.data.totalQuestions is int
+          && request.resource.data.score >= 0
+          && request.resource.data.totalQuestions > 0
+          && request.resource.data.score <= request.resource.data.totalQuestions
+          && request.resource.data.timeSpentSeconds is int
+          && request.resource.data.timeSpentSeconds >= 0
+          && request.resource.data.timeSpentSeconds <= 86400
+          && request.resource.data.submittedAt == request.time;
+        allow update, delete: if false;
+      }
+
       match /inventory/{itemId} {
         allow read: if isSelf(userId);
         allow write: if isAdmin();
