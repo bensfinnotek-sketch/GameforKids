@@ -14,13 +14,11 @@ import {
   signInWithEmail, 
   configurePersistence, 
   mapAuthError,
-  fetchUserProfileFromFirestore,
-  syncUserProfileToFirestore
 } from '../firebase/auth';
 import { soundManager } from '../utils/sound';
 
 export const LoginPage: React.FC = () => {
-  const { loginWithAuth, navigateTo } = useGame();
+  const { navigateTo } = useGame();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,22 +43,9 @@ export const LoginPage: React.FC = () => {
         soundManager.playLevelUp();
         setSuccessMessage('Đăng nhập Google thành công! Đang mở hành trình học tập...');
         
-        // Fetch existing profile or create initial profile
-        const existingProfile = await fetchUserProfileFromFirestore(user.uid);
-        const displayName = user.displayName || user.email?.split('@')[0] || 'Bé Thám Hiểm';
-        
-        const finalProfile = {
-          id: user.uid,
-          name: existingProfile?.name || displayName,
-          role: existingProfile?.role || 'student',
-          avatarEmoji: existingProfile?.avatarEmoji || '🤠',
-        };
-
-        await syncUserProfileToFirestore(user.uid, finalProfile);
-
-        setTimeout(() => {
-          loginWithAuth(finalProfile);
-        }, 600);
+        // GameProvider listens to Firebase Auth and loads the real Firestore profile.
+        // We intentionally do not create a second client-side session here.
+        setSuccessMessage('Đăng nhập Google thành công! Đang mở hành trình học tập...');
       }
     } catch (err) {
       console.error('Google Sign-in error:', err);
@@ -86,19 +71,8 @@ export const LoginPage: React.FC = () => {
       soundManager.playLevelUp();
       setSuccessMessage('Đăng nhập thành công! Đang mở hành trình học tập...');
 
-      // Fetch or sync user profile
-      const existingProfile = await fetchUserProfileFromFirestore(user.uid);
-      const displayName = user.displayName || email.split('@')[0] || 'Bé Thám Hiểm';
-
-      const finalProfile = {
-        id: user.uid,
-        name: existingProfile?.name || displayName,
-        role: existingProfile?.role || 'student',
-      };
-
-      setTimeout(() => {
-        loginWithAuth(finalProfile);
-      }, 600);
+      // GameProvider receives the Firebase Auth event and loads the real Firestore profile.
+      setSuccessMessage('Đăng nhập thành công! Đang mở hành trình học tập...');
 
     } catch (err) {
       console.error('Email Sign-in error:', err);
