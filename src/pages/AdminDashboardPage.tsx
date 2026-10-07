@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ShieldAlert, 
   Settings, 
@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
+import { fetchAllUserProfilesFromFirestore } from '../firebase/auth';
+import { INITIAL_LESSONS } from '../data/mockData';
 
 export const AdminDashboardPage: React.FC = () => {
   const { setActiveTab, switchRole } = useGame();
@@ -25,6 +27,22 @@ export const AdminDashboardPage: React.FC = () => {
   const [safeModeEnabled, setSafeModeEnabled] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [savedSettings, setSavedSettings] = useState(false);
+  const [accountCount, setAccountCount] = useState<number | null>(null);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchAllUserProfilesFromFirestore().then((profiles) => {
+      if (!mounted) return;
+      setAccountCount(profiles.length);
+      setStudentCount(profiles.filter((profile) => profile.role === 'student').length);
+    }).catch(() => {
+      if (!mounted) return;
+      setAccountCount(null);
+      setStudentCount(null);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const handleSaveConfig = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +111,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">12,480</div>
+          <div className="text-h1 font-extrabold text-slate-800">{accountCount === null ? '—' : accountCount}</div>
           <p className="text-caption font-semibold text-emerald-600 mt-1">
-            +328 bé mới đăng ký trong tuần
+            {studentCount === null ? 'Chưa có dữ liệu tài khoản' : `${studentCount} tài khoản học sinh`}
           </p>
         </div>
 
@@ -106,9 +124,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Database className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">450 bài</div>
+          <div className="text-h1 font-extrabold text-slate-800">{INITIAL_LESSONS.length} bài</div>
           <p className="text-caption font-semibold text-indigo-600 mt-1">
-            1,850+ câu hỏi tương tác đạt chuẩn
+            Nội dung hiện có trong ngân hàng bài học của ứng dụng
           </p>
         </div>
 
@@ -119,9 +137,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Server className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">99.98%</div>
+          <div className="text-h1 font-extrabold text-slate-800">—</div>
           <p className="text-caption font-semibold text-emerald-600 mt-1">
-            Độ trễ trung bình: 18ms
+            Chưa kết nối hệ thống giám sát máy chủ
           </p>
         </div>
 
@@ -132,9 +150,9 @@ export const AdminDashboardPage: React.FC = () => {
               <Sparkles className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-h1 font-extrabold text-slate-800">99.2%</div>
+          <div className="text-h1 font-extrabold text-slate-800">—</div>
           <p className="text-caption font-semibold text-amber-700 mt-1">
-            Từ 8,400+ đánh giá phụ huynh
+            Chưa có dữ liệu khảo sát thực tế
           </p>
         </div>
 
