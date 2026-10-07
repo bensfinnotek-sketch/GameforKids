@@ -53,7 +53,7 @@ export const RegisterPage: React.FC = () => {
         await syncUserProfileToFirestore(user.uid, finalProfile);
 
         // Firebase Auth + GameProvider will load the persisted profile from Firestore.
-        navigateTo('child/home');
+        navigateTo(role === 'parent' ? 'parent' : 'child/home');
       }
     } catch (err) {
       console.error('Google Sign-up error:', err);
@@ -140,7 +140,6 @@ export const RegisterPage: React.FC = () => {
             {[
               { id: 'student', label: 'Bé học sinh', icon: '🎒' },
               { id: 'parent', label: 'Phụ huynh', icon: '👨‍👩‍👧' },
-              { id: 'teacher', label: 'Giáo viên', icon: '👩‍🏫' },
             ].map((r) => {
               const isSel = role === r.id;
               return (
