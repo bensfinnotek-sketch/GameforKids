@@ -57,7 +57,7 @@ export const mapAuthError = (error: unknown): string => {
     case 'auth/too-many-requests':
       return 'Quá nhiều lần thử không thành công. Hãy đợi vài phút rồi thử lại nhé!';
     case 'auth/unauthorized-domain':
-      return 'Tên miền chưa được cấu hình trong Firebase Console. Đang chạy chế độ an toàn.';
+      return 'Tên miền chưa được thêm vào Firebase Authentication. Hãy thêm domain hiện tại trong Firebase Console rồi thử lại.';
     case 'auth/operation-not-allowed':
       return 'Phương thức đăng nhập này chưa được kích hoạt trong Firebase Console.';
     default:
