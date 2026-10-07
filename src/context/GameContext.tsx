@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, logOutUser } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -386,6 +386,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const lesson = lessons.find((l) => l.id === lessonId);
     if (!lesson) return;
 
+    if (
+      !Number.isInteger(score) ||
+      !Number.isInteger(totalQuestions) ||
+      !Number.isInteger(timeSpentSeconds) ||
+      totalQuestions <= 0 ||
+      score < 0 ||
+      score > totalQuestions ||
+      timeSpentSeconds < 0 ||
+      timeSpentSeconds > 86400
+    ) {
+      return;
+    }
+
     const accuracy = Math.round((score / totalQuestions) * 100);
     
     // Star Calculation:
@@ -395,6 +408,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let stars = 1;
     if (accuracy >= 95) stars = 3;
     else if (accuracy >= 80) stars = 2;
+
+    if (auth.currentUser) {
+      void submitLessonAttemptToFirestore(auth.currentUser.uid, {
+        lessonId,
+        score,
+        totalQuestions,
+        timeSpentSeconds,
+      });
+    }
 
     const xpBonus = lesson.xpReward + (stars === 3 ? 20 : stars === 2 ? 10 : 0);
     const coinBonus = lesson.coinReward;
