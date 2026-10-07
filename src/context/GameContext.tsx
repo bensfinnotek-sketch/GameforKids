@@ -126,6 +126,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [user, setUser] = useState<UserProfile>(() => {
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (cached) return { ...INITIAL_USER, ...JSON.parse(cached) } as UserProfile;
+    } catch {
+      // Ignore malformed/stale local cache and use the safe default profile.
+    }
+    return INITIAL_USER;
+  });
 
   const navigateTo = useCallback((tabOrRoute: string) => {
     soundManager.playClick();
