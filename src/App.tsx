@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, useState } from 'react';
+import React, { Component, ErrorInfo, useEffect, useState } from 'react';
 
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; message: string }> {
   state = { hasError: false, message: '' };
@@ -73,11 +73,29 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResendConfirmationPage } from './pages/ResendConfirmationPage';
 
 const AppContent: React.FC = () => {
-  const { activeTab, navigateTo } = useGame();
+  const { activeTab, navigateTo, user, isAuthenticated, authReady } = useGame();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const isAuthRoute = ['login', 'register', 'forgot-password', 'resend-confirmation'].includes(activeTab);
+  const protectedRouteRole = activeTab === 'admin' ? 'admin' : activeTab === 'teacher' ? 'teacher' : activeTab === 'parent' ? 'parent' : null;
+  const requiresAuth = !isAuthRoute && (protectedRouteRole !== null || activeTab === 'child/home' || activeTab === 'home' || activeTab.startsWith('world/') || activeTab.startsWith('lesson/'));
+
+  useEffect(() => {
+    if (!authReady || !requiresAuth) return;
+    if (!isAuthenticated) {
+      navigateTo('login');
+      return;
+    }
+    if (protectedRouteRole && user.role !== protectedRouteRole) {
+      navigateTo(user.role === 'admin' ? 'admin' : user.role === 'teacher' ? 'teacher' : user.role === 'parent' ? 'parent' : 'child/home');
+    }
+  }, [authReady, requiresAuth, isAuthenticated, protectedRouteRole, user.role, navigateTo]);
+
+  if (requiresAuth && !authReady) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f4f8fd]"><div className="rounded-2xl bg-white px-6 py-4 shadow-sm font-bold text-slate-600">Đang kiểm tra phiên đăng nhập...</div></div>;
+  }
+
 
   const renderCurrentView = () => {
     switch (activeTab) {
