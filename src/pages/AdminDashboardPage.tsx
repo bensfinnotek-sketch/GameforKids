@@ -277,22 +277,12 @@ export const AdminDashboardPage: React.FC = () => {
               Nhật Ký Hoạt Động Gần Nhất
             </h3>
             <div className="space-y-3">
-              {[
-                { text: 'Thêm 12 câu hỏi trắc nghiệm hình học 3D mới', time: '10 phút trước', tag: 'Content' },
-                { text: 'Đồng bộ sao lưu cơ sở dữ liệu học tập Cloud', time: '45 phút trước', tag: 'Backup' },
-                { text: 'Cập nhật hệ thống âm thanh Web Audio API v2', time: '2 giờ trước', tag: 'Core' },
-                { text: 'Phụ huynh xác nhận kích hoạt gói VIP Family', time: '3 giờ trước', tag: 'Billing' },
-              ].map((log, i) => (
-                <div key={i} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      {log.tag}
-                    </span>
-                    <span className="text-[11px] text-slate-400 font-semibold">{log.time}</span>
-                  </div>
-                  <p className="text-caption text-slate-700 font-medium">{log.text}</p>
-                </div>
-              ))}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-caption text-slate-600 font-medium leading-relaxed">
+                  Chưa có nhật ký audit server-side. Phần này sẽ chỉ hiển thị sự kiện thực tế sau khi
+                  hệ thống Cloud Functions/Audit Log được kết nối; không dùng dữ liệu mẫu.
+                </p>
+              </div>
             </div>
           </div>
 
