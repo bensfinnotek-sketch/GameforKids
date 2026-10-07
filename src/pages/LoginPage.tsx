@@ -16,6 +16,7 @@ import {
   mapAuthError,
 } from '../firebase/auth';
 import { soundManager } from '../utils/sound';
+import { firebaseConfigured } from '../firebase/config';
 
 export const LoginPage: React.FC = () => {
   const { navigateTo } = useGame();
@@ -32,6 +33,11 @@ export const LoginPage: React.FC = () => {
 
   // Handle Google Sign-in
   const handleGoogleSignIn = async () => {
+    if (!firebaseConfigured) {
+      setErrorMessage('Hệ thống đăng nhập chưa được cấu hình Firebase trên môi trường này. Vui lòng thử lại sau.');
+      return;
+    }
+
     try {
       soundManager.playClick();
       setGoogleLoading(true);
@@ -58,6 +64,10 @@ export const LoginPage: React.FC = () => {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) return;
+    if (!firebaseConfigured) {
+      setErrorMessage('Hệ thống đăng nhập chưa được cấu hình Firebase trên môi trường này. Vui lòng thử lại sau.');
+      return;
+    }
 
     try {
       soundManager.playClick();
@@ -100,6 +110,11 @@ export const LoginPage: React.FC = () => {
 
         {/* Error / Success Notifications */}
         <div className="space-y-3 mb-4">
+          {!firebaseConfigured && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+              🔧 Hệ thống đăng nhập đang được cấu hình. Tài khoản sẽ hoạt động ngay khi Firebase được kết nối.
+            </div>
+          )}
           <AuthErrorAlert message={errorMessage} onDismiss={() => setErrorMessage(null)} />
           <AuthSuccessAlert message={successMessage} />
         </div>
@@ -108,7 +123,7 @@ export const LoginPage: React.FC = () => {
         <GoogleLoginButton
           onClick={handleGoogleSignIn}
           loading={googleLoading}
-          disabled={loading}
+          disabled={loading || !firebaseConfigured}
         />
 
         {/* Divider */}
@@ -133,7 +148,7 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || !firebaseConfigured}
                 placeholder="Nhập email của bạn..."
                 className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50/70 hover:bg-slate-50 focus:bg-white border-2 border-slate-200 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 focus:outline-none text-body-sm font-semibold text-slate-800 placeholder-slate-400 transition-all disabled:opacity-50"
               />
@@ -145,7 +160,7 @@ export const LoginPage: React.FC = () => {
             id="login-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || !firebaseConfigured}
             label="Mật khẩu"
             placeholder="Nhập mật khẩu..."
           />
@@ -179,7 +194,7 @@ export const LoginPage: React.FC = () => {
           {/* Primary Submit Button */}
           <button
             type="submit"
-            disabled={loading || googleLoading}
+            disabled={loading || googleLoading || !firebaseConfigured}
             className="btn-touch-target w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-body-sm font-extrabold shadow-md shadow-sky-500/25 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
