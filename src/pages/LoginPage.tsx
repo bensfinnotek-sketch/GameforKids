@@ -41,8 +41,6 @@ export const LoginPage: React.FC = () => {
       const user = await signInWithGoogle();
       if (user) {
         soundManager.playLevelUp();
-        setSuccessMessage('Đăng nhập Google thành công! Đang mở hành trình học tập...');
-        
         // GameProvider listens to Firebase Auth and loads the real Firestore profile.
         // We intentionally do not create a second client-side session here.
         setSuccessMessage('Đăng nhập Google thành công! Đang mở hành trình học tập...');
@@ -67,7 +65,7 @@ export const LoginPage: React.FC = () => {
       setErrorMessage(null);
       await configurePersistence(rememberMe);
 
-      const user = await signInWithEmail(email.trim(), password);
+      await signInWithEmail(email.trim(), password);
       soundManager.playLevelUp();
       setSuccessMessage('Đăng nhập thành công! Đang mở hành trình học tập...');
 
