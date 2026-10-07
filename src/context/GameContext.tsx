@@ -73,6 +73,7 @@ interface GameContextType {
   markAllNotificationsRead: () => void;
   addNotification: (title: string, message: string, icon: string, type: NotificationItem['type']) => void;
   isAuthenticated: boolean;
+  authReady: boolean;
   loginWithAuth: (profile: Partial<UserProfile>) => void;
   logout: () => Promise<void>;
   navigateTo: (routeOrTab: string) => void;
@@ -689,6 +690,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         markAllNotificationsRead,
         addNotification,
         isAuthenticated,
+        authReady,
         loginWithAuth,
         logout,
         navigateTo,
