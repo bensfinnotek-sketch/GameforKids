@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowRight, Loader2, Sparkles, Check, HelpCircle } from 'lucide-react';
+import { Mail, ArrowRight, Loader2 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { MascotBadge } from '../components/auth/MascotBadge';
@@ -69,9 +69,6 @@ export const LoginPage: React.FC = () => {
 
       const user = await signInWithEmail(email.trim(), password);
       soundManager.playLevelUp();
-      setSuccessMessage('Đăng nhập thành công! Đang mở hành trình học tập...');
-
-      // GameProvider receives the Firebase Auth event and loads the real Firestore profile.
       setSuccessMessage('Đăng nhập thành công! Đang mở hành trình học tập...');
 
     } catch (err) {
