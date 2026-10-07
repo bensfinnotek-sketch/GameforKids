@@ -14,7 +14,7 @@ import {
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, query, where, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import { UserProfile } from '../types';
 
@@ -150,6 +150,34 @@ export const syncUserProfileToFirestore = async (
     );
   } catch (err) {
     console.warn('Firestore profile sync warning:', err);
+  }
+};
+
+export const submitLessonAttemptToFirestore = async (
+  uid: string,
+  attempt: {
+    lessonId: string;
+    score: number;
+    totalQuestions: number;
+    timeSpentSeconds: number;
+  }
+): Promise<string | null> => {
+  try {
+    if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
+
+    const attemptsRef = collection(db, 'users', uid, 'lessonAttempts');
+    const result = await addDoc(attemptsRef, {
+      lessonId: attempt.lessonId,
+      score: attempt.score,
+      totalQuestions: attempt.totalQuestions,
+      timeSpentSeconds: attempt.timeSpentSeconds,
+      submittedAt: serverTimestamp(),
+    });
+
+    return result.id;
+  } catch (err) {
+    console.warn('Firestore lesson attempt submission warning:', err);
+    return null;
   }
 };
 
