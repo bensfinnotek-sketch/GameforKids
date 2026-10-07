@@ -17,9 +17,9 @@ import {
 import { soundManager } from '../utils/sound';
 
 export const RegisterPage: React.FC = () => {
-  const { loginWithAuth, navigateTo } = useGame();
+  const { navigateTo } = useGame();
   
-  const [role, setRole] = useState<'student' | 'parent' | 'teacher'>('student');
+  const [role, setRole] = useState<'student' | 'parent'>('student');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,14 +47,13 @@ export const RegisterPage: React.FC = () => {
           id: user.uid,
           name: name.trim() || user.displayName || user.email?.split('@')[0] || 'Bé Thám Hiểm',
           role,
-          avatarEmoji: role === 'student' ? '🤠' : role === 'parent' ? '👨‍👩‍👧' : '👩‍🏫',
+          avatarEmoji: role === 'student' ? '🤠' : '👨‍👩‍👧',
         };
 
         await syncUserProfileToFirestore(user.uid, finalProfile);
 
-        setTimeout(() => {
-          loginWithAuth(finalProfile);
-        }, 600);
+        // Firebase Auth + GameProvider will load the persisted profile from Firestore.
+        navigateTo('child/home');
       }
     } catch (err) {
       console.error('Google Sign-up error:', err);
@@ -100,9 +99,8 @@ export const RegisterPage: React.FC = () => {
 
       await syncUserProfileToFirestore(user.uid, finalProfile);
 
-      setTimeout(() => {
-        loginWithAuth(finalProfile);
-      }, 700);
+      // Firebase Auth + GameProvider will load the persisted profile from Firestore.
+      navigateTo('child/home');
 
     } catch (err) {
       console.error('Email Sign-up error:', err);
@@ -151,7 +149,7 @@ export const RegisterPage: React.FC = () => {
                   type="button"
                   onClick={() => {
                     soundManager.playClick();
-                    setRole(r.id as any);
+                    setRole(r.id as 'student' | 'parent');
                   }}
                   className={`btn-touch-target p-2.5 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition text-center ${
                     isSel
