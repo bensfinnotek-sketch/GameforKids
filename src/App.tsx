@@ -3,11 +3,16 @@ import React, { Component, ErrorInfo, useState } from 'react';
 class AppErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean; message: string }> {
   state = { hasError: false, message: '' };
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, message: error?.message || 'Unknown application error' };
+  static getDerivedStateFromError(error: unknown) {
+    const message = error instanceof Error
+      ? `${error.name}: ${error.message}${error.stack ? `\\n\\n${error.stack}` : ''}`
+      : typeof error === 'string'
+        ? error
+        : (() => { try { return JSON.stringify(error, null, 2); } catch { return String(error); } })();
+    return { hasError: true, message: message || 'Unknown application error' };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
+  componentDidCatch(error: unknown, info: ErrorInfo) {
     console.error('Math Adventure Kids runtime error:', error, info);
   }
 
