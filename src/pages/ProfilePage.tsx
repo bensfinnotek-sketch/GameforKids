@@ -19,7 +19,7 @@ import { MascotMini } from '../components/common/MascotMini';
 import { soundManager } from '../utils/sound';
 
 export const ProfilePage: React.FC = () => {
-  const { user, updateUserName, setActiveTab, badges } = useGame();
+  const { user, updateUserName, setActiveTab, logout } = useGame();
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState(user.name);
 
@@ -35,12 +35,18 @@ export const ProfilePage: React.FC = () => {
   };
 
   // Calculate learning stats from user history
-  const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 690);
+  const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 0);
   const totalMinutes = Math.round(totalTimeSeconds / 60);
+  const subjectStats = Array.from(new Set(user.history.map((item) => item.category))).map((category) => {
+    const items = user.history.filter((item) => item.category === category);
+    const accuracy = Math.round(items.reduce((sum, item) => sum + item.accuracy, 0) / items.length);
+    return { category, accuracy, attempts: items.length };
+  });
+
   const avgAccuracy = Math.round(
     user.history.length > 0
       ? user.history.reduce((acc, h) => acc + h.accuracy, 0) / user.history.length
-      : 92
+      : 0
   );
 
   return (
@@ -134,6 +140,7 @@ export const ProfilePage: React.FC = () => {
             >
               👨‍👩‍👧 Báo cáo Phụ huynh
             </button>
+            <button onClick={async () => { soundManager.playClick(); await logout(); }} className="px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition">🚪 Đăng xuất</button>
           </div>
 
         </div>
@@ -166,48 +173,36 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Visual Chart Bars (Learning progress by Subject) */}
+      {/* Learning stats — chỉ hiển thị dữ liệu thật */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sky-100 shadow-md mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 gap-4">
           <div>
-            <h3 className="font-heading font-black text-xl text-slate-800">
-              Năng Lực Tư Duy Theo Phân Môn 📊
-            </h3>
-            <p className="text-xs font-semibold text-slate-400">
-              Đánh giá dựa trên các bài tập và quiz bé đã giải
-            </p>
+            <h3 className="font-heading font-black text-xl text-slate-800">Tiến bộ theo môn 📊</h3>
+            <p className="text-xs font-semibold text-slate-400 mt-1">Tính từ {user.history.length} lượt học đã được ghi nhận</p>
           </div>
-          <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-            Xuất sắc toàn diện
-          </span>
+          {user.history.length === 0 && <span className="text-xs font-black text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">Chưa có dữ liệu</span>}
         </div>
-
-        {/* Visual Bar chart */}
-        <div className="space-y-4">
-          {[
-            { subject: 'Toán cơ bản & Phép tính', score: 95, color: 'bg-sky-500', emoji: '🔢' },
-            { subject: 'Toán tư duy & Quy luật', score: 88, color: 'bg-amber-500', emoji: '💡' },
-            { subject: 'Hình học & Đo lường', score: 92, color: 'bg-emerald-500', emoji: '📐' },
-            { subject: 'Logic & Trí tuệ', score: 85, color: 'bg-purple-500', emoji: '🧩' },
-            { subject: 'Toán tiếng Anh & Olympic', score: 78, color: 'bg-rose-500', emoji: '🏆' },
-          ].map((bar, idx) => (
-            <div key={idx} className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-black text-slate-700">
-                <span className="flex items-center gap-1.5">
-                  <span>{bar.emoji}</span>
-                  <span>{bar.subject}</span>
-                </span>
-                <span className="text-sky-600">{bar.score}% thành thạo</span>
+        {subjectStats.length === 0 ? (
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-6 text-center">
+            <div className="text-4xl mb-2">📚</div>
+            <p className="font-black text-slate-700">Bé chưa hoàn thành bài học nào</p>
+            <p className="text-xs font-semibold text-slate-400 mt-1">Học một bài để bắt đầu thấy tiến bộ ở đây nhé!</p>
+            <button onClick={() => setActiveTab('learn')} className="mt-4 px-5 py-2.5 rounded-xl bg-sky-500 text-white text-xs font-black hover:bg-sky-600 transition">Học bài đầu tiên</button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {subjectStats.map((bar) => (
+              <div key={bar.category} className="space-y-1">
+                <div className="flex items-center justify-between gap-3 text-xs font-black text-slate-700">
+                  <span>{bar.category}</span><span className="text-sky-600 whitespace-nowrap">{bar.accuracy}% · {bar.attempts} lượt</span>
+                </div>
+                <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5">
+                  <div className="bg-sky-500 h-full rounded-full transition-all duration-700" style={{ width: `${bar.accuracy}%` }} />
+                </div>
               </div>
-              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5">
-                <div
-                  className={`${bar.color} h-full rounded-full transition-all duration-700`}
-                  style={{ width: `${bar.score}%` }}
-                ></div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent History List */}
