@@ -1,4 +1,6 @@
-import { onAuthStateChanged, fetchUserProfileFromFirestore, logOutUser } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, logOutUser } from '../firebase/auth';
+import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { 
@@ -183,7 +185,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     let mounted = true;
-    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
       if (!mounted) return;
       if (!firebaseUser) {
         setIsAuthenticated(false);
