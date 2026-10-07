@@ -1,73 +1,75 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions
-    function isAuthenticated() {
+    function signedIn() {
       return request.auth != null;
     }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
-    
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+
+    function hasRole(role) {
+      return signedIn() && request.auth.token.role == role;
     }
-    
+
     function isAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.admin == true || getUserData().role == 'admin');
+      return hasRole('admin') || request.auth.token.admin == true;
     }
-    
+
     function isTeacher() {
-      return isAuthenticated() && 
-        (request.auth.token.teacher == true || getUserData().role == 'teacher' || isAdmin());
+      return isAdmin() || hasRole('teacher') || request.auth.token.teacher == true;
     }
 
-    // User Profile Documents
     match /users/{userId} {
-      // Any authenticated user can read their own profile; teachers and admins can view relevant student profiles
-      allow read: if isOwner(userId) || isTeacher() || isAdmin();
-      
-      // User can create their initial profile upon registration
-      allow create: if isOwner(userId) && 
-        (!('role' in request.resource.data) || request.resource.data.role != 'admin');
-      
-      // User can update their own non-sensitive profile fields; cannot elevate themselves to admin
-      allow update: if isOwner(userId) && 
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || 
-         request.resource.data.role == resource.data.role || 
-         isAdmin());
-         
+      allow read: if isSelf(userId) || isTeacher();
+
+      allow create: if isSelf(userId)
+        && request.resource.data.id == userId
+        && request.resource.data.role in ['student', 'parent'];
+
+      allow update: if isSelf(userId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.xp == resource.data.xp
+        && request.resource.data.coin == resource.data.coin
+        && request.resource.data.gem == resource.data.gem
+        && request.resource.data.level == resource.data.level
+        && request.resource.data.streak == resource.data.streak
+        && request.resource.data.completedLessons == resource.data.completedLessons
+        && request.resource.data.lessonStars == resource.data.lessonStars
+        && request.resource.data.unlockedBadges == resource.data.unlockedBadges
+        && request.resource.data.inventory == resource.data.inventory
+        && request.resource.data.history == resource.data.history
+        && request.resource.data.highScores == resource.data.highScores
+        || isAdmin();
+
       allow delete: if isAdmin();
-      
-      // Nested user subcollections (study history, badges, inventory)
+
       match /history/{historyId} {
-        allow read, write: if isOwner(userId) || isTeacher() || isAdmin();
+        allow read: if isSelf(userId) || isTeacher();
+        allow write: if isAdmin();
       }
+
       match /inventory/{itemId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isSelf(userId);
+        allow write: if isAdmin();
       }
     }
 
-    // Classroom & Assignment Collections for Teachers
     match /classrooms/{classId} {
-      allow read: if isAuthenticated();
-      allow write: if isTeacher() || isAdmin();
-      
+      allow read: if isTeacher();
+      allow write: if isTeacher();
       match /assignments/{assignmentId} {
-        allow read: if isAuthenticated();
-        allow write: if isTeacher() || isAdmin();
+        allow read, write: if isTeacher();
       }
     }
 
-    // Curriculum & Lessons Content (Read-only for all, write for admin)
     match /lessons/{lessonId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     match /worlds/{worldId} {
       allow read: if true;
       allow write: if isAdmin();
