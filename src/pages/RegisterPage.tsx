@@ -94,7 +94,7 @@ export const RegisterPage: React.FC = () => {
         id: user.uid,
         name: name.trim() || email.split('@')[0],
         role,
-        avatarEmoji: role === 'student' ? '🤠' : role === 'parent' ? '👨‍👩‍👧' : '👩‍🏫',
+        avatarEmoji: role === 'student' ? '🤠' : '👨‍👩‍👧',
       };
 
       await syncUserProfileToFirestore(user.uid, finalProfile);
@@ -136,7 +136,7 @@ export const RegisterPage: React.FC = () => {
           <label className="block text-caption font-bold text-slate-700 tracking-wide mb-2 text-center">
             Bạn đăng ký tài khoản cho ai?
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {[
               { id: 'student', label: 'Bé học sinh', icon: '🎒' },
               { id: 'parent', label: 'Phụ huynh', icon: '👨‍👩‍👧' },
