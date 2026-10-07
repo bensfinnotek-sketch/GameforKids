@@ -185,27 +185,62 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     let mounted = true;
+
     const unsubscribe = firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
       if (!mounted) return;
+
       if (!firebaseUser) {
         setIsAuthenticated(false);
         setAuthReady(true);
         return;
       }
-      const profile = await fetchUserProfileFromFirestore(firebaseUser.uid);
+
+      const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
       if (!mounted) return;
-      setUser((prev) => ({
-        ...prev,
+
+      const fallbackName =
+        firebaseUser.displayName ||
+        firebaseUser.email?.split('@')[0] ||
+        'Bé Thám Hiểm';
+
+      const mergedProfile: UserProfile = {
+        ...INITIAL_USER,
+        ...(existingProfile || {}),
         id: firebaseUser.uid,
-        name: profile?.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || prev.name,
-        role: profile?.role || 'student',
-        avatarEmoji: profile?.avatarEmoji || prev.avatarEmoji,
-      }));
+        name: existingProfile?.name || fallbackName,
+        role: existingProfile?.role || 'student',
+        avatarEmoji: existingProfile?.avatarEmoji || INITIAL_USER.avatarEmoji,
+      };
+
+      setUser(mergedProfile);
       setIsAuthenticated(true);
       setAuthReady(true);
+
+      // First login / Google redirect: create a real Firestore profile.
+      if (!existingProfile) {
+        await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
+      }
     });
-    return () => { mounted = false; unsubscribe(); };
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
+
+  // Firestore is the source of truth for account/progress data.
+  // localStorage remains only a best-effort UI cache for faster rendering.
+  useEffect(() => {
+    if (!isAuthenticated || !auth.currentUser || !authReady) return;
+
+    const timer = window.setTimeout(() => {
+      syncUserProfileToFirestore(auth.currentUser!.uid, user).catch((error) => {
+        console.warn('Unable to persist user progress to Firestore:', error);
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [user, isAuthenticated, authReady]);
 
   // Sync sound manager with user preference
   useEffect(() => {
