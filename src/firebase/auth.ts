@@ -170,6 +170,16 @@ export const fetchUserProfileFromFirestore = async (
 };
 
 
+export const fetchAllUserProfilesFromFirestore = async (): Promise<UserProfile[]> => {
+  try {
+    const snapshot = await getDocs(collection(db, 'users'));
+    return snapshot.docs.map((item) => item.data() as UserProfile);
+  } catch (err) {
+    console.warn('Firestore user list fetch warning:', err);
+    return [];
+  }
+};
+
 export const fetchStudentProfilesFromFirestore = async (): Promise<UserProfile[]> => {
   try {
     const snapshot = await getDocs(
