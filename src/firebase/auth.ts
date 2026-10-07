@@ -11,7 +11,6 @@ import {
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  onAuthStateChanged,
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
@@ -169,5 +168,3 @@ export const fetchUserProfileFromFirestore = async (
     return null;
   }
 };
-
-export { onAuthStateChanged };
