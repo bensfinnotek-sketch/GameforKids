@@ -1,0 +1,22 @@
+{
+  "short_name": "Math Adventure",
+  "name": "Math Adventure Kids – Học Toán Vui Nhộn",
+  "description": "Nền tảng học Toán tư duy dành cho trẻ em thông qua trò chơi, nhiệm vụ và phần thưởng.",
+  "icons": [
+    {
+      "src": "/src/assets/images/mini_mascot_avatar_1791350392100.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/src/assets/images/mini_mascot_avatar_1791350392100.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#f4f8fd",
+  "theme_color": "#0284c7",
+  "display": "standalone",
+  "orientation": "portrait"
+}

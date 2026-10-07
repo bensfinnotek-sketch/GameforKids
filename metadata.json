@@ -1,0 +1,6 @@
+{
+  "name": "Math Adventure Kids",
+  "description": "Nền tảng học Toán tư duy trực tuyến cho trẻ em - Biến mỗi bài Toán thành một chuyến phiêu lưu!",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,72 @@
+@import "tailwindcss";
+@import "./styles/typography.css";
+
+:root {
+  --primary: #0284c7;       /* Blue */
+  --primary-light: #38bdf8;
+  --secondary: #f59e0b;     /* Yellow/Gold */
+  --accent: #f97316;        /* Orange */
+  --success: #10b981;       /* Green */
+  --magic: #8b5cf6;         /* Purple */
+  --warning: #eab308;       /* Yellow */
+  --danger: #ef4444;        /* Soft red */
+  --background: #f4f8fd;    /* Soft cloud blue cream */
+  --surface: #ffffff;
+  --text: #1e293b;          /* Slate 800 */
+  --muted: #64748b;         /* Slate 500 */
+}
+
+@layer base {
+  body {
+    font-family: var(--font-family-sans);
+    background-color: var(--background);
+    color: var(--text);
+  }
+  
+  h1, h2, h3, .font-heading {
+    font-family: var(--font-family-display);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(251, 191, 36, 0.85);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Custom scrollbar for game/learning sidebars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
