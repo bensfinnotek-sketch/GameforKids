@@ -21,13 +21,24 @@ export const ParentDashboardPage: React.FC = () => {
   const [goalMinutes, setGoalMinutes] = useState(user.dailyStudyGoalMinutes || 20);
   const [savedMsg, setSavedMsg] = useState(false);
 
-  const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 690);
+  const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 0);
   const totalMinutes = Math.round(totalTimeSeconds / 60);
-  const avgAccuracy = Math.round(
-    user.history.length > 0
-      ? user.history.reduce((acc, h) => acc + h.accuracy, 0) / user.history.length
-      : 92
-  );
+  const avgAccuracy = user.history.length > 0
+    ? Math.round(user.history.reduce((acc, h) => acc + h.accuracy, 0) / user.history.length)
+    : null;
+
+  const categoryStats = user.history.reduce<Record<string, { total: number; accuracy: number }>>((acc, item) => {
+    const current = acc[item.category] || { total: 0, accuracy: 0 };
+    current.total += 1;
+    current.accuracy += item.accuracy;
+    acc[item.category] = current;
+    return acc;
+  }, {});
+  const rankedCategories = Object.entries(categoryStats)
+    .map(([category, stats]) => ({ category, accuracy: Math.round(stats.accuracy / stats.total), total: stats.total }))
+    .sort((a, b) => b.accuracy - a.accuracy);
+  const strongestCategory = rankedCategories[0];
+  const focusCategory = rankedCategories.length > 1 ? rankedCategories[rankedCategories.length - 1] : null;
 
   const handleSaveGoal = () => {
     soundManager.playClick();
@@ -83,7 +94,7 @@ export const ParentDashboardPage: React.FC = () => {
           </div>
           <span className="font-heading font-black text-3xl text-slate-800">{totalMinutes} phút</span>
           <p className="text-xs font-semibold text-emerald-600 mt-1 flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> +15 phút so với hôm qua
+            <TrendingUp className="w-3.5 h-3.5" /> Dữ liệu từ lịch sử học tập
           </p>
         </div>
 
@@ -98,7 +109,7 @@ export const ParentDashboardPage: React.FC = () => {
             {user.completedLessons.length} bài
           </span>
           <p className="text-xs font-semibold text-sky-600 mt-1">
-            Đạt 100% mục tiêu tuần
+            Dữ liệu thực tế từ tài khoản
           </p>
         </div>
 
@@ -109,9 +120,9 @@ export const ParentDashboardPage: React.FC = () => {
               <Target className="w-5 h-5" />
             </div>
           </div>
-          <span className="font-heading font-black text-3xl text-slate-800">{avgAccuracy}%</span>
+          <span className="font-heading font-black text-3xl text-slate-800">{avgAccuracy === null ? '—' : `${avgAccuracy}%`}</span>
           <p className="text-xs font-semibold text-amber-600 mt-1">
-            Phản xạ toán học xuất sắc
+            {avgAccuracy === null ? 'Chưa đủ dữ liệu để đánh giá' : 'Tính từ các lần làm bài đã lưu'}
           </p>
         </div>
 
@@ -141,45 +152,40 @@ export const ParentDashboardPage: React.FC = () => {
               <span>Đánh Giá Năng Lực & Khuyến Nghị</span>
             </h2>
 
-            {/* Strengths */}
             <div className="mb-6">
               <div className="flex items-center gap-2 text-emerald-700 font-black text-sm mb-3">
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Điểm mạnh vượt trội của bé:</span>
+                <span>Điểm mạnh từ dữ liệu thật:</span>
               </div>
-              <div className="space-y-2.5">
-                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200">
-                  <h4 className="font-bold text-xs sm:text-sm text-emerald-950">
-                    🟢 Khả năng nhận diện Hình học & Không gian
-                  </h4>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    Bé trả lời đúng 92% các bài nhận biết hình khối 3D, chu vi và màu sắc rất nhanh.
-                  </p>
-                </div>
-                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200">
-                  <h4 className="font-bold text-xs sm:text-sm text-emerald-950">
-                    🟢 Phép cộng tính nhẩm trong phạm vi 20
-                  </h4>
-                  <p className="text-xs text-slate-600 mt-0.5">
-                    Tốc độ xử lý phép cộng và bài toán có lời văn xe bus đạt độ chính xác gần như tuyệt đối.
-                  </p>
-                </div>
+              <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200">
+                {strongestCategory ? (
+                  <>
+                    <h4 className="font-bold text-xs sm:text-sm text-emerald-950">
+                      🟢 {strongestCategory.category}
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      {strongestCategory.accuracy}% chính xác qua {strongestCategory.total} lần hoàn thành.
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-600">Chưa có đủ lịch sử học tập để tạo đánh giá.</p>
+                )}
               </div>
             </div>
 
-            {/* Improvements */}
             <div>
               <div className="flex items-center gap-2 text-amber-700 font-black text-sm mb-3">
                 <AlertCircle className="w-4 h-4" />
-                <span>Chủ đề ba mẹ nên khích lệ thêm:</span>
+                <span>Chủ đề cần luyện thêm:</span>
               </div>
               <div className="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200">
-                <h4 className="font-bold text-xs sm:text-sm text-amber-950">
-                  🟡 Bảng cửu chương & Phép nhân chia 6-8
-                </h4>
-                <p className="text-xs text-slate-600 mt-0.5">
-                  Bé thường mất thêm 30–45 giây khi suy nghĩ bài toán nhân nhảy cóc. Khuyên ba mẹ cùng bé chơi mini game "Đường đua phép tính" mỗi ngày 5 phút để tạo phản xạ vui vẻ.
-                </p>
+                {focusCategory ? (
+                  <p className="text-xs text-slate-600">
+                    {focusCategory.category}: {focusCategory.accuracy}% chính xác qua {focusCategory.total} lần hoàn thành.
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-600">Cần thêm dữ liệu từ các bài đã làm.</p>
+                )}
               </div>
             </div>
           </div>
