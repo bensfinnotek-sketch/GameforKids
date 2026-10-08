@@ -3,6 +3,7 @@ import { Compass, Sparkles, ArrowLeft, Star, Heart, ShieldCheck, CheckCircle2 } 
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from '../common/BrandLogo';
 import { soundManager } from '../../utils/sound';
+import mathIsland from '../../assets/images/mini_math_island_1791350375195.jpg';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -128,7 +129,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             {/* Immersive Island Artwork Card */}
             <div className="relative rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gradient-to-tr from-sky-300 via-amber-200 to-emerald-200 group">
               <img
-                src="/src/assets/images/mini_math_island_1791350375195.jpg"
+                src={mathIsland}
                 alt="Đảo Toán Học Math Adventure Kids với Thám Hiểm Mini"
                 className="w-full h-64 xl:h-72 object-cover object-center group-hover:scale-105 transition-transform duration-700"
               />
