@@ -3,12 +3,25 @@ import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { getLevelInfo } from './lessonRewards';
 
-const GAME_ID = 'game-60s-blitz';
-const QUESTION_COUNT = 10;
-const SESSION_SECONDS = 60;
-const REWARD_XP = 25;
-const REWARD_COIN = 10;
-const REWARD_GEM = 0;
+const GAME_CONFIG = {
+  'game-60s-blitz': {
+    questionCount: 10,
+    sessionSeconds: 60,
+    rewardXP: 25,
+    rewardCoin: 10,
+    rewardGem: 0,
+  },
+  'game-speed-race': {
+    questionCount: 5,
+    sessionSeconds: 45,
+    rewardXP: 30,
+    rewardCoin: 12,
+    rewardGem: 0,
+  },
+} as const;
+
+type GameId = keyof typeof GAME_CONFIG;
+type AgeGroup = '4-5' | '6-8' | '9-11';
 
 type Question = {
   a: number;
@@ -48,7 +61,7 @@ function hashSeed(input: string) {
   return hash >>> 0;
 }
 
-function createQuestion(seed: number, index: number): Question {
+function createQuestion(seed: number, index: number, ageGroup: AgeGroup, gameId: GameId): Question {
   let state = (seed + Math.imul(index + 1, 2654435761)) >>> 0;
   const next = () => {
     state ^= state << 13;
@@ -58,19 +71,47 @@ function createQuestion(seed: number, index: number): Question {
   };
 
   const mode = next();
-  let a = Math.floor(next() * 10) + 1;
-  let b = Math.floor(next() * 10) + 1;
+  let a = 1;
+  let b = 1;
   let op: Question['op'] = '+';
-  let answer = a + b;
+  let answer = 0;
 
-  if (mode > 0.65) {
-    op = 'x';
-    answer = a * b;
-  } else if (mode > 0.3) {
-    op = '-';
-    if (a < b) [a, b] = [b, a];
-    answer = a - b;
+  if (gameId === 'game-speed-race') {
+    if (ageGroup === '4-5') {
+      a = Math.floor(next() * 5) + 1;
+      b = Math.floor(next() * 5) + 1;
+      op = '+';
+    } else if (ageGroup === '6-8') {
+      a = Math.floor(next() * 10) + 1;
+      b = Math.floor(next() * 10) + 1;
+      op = mode > 0.5 ? '-' : '+';
+      if (op === '-' && a < b) [a, b] = [b, a];
+    } else {
+      a = Math.floor(next() * 11) + 2;
+      b = Math.floor(next() * 11) + 2;
+      if (mode > 0.7) {
+        op = 'x';
+      } else if (mode > 0.35) {
+        op = '-';
+        if (a < b) [a, b] = [b, a];
+      } else {
+        op = '+';
+      }
+    }
+  } else {
+    a = Math.floor(next() * 10) + 1;
+    b = Math.floor(next() * 10) + 1;
+    if (mode > 0.65) {
+      op = 'x';
+    } else if (mode > 0.3) {
+      op = '-';
+      if (a < b) [a, b] = [b, a];
+    }
   }
+
+  if (op === 'x') answer = a * b;
+  else if (op === '-') answer = a - b;
+  else answer = a + b;
 
   const offsets = [1, -1, 2, -2, 3];
   const options = new Set<number>([answer]);
@@ -117,32 +158,45 @@ export async function POST(request: Request) {
     const userRef = db.collection('users').doc(decoded.uid);
 
     if (action === 'start') {
-      if (body.gameId !== GAME_ID) return Response.json({ error: 'Invalid mini-game' }, { status: 400 });
+      const gameId = body.gameId as GameId;
+      if (!Object.prototype.hasOwnProperty.call(GAME_CONFIG, gameId)) {
+        return Response.json({ error: 'Invalid mini-game' }, { status: 400 });
+      }
+
+      const userSnap = await userRef.get();
+      if (!userSnap.exists) return Response.json({ error: 'Profile not found' }, { status: 404 });
+      const user = userSnap.data() || {};
+      const selectedAgeGroup: AgeGroup =
+        user.selectedAgeGroup === '4-5' || user.selectedAgeGroup === '9-11'
+          ? user.selectedAgeGroup
+          : '6-8';
+      const config = GAME_CONFIG[gameId];
       const sessionRef = userRef.collection('miniGameSessions').doc();
       const seed = hashSeed(sessionRef.id);
-      const firstQuestion = createQuestion(seed, 0);
+      const firstQuestion = createQuestion(seed, 0, selectedAgeGroup, gameId);
       const now = Date.now();
 
       await sessionRef.set({
-        gameId: GAME_ID,
+        gameId,
         uid: decoded.uid,
         seed,
+        ageGroup: selectedAgeGroup,
         questionIndex: 0,
         correctCount: 0,
         status: 'active',
         startedAtMs: now,
-        expiresAtMs: now + SESSION_SECONDS * 1000,
+        expiresAtMs: now + config.sessionSeconds * 1000,
         createdAt: FieldValue.serverTimestamp(),
       });
 
       return Response.json({
         ok: true,
         sessionId: sessionRef.id,
-        gameId: GAME_ID,
+        gameId,
         question: publicQuestion(firstQuestion),
         questionNumber: 1,
-        totalQuestions: QUESTION_COUNT,
-        secondsRemaining: SESSION_SECONDS,
+        totalQuestions: config.questionCount,
+        secondsRemaining: config.sessionSeconds,
       });
     }
 
@@ -162,7 +216,10 @@ export async function POST(request: Request) {
       if (!sessionSnap.exists) throw new Error('SESSION_NOT_FOUND');
 
       const session = sessionSnap.data() || {};
-      if (session.gameId !== GAME_ID || session.uid !== decoded.uid) throw new Error('SESSION_INVALID');
+      const gameId = session.gameId as GameId;
+      if (!Object.prototype.hasOwnProperty.call(GAME_CONFIG, gameId) || session.uid !== decoded.uid) throw new Error('SESSION_INVALID');
+      const config = GAME_CONFIG[gameId];
+      const ageGroup: AgeGroup = session.ageGroup === '4-5' || session.ageGroup === '9-11' ? session.ageGroup : '6-8';
 
       if (session.status === 'completed') {
         return {
@@ -175,7 +232,7 @@ export async function POST(request: Request) {
       if (session.status !== 'active') throw new Error('SESSION_CLOSED');
 
       const questionIndex = Number(session.questionIndex || 0);
-      if (questionIndex >= QUESTION_COUNT) throw new Error('SESSION_CLOSED');
+      if (questionIndex >= config.questionCount) throw new Error('SESSION_CLOSED');
 
       const now = Date.now();
       if (now > Number(session.expiresAtMs || 0)) {
@@ -184,11 +241,11 @@ export async function POST(request: Request) {
       }
 
       const seed = Number(session.seed);
-      const question = createQuestion(seed, questionIndex);
+      const question = createQuestion(seed, questionIndex, ageGroup, gameId);
       const isCorrect = value === question.answer;
       const nextCorrect = Number(session.correctCount || 0) + (isCorrect ? 1 : 0);
       const nextIndex = questionIndex + 1;
-      const finished = nextIndex >= QUESTION_COUNT;
+      const finished = nextIndex >= config.questionCount;
 
       if (!finished) {
         tx.update(sessionRef, {
@@ -196,14 +253,14 @@ export async function POST(request: Request) {
           correctCount: nextCorrect,
           updatedAt: FieldValue.serverTimestamp(),
         });
-        const nextQuestion = createQuestion(seed, nextIndex);
+        const nextQuestion = createQuestion(seed, nextIndex, ageGroup, gameId);
         return {
           completed: false,
           correct: isCorrect,
           correctCount: nextCorrect,
           question: publicQuestion(nextQuestion),
           questionNumber: nextIndex + 1,
-          totalQuestions: QUESTION_COUNT,
+          totalQuestions: config.questionCount,
           secondsRemaining: Math.max(0, Math.ceil((Number(session.expiresAtMs) - now) / 1000)),
         };
       }
@@ -218,10 +275,10 @@ export async function POST(request: Request) {
         ? { ...user.dailyChallengeProgress }
         : {};
 
-      const newXp = Number(user.xp || 0) + REWARD_XP;
+      const newXp = Number(user.xp || 0) + config.rewardXP;
       const newLevel = Math.max(Number(user.level || 1), getLevelInfo(newXp).level);
-      const newCoin = Number(user.coin || 0) + REWARD_COIN;
-      const newGem = Number(user.gem || 0) + REWARD_GEM;
+      const newCoin = Number(user.coin || 0) + config.rewardCoin;
+      const newGem = Number(user.gem || 0) + config.rewardGem;
       const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
       highScores[GAME_ID] = Math.max(Number(highScores[GAME_ID] || 0), nextCorrect);
       const date = todayInVietnam();
@@ -252,9 +309,9 @@ export async function POST(request: Request) {
         correct: isCorrect,
         correctCount: nextCorrect,
         rewardGranted: true,
-        xpEarned: REWARD_XP,
-        coinEarned: REWARD_COIN,
-        gemEarned: REWARD_GEM,
+        xpEarned: config.rewardXP,
+        coinEarned: config.rewardCoin,
+        gemEarned: config.rewardGem,
         newLevel,
       };
     });
