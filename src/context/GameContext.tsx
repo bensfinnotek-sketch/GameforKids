@@ -82,7 +82,6 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'math_adventure_kids_user_v2';
 const TREASURE_STORAGE_KEY = 'math_adventure_kids_treasure_v2';
-const CHALLENGES_STORAGE_KEY = 'math_adventure_kids_challenges_v2';
 
 const createEmptyUserProfile = (): UserProfile => ({
   dataVersion: 2,
@@ -125,15 +124,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return INITIAL_TREASURE_ITEMS;
   });
 
-  const [dailyChallenges, setDailyChallenges] = useState<DailyChallenge[]>(() => {
-    try {
-      const saved = localStorage.getItem(CHALLENGES_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
-    return INITIAL_DAILY_CHALLENGES;
-  });
+  // Daily challenges are server-authoritative. Start empty until Firebase confirms
+  // the current account's state so stale local cache can never masquerade as progress.
+  const [dailyChallenges, setDailyChallenges] = useState<DailyChallenge[]>([]);
 
   const getInitialTab = (): string => {
     if (typeof window !== 'undefined') {
@@ -288,15 +281,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // ignore
     }
   }, [treasureItems]);
-
-  // Persist daily challenges
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHALLENGES_STORAGE_KEY, JSON.stringify(dailyChallenges));
-    } catch {
-      // ignore
-    }
-  }, [dailyChallenges]);
 
   const triggerConfetti = useCallback(() => {
     try {
