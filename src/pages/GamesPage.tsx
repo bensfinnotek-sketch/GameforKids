@@ -328,7 +328,7 @@ export const GamesPage: React.FC = () => {
               Học Mà Chơi – Đua Điểm Cùng Mini! 🎮
             </h1>
             <p className="text-xs sm:text-sm font-semibold text-amber-100 max-w-xl">
-              Thử thách phản xạ nhanh, trí nhớ và tư duy nhạy bén nhận thêm thật nhiều Vàng và XP!
+              Thử thách phản xạ nhanh, trí nhớ và tư duy nhạy bén chơi để rèn luyện và phá kỷ lục!
             </p>
           </div>
 
