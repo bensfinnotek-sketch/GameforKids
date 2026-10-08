@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -230,7 +230,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           avatarEmoji: isRealProfile && existingProfile?.avatarEmoji ? existingProfile.avatarEmoji : '🤠',
         };
 
-        setUser(mergedProfile);
+        setUser(mergedProfile);\n\n        const trustedChallenges = await fetchDailyChallengesFromServer();\n        if (trustedChallenges) setDailyChallenges(trustedChallenges as DailyChallenge[]);
 
         // First login, or a legacy profile from the old demo dataset: persist a clean
         // zeroed account so every user starts from their own real Firebase state.
@@ -520,55 +520,63 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     });
 
-    setDailyChallenges((prev) =>
-      prev.map((challenge) => {
-        if (challenge.id === 'dc-1') {
-          const nextCount = challenge.currentCount + 1;
-          return { ...challenge, currentCount: nextCount, completed: nextCount >= challenge.targetCount };
-        }
-        if (challenge.id === 'dc-3' && accuracy === 100) {
-          return { ...challenge, completed: true };
-        }
-        return challenge;
-      })
-    );
+    const trustedChallenges = await fetchDailyChallengesFromServer();
+    if (trustedChallenges) {
+      setDailyChallenges(trustedChallenges as DailyChallenge[]);
+    }
 
     triggerConfetti();
   }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
-  const claimDailyChallenge = useCallback((challengeId: string) => {
+  const claimDailyChallenge = useCallback(async (challengeId: string) => {
     const challenge = dailyChallenges.find((c) => c.id === challengeId);
-    if (!challenge || !challenge.completed || challenge.claimed) return;
+    if (!challenge || !challenge.completed || challenge.claimed || !auth.currentUser) return;
+
+    const reward = await claimDailyChallengeOnServer(challengeId);
+    if (!reward?.ok || reward.notCompleted) {
+      showReward({
+        id: 'claim-error-' + Date.now(),
+        title: 'Chưa thể nhận thưởng',
+        message: 'Máy chủ chưa xác nhận đủ điều kiện. Bé chưa được cộng thưởng; hãy thử lại sau nhé.',
+        icon: '⚠️',
+      });
+      const refreshed = await fetchDailyChallengesFromServer();
+      if (refreshed) setDailyChallenges(refreshed as DailyChallenge[]);
+      return;
+    }
+
+    const refreshedChallenges = reward.challenges || await fetchDailyChallengesFromServer();
+    if (refreshedChallenges) {
+      setDailyChallenges(refreshedChallenges as DailyChallenge[]);
+    }
+
+    const latestProfile = await fetchUserProfileFromFirestore(auth.currentUser.uid);
+    if (latestProfile) {
+      setUser((prev) => ({ ...prev, ...latestProfile, id: auth.currentUser!.uid }));
+    }
+
+    if (reward.duplicate) {
+      showReward({
+        id: 'claim-duplicate-' + Date.now(),
+        title: 'Phần thưởng đã được nhận',
+        message: 'Thử thách này đã được ghi nhận trước đó. Bé không nhận thưởng lần thứ hai.',
+        icon: 'ℹ️',
+      });
+      return;
+    }
 
     soundManager.playCorrect();
     triggerConfetti();
-
-    setDailyChallenges((prev) =>
-      prev.map((c) => (c.id === challengeId ? { ...c, claimed: true } : c))
-    );
-
-    setUser((prev) => {
-      const newXp = prev.xp + challenge.rewardXP;
-      const newLevel = checkLevelUp(prev.xp, newXp, prev.level);
-      return {
-        ...prev,
-        xp: newXp,
-        level: newLevel,
-        gem: prev.gem + challenge.rewardGem,
-        coin: prev.coin + (challenge.rewardCoin || 20),
-      };
-    });
-
     showReward({
       id: 'claim-' + Date.now(),
       title: '🎁 Đã nhận thưởng Thử thách!',
-      message: `+${challenge.rewardXP} XP • +${challenge.rewardGem} Ngọc`,
-      xp: challenge.rewardXP,
-      gem: challenge.rewardGem,
+      message: `+${reward.xpEarned || 0} XP • +${reward.gemEarned || 0} Ngọc • +${reward.coinEarned || 0} Vàng`,
+      xp: reward.xpEarned,
+      gem: reward.gemEarned,
+      coin: reward.coinEarned,
       icon: '💎',
     });
-  }, [dailyChallenges, checkLevelUp, showReward, triggerConfetti]);
-
+  }, [dailyChallenges, showReward, triggerConfetti]);
   const purchaseItem = useCallback((item: TreasureItem) => {
     if (user.inventory.includes(item.id)) {
       return { success: false, message: 'Bạn đã sở hữu vật phẩm này rồi!' };
