@@ -45,6 +45,9 @@ export const mapAuthError = (error: unknown): string => {
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
       return 'Email hoặc mật khẩu chưa chính xác. Vui lòng kiểm tra lại nhé!';
+    case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+    case 'auth/invalid-api-key':
+      return 'Cấu hình Firebase trên bản Production chưa hợp lệ. Vui lòng kiểm tra VITE_FIREBASE_API_KEY trong Vercel rồi triển khai lại.';
     case 'auth/user-not-found':
       return 'Tài khoản chưa tồn tại. Bé hoặc Ba Mẹ hãy đăng ký tài khoản mới nhé!';
     case 'auth/email-already-in-use':
