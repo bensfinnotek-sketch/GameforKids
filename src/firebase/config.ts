@@ -4,17 +4,25 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 const env = import.meta.env;
 
-// Firebase Web config is client-side configuration (not a service-account secret).
-// Keep environment variables as the primary source, but use the project's public
-// web config as a production-safe fallback so a missing Vercel build variable
-// cannot crash the entire React app with auth/invalid-api-key.
+const cleanEnvValue = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  return value.trim().replace(/^["']|["']$/g, '');
+};
+
+const cleanApiKey = (value: unknown): string => {
+  const cleaned = cleanEnvValue(value);
+  // Be tolerant of accidental copy/paste punctuation such as a trailing comma,
+  // but never invent or fall back to a different project's credential.
+  return cleaned.replace(/[,;]\s*$/, '').trim();
+};
+
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'math-adventure-kids-web.firebaseapp.com',
-  projectId: env.VITE_FIREBASE_PROJECT_ID || 'math-adventure-kids-web',
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'math-adventure-kids-web.firebasestorage.app',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1084759286468',
-  appId: env.VITE_FIREBASE_APP_ID || '1:1084759286468:web:a12d74225194a548efdf91',
+  apiKey: cleanApiKey(env.VITE_FIREBASE_API_KEY),
+  authDomain: cleanEnvValue(env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: cleanEnvValue(env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: cleanEnvValue(env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: cleanEnvValue(env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: cleanEnvValue(env.VITE_FIREBASE_APP_ID),
 };
 
 const requiredValues = Object.values(firebaseConfig);
@@ -27,15 +35,24 @@ const hasPlaceholderValues = [
 
 const firebaseConfigured = requiredValues.every(Boolean)
   && !hasPlaceholderValues
-  && !firebaseConfig.apiKey.includes('Demo')
-  && firebaseConfig.authDomain !== 'missing-config.invalid'
-  && firebaseConfig.projectId !== 'missing-config';
+  && firebaseConfig.apiKey.startsWith('AIza')
+  && firebaseConfig.authDomain.endsWith('.firebaseapp.com')
+  && firebaseConfig.projectId.length > 0;
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+const initializationConfig = firebaseConfigured
+  ? firebaseConfig
+  : {
+      // Safe placeholders keep the React app renderable when Vercel env vars
+      // are missing. Authentication remains disabled until real client config exists.
+      apiKey: 'MISSING_FIREBASE_WEB_API_KEY',
+      authDomain: 'missing-config.invalid',
+      projectId: 'missing-config',
+      storageBucket: 'missing-config.invalid',
+      messagingSenderId: 'missing-config',
+      appId: 'missing-config',
+    };
 
-const initializeFirebase = (config: typeof firebaseConfig) => {
+const initializeFirebase = (config: typeof initializationConfig) => {
   const firebaseApp = getApps().length ? getApp() : initializeApp(config);
   return {
     app: firebaseApp,
@@ -44,33 +61,6 @@ const initializeFirebase = (config: typeof firebaseConfig) => {
   };
 };
 
-if (firebaseConfigured) {
-  try {
-    ({ app, auth, db } = initializeFirebase(firebaseConfig));
-  } catch (error) {
-    // A stale/broken Vercel client env must not prevent React from rendering.
-    // Fall back to the known public Firebase Web config used by this project.
-    console.warn('Firebase environment configuration failed; using public project config.', error);
-    ({ app, auth, db } = initializeFirebase({
-      apiKey: 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
-      authDomain: 'math-adventure-kids-web.firebaseapp.com',
-      projectId: 'math-adventure-kids-web',
-      storageBucket: 'math-adventure-kids-web.firebasestorage.app',
-      messagingSenderId: '1084759286468',
-      appId: '1:1084759286468:web:a12d74225194a548efdf91',
-    }));
-  }
-} else {
-  // Use the known public Web config rather than crashing the application during
-  // module evaluation. Firebase Web config is not a secret.
-  ({ app, auth, db } = initializeFirebase({
-    apiKey: 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
-    authDomain: 'math-adventure-kids-web.firebaseapp.com',
-    projectId: 'math-adventure-kids-web',
-    storageBucket: 'math-adventure-kids-web.firebasestorage.app',
-    messagingSenderId: '1084759286468',
-    appId: '1:1084759286468:web:a12d74225194a548efdf91',
-  }));
-}
+const { app, auth, db } = initializeFirebase(initializationConfig);
 
 export { app, auth, db, firebaseConfigured };
