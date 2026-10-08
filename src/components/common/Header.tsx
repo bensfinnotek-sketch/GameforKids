@@ -20,7 +20,7 @@ import { getLevelInfo } from '../../data/mockData';
 import { soundManager } from '../../utils/sound';
 
 export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => {
-  const { user, activeTab, setActiveTab, toggleSound, markAllNotificationsRead, logout } = useGame();
+  const { user, activeTab, setActiveTab, toggleSound, markAllNotificationsRead, logout, isAuthenticated } = useGame();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -212,17 +212,8 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
               )}
             </button>
 
-            {/* Login Link button for quick access to /login */}
-            <button
-              onClick={() => handleNav('login')}
-              className="btn-touch-target hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-700 text-caption font-extrabold border border-sky-200 transition cursor-pointer"
-              title="Đăng nhập tài khoản Math Adventure Kids"
-            >
-              <span>Đăng nhập</span>
-            </button>
-
-            {/* Secure Logout */}
-            <button
+            {/* Secure Logout — only shown after Firebase confirms the session */}
+            {isAuthenticated && <button
               onClick={async () => {
                 soundManager.playClick();
                 await logout();
@@ -232,7 +223,7 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
             >
               <LogOut className="w-4 h-4" />
               <span>Đăng xuất</span>
-            </button>
+            </button>}
 
             {/* Avatar & User Mini Pill */}
             <button
