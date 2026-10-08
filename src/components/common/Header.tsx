@@ -54,33 +54,15 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
           {/* Left: Brand Logo (visible on mobile / when sidebar is hidden) */}
           <div 
             onClick={() => handleNav('home')}
-            className="cursor-pointer"
+            className="cursor-pointer xl:invisible"
           >
             <BrandLogo size="md" showText={true} />
           </div>
 
-          {/* Desktop Nav Items (visible on non-sidebar views or xl screens) */}
-          <nav className="hidden xl:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/60 shadow-inner">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full font-black text-xs transition-all duration-200 ${
-                    isActive
-                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25 scale-[1.03]'
-                      : 'text-slate-600 hover:text-sky-600 hover:bg-white/80'
-                  }`}
-                >
-                  <span>{item.emoji}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+          {/* Desktop category navigation lives in the persistent sidebar. */}
 
-          {/* Right Header Stats & Profile */}
+          {/* The sidebar is the single desktop navigation surface; this header only keeps account/status controls. */}
+          {/* Right Header Stats & Profile */
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Quick Currency Counters */}
