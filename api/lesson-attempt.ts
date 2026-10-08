@@ -41,8 +41,8 @@ export async function POST(request:Request){
       const nextCompleted=completed.includes(lessonId)?completed:[...completed,lessonId];
       const nextHistory=[...history,{id:attemptId,lessonId,lessonTitle:lesson.title,category:lesson.category,completedAt:new Date().toISOString(),score,totalQuestions,xpEarned,accuracy,starsEarned:stars,timeSpentSeconds}];
       tx.set(attemptRef,{uid:decoded.uid,lessonId,score,totalQuestions,timeSpentSeconds,accuracy,starsEarned:stars,xpEarned,coinEarned,gemEarned,submittedAt:FieldValue.serverTimestamp()});
-      tx.update(userRef,{xp:newXp,level:newLevel,coin:Number(user.coin||0)+coinEarned,gem:Number(user.gem||0)+gemEarned,streak:nextStreak,lastActiveDate:today,completedLessons:nextCompleted,lessonStars:{...lessonStars,[lessonId]:Math.max(Number(lessonStars[lessonId]||0),stars)},history:nextHistory,updatedAt:FieldValue.serverTimestamp()});
-      return {duplicate:false,xpEarned,coinEarned,gemEarned,stars,accuracy,newLevel};
+      tx.update(userRef,{xp:newXp,level:newLevel,coin:Number(user.coin||0)+coinEarned,gem:Number(user.gem||0)+gemEarned,streak:nextStreak,lastActiveDate:today,completedLessons:nextCompleted,lessonStars:{...lessonStars,[lessonId]:Math.max(Number(lessonStars[lessonId]||0),stars)},history:nextHistory,dailyChallengeDate:today,dailyChallengeProgress,dailyChallengeClaims,updatedAt:FieldValue.serverTimestamp()});
+      return {duplicate:false,xpEarned,coinEarned,gemEarned,stars,accuracy,newLevel,streak:nextStreak};
     });
     return Response.json({ok:true,...result});
   }catch(error){
