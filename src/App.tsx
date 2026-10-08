@@ -82,6 +82,21 @@ const AppContent: React.FC = () => {
   const requiresAuth = !isAuthRoute && (protectedRouteRole !== null || activeTab === 'child/home' || activeTab === 'home' || activeTab.startsWith('world/') || activeTab.startsWith('lesson/'));
 
   useEffect(() => {
+    if (!authReady || !isAuthenticated || !isAuthRoute) return;
+
+    const targetRole = user.role || 'student';
+    navigateTo(
+      targetRole === 'admin'
+        ? 'admin'
+        : targetRole === 'teacher'
+          ? 'teacher'
+          : targetRole === 'parent'
+            ? 'parent'
+            : 'child/home'
+    );
+  }, [authReady, isAuthenticated, isAuthRoute, user.role, navigateTo]);
+
+  useEffect(() => {
     if (!authReady || !requiresAuth) return;
     if (!isAuthenticated) {
       navigateTo('login');
