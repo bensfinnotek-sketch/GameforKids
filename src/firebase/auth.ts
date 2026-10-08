@@ -174,7 +174,7 @@ export interface TrustedLessonRewardResult {
   gemEarned?: number;
   stars?: number;
   accuracy?: number;
-  newLevel?: number;
+  newLevel?: number;\n  streak?: number;
 }
 
 export const submitLessonAttemptToFirestore = async (
