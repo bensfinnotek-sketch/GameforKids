@@ -16,7 +16,6 @@ type ChallengeDefinition = {
 
 const CHALLENGES: ChallengeDefinition[] = [
   { id: 'dc-1', title: 'Hoàn thành 3 bài học', description: 'Hoàn thành 3 lượt học được máy chủ ghi nhận trong ngày.', targetCount: 3, rewardXP: 60, rewardGem: 10, rewardCoin: 30, icon: '📚' },
-  { id: 'dc-2', title: 'Chơi 1 mini game', description: 'Mini game sẽ được ghi nhận khi hệ thống lưu điểm máy chủ.', targetCount: 1, rewardXP: 40, rewardGem: 5, rewardCoin: 20, icon: '🎮' },
   { id: 'dc-3', title: 'Đạt độ chính xác 100%', description: 'Đạt 100% trong ít nhất 1 bài quiz được máy chủ xác nhận.', targetCount: 1, rewardXP: 50, rewardGem: 8, rewardCoin: 25, icon: '🎯' },
   { id: 'dc-4', title: 'Trả lời đúng 10 câu hỏi', description: 'Tích lũy 10 câu trả lời đúng từ các bài học được ghi nhận hôm nay.', targetCount: 10, rewardXP: 70, rewardGem: 12, rewardCoin: 35, icon: '✨' },
   { id: 'dc-5', title: 'Học liên tục 15 phút', description: 'Tích lũy ít nhất 15 phút thời gian học được máy chủ ghi nhận.', targetCount: 15, rewardXP: 80, rewardGem: 15, rewardCoin: 40, icon: '⏱️' },
