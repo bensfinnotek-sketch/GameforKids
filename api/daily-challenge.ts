@@ -1,6 +1,7 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { getLevelInfo } from './lessonRewards';
 
 type ChallengeDefinition = {
   id: string;
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
 
       claims[challenge.id] = true;
       const newXp = Number(user.xp || 0) + challenge.rewardXP;
-      const newLevel = Math.max(Number(user.level || 1), newXp >= 0 ? Math.max(1, Math.floor(newXp / 100) + 1) : 1);
+      const newLevel = Math.max(Number(user.level || 1), getLevelInfo(newXp).level);
 
       tx.update(userRef, {
         xp: newXp,
