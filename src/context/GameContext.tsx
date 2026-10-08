@@ -232,7 +232,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setUser(mergedProfile);
 
-        const trustedChallenges = await fetchDailyChallengesFromServer();\n        if (trustedChallenges) setDailyChallenges(trustedChallenges as DailyChallenge[]);
+        const trustedChallenges = await fetchDailyChallengesFromServer();
+        if (trustedChallenges) setDailyChallenges(trustedChallenges as DailyChallenge[]);
 
         // First login, or a legacy profile from the old demo dataset: persist a clean
         // zeroed account so every user starts from their own real Firebase state.
