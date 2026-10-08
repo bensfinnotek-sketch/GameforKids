@@ -20,7 +20,7 @@ import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
 
 export const GamesPage: React.FC = () => {
-  const { user, addXP, addCoins, triggerConfetti } = useGame();
+  const { user, triggerConfetti } = useGame();
   const [selectedGame, setSelectedGame] = useState<MiniGame | null>(null);
 
   // GAME 1: Bắt số
@@ -87,15 +87,13 @@ export const GamesPage: React.FC = () => {
           setBubbleGameOver(true);
           soundManager.playLevelUp();
           triggerConfetti();
-          addXP(40, 'Hoàn thành mini game Bắt số!');
-          addCoins(25);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [bubbleActive, bubbleTimer, addXP, addCoins, triggerConfetti]);
+  }, [bubbleActive, bubbleTimer, triggerConfetti]);
 
   const handleBubbleClick = (item: { id: number; value: number }) => {
     const isCorrect = item.value % 2 === 0; // Even number target
@@ -139,8 +137,6 @@ export const GamesPage: React.FC = () => {
         setRaceActive(false);
         soundManager.playLevelUp();
         triggerConfetti();
-        addXP(55, 'Về đích đầu tiên trong Đường đua phép tính!');
-        addCoins(35);
       } else {
         setCarPosition(nextPos);
         generateRaceQ();
@@ -158,8 +154,6 @@ export const GamesPage: React.FC = () => {
       triggerConfetti();
       setSafeUnlocked(true);
       setSafeError(false);
-      addXP(60, 'Mở khóa Rương Kho Báu!');
-      addCoins(40);
     } else {
       soundManager.playWrong();
       setSafeError(true);
@@ -206,8 +200,6 @@ export const GamesPage: React.FC = () => {
             if (next === 3) {
               soundManager.playLevelUp();
               triggerConfetti();
-              addXP(45, 'Hoàn thành Ghép đôi phép tính!');
-              addCoins(30);
             }
             return next;
           });
@@ -267,15 +259,13 @@ export const GamesPage: React.FC = () => {
           setBlitzGameOver(true);
           soundManager.playLevelUp();
           triggerConfetti();
-          addXP(70, 'Chiến thắng Thử thách 60 giây!');
-          addCoins(50);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [blitzActive, blitzTimer, addXP, addCoins, triggerConfetti]);
+  }, [blitzActive, blitzTimer, triggerConfetti]);
 
   const handleBlitzAnswer = (val: number) => {
     if (val === blitzQuestion.answer) {
@@ -314,8 +304,6 @@ export const GamesPage: React.FC = () => {
           setShapeFinished(true);
           soundManager.playLevelUp();
           triggerConfetti();
-          addXP(40, 'Hoàn thành Thợ săn hình học!');
-          addCoins(25);
         }
         return next;
       });
@@ -431,7 +419,7 @@ export const GamesPage: React.FC = () => {
                     Tổng điểm đạt được: <span className="text-amber-500 font-black">{bubbleScore} điểm</span>
                   </p>
                   <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    +40 XP Thám Hiểm • +25 Tiền Vàng đã được cộng vào tài khoản!
+                    Điểm mini game chỉ dùng để hiển thị trong lượt chơi này. Chưa cộng XP/Vàng vào tài khoản.
                   </p>
                   <button
                     onClick={startBubbleGame}
@@ -503,7 +491,7 @@ export const GamesPage: React.FC = () => {
                     VỀ ĐÍCH ĐẦU TIÊN!
                   </h3>
                   <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    +55 XP Thám Hiểm • +35 Tiền Vàng!
+                    Lượt chơi đã hoàn tất. XP/Vàng chưa được cộng vì mini game chưa có xác thực máy chủ.
                   </p>
                   <button
                     onClick={startRaceGame}
@@ -578,7 +566,7 @@ export const GamesPage: React.FC = () => {
                     Mật khẩu chính xác là: 7 - 8 - 5
                   </p>
                   <p className="text-xs font-black text-emerald-700 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
-                    +60 XP • +40 Tiền Vàng đã được trao cho bạn!
+                    Rương đã mở! Phần thưởng tài khoản sẽ chỉ được trao sau khi mini game có xác thực máy chủ.
                   </p>
                   <button
                     onClick={() => {
@@ -636,7 +624,7 @@ export const GamesPage: React.FC = () => {
                     BÉ ĐÃ GHÉP ĐÚNG TOÀN BỘ CÁC CẶP!
                   </h3>
                   <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    +45 XP • +30 Tiền Vàng!
+                    Hoàn thành lượt chơi! Phần thưởng tài khoản chưa được cộng.
                   </p>
                   <button
                     onClick={startMatchGame}
@@ -711,7 +699,7 @@ export const GamesPage: React.FC = () => {
                     Bạn giải đúng được: <span className="text-amber-500 font-black">{blitzScore} câu</span>
                   </p>
                   <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    +70 XP Thám Hiểm • +50 Tiền Vàng đã được cộng!
+                    Lượt chơi đã hoàn tất. Phần thưởng tài khoản chưa được cộng.
                   </p>
                   <button
                     onClick={startBlitzGame}
@@ -767,7 +755,7 @@ export const GamesPage: React.FC = () => {
                     BÉ ĐÃ SĂN ĐỦ CÁC HÌNH TAM GIÁC!
                   </h3>
                   <p className="text-xs font-black text-emerald-700 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
-                    +40 XP • +25 Tiền Vàng!
+                    Hoàn thành lượt chơi! Phần thưởng tài khoản chưa được cộng.
                   </p>
                   <button
                     onClick={startShapeGame}
@@ -813,13 +801,8 @@ export const GamesPage: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-slate-100 space-y-3">
-                <div className="flex items-center justify-between text-xs font-black">
-                  <span className="text-amber-600 flex items-center gap-1">
-                    ⭐ +{game.xpReward} XP
-                  </span>
-                  <span className="text-yellow-600 flex items-center gap-1">
-                    🪙 +{game.coinReward} Vàng
-                  </span>
+                <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] font-extrabold text-slate-500">
+                  🎮 Điểm chơi được tính tại phiên. XP/Vàng chỉ trao khi có xác thực máy chủ.
                 </div>
 
                 <button
