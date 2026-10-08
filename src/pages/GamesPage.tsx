@@ -17,10 +17,11 @@ import {
 import { MINI_GAMES } from '../data/mockData';
 import { MiniGame } from '../types';
 import { useGame } from '../context/GameContext';
+import { answerTrustedMiniGame, startTrustedMiniGame } from '../firebase/auth';
 import { soundManager } from '../utils/sound';
 
 export const GamesPage: React.FC = () => {
-  const { user, triggerConfetti } = useGame();
+  const { user, triggerConfetti, refreshUserProfile } = useGame();
   const [selectedGame, setSelectedGame] = useState<MiniGame | null>(null);
 
   // GAME 1: Bắt số
@@ -49,10 +50,13 @@ export const GamesPage: React.FC = () => {
   // GAME 5: 60 Giây thử thách
   const [blitzTimer, setBlitzTimer] = useState(60);
   const [blitzScore, setBlitzScore] = useState(0);
-  const [blitzQuestion, setBlitzQuestion] = useState<{ a: number; b: number; op: string; answer: number }>({ a: 4, b: 3, op: '+', answer: 7 });
+  const [blitzQuestion, setBlitzQuestion] = useState<{ a: number; b: number; op: string; answer: number }>({ a: 4, b: 3, op: '+', answer: 0 });
   const [blitzOptions, setBlitzOptions] = useState<number[]>([5, 7, 8, 9]);
   const [blitzActive, setBlitzActive] = useState(false);
   const [blitzGameOver, setBlitzGameOver] = useState(false);
+  const [blitzSessionId, setBlitzSessionId] = useState<string | null>(null);
+  const [blitzQuestionNumber, setBlitzQuestionNumber] = useState(1);
+  const [blitzRewardMessage, setBlitzRewardMessage] = useState('');
 
   // GAME 6: Thợ săn hình học
   const [shapeTarget, setShapeTarget] = useState<'triangle' | 'circle' | 'square' | 'star'>('triangle');
@@ -217,37 +221,34 @@ export const GamesPage: React.FC = () => {
   };
 
   // --- GAME 5: 60 Giây thử thách ---
-  const generateBlitzQ = () => {
-    const isMult = Math.random() > 0.6;
-    let a = Math.floor(Math.random() * 10) + 1;
-    let b = Math.floor(Math.random() * 10) + 1;
-    let op = '+';
-    let ans = a + b;
-
-    if (isMult) {
-      op = 'x';
-      ans = a * b;
-    } else if (Math.random() > 0.5) {
-      op = '-';
-      if (a < b) [a, b] = [b, a];
-      ans = a - b;
-    }
-
-    const distractors = [ans + 1, ans - 1, ans + 2].filter((d) => d >= 0);
-    const options = Array.from(new Set([ans, ...distractors])).slice(0, 4);
-    options.sort(() => Math.random() - 0.5);
-
-    setBlitzQuestion({ a, b, op, answer: ans });
-    setBlitzOptions(options);
-  };
-
-  const startBlitzGame = () => {
+  const startBlitzGame = async () => {
     soundManager.playCorrect();
     setBlitzScore(0);
     setBlitzTimer(60);
-    setBlitzActive(true);
+    setBlitzActive(false);
     setBlitzGameOver(false);
-    generateBlitzQ();
+    setBlitzSessionId(null);
+    setBlitzQuestionNumber(1);
+    setBlitzRewardMessage('');
+
+    const session = await startTrustedMiniGame('game-60s-blitz');
+    if (!session?.ok || !session.sessionId || !session.question) {
+      setBlitzGameOver(true);
+      setBlitzRewardMessage('Không thể tạo phiên chơi an toàn. Bé chưa nhận XP/Vàng.');
+      return;
+    }
+
+    setBlitzSessionId(session.sessionId);
+    setBlitzQuestion({
+      a: session.question.a,
+      b: session.question.b,
+      op: session.question.op,
+      answer: 0,
+    });
+    setBlitzOptions(session.question.options);
+    setBlitzQuestionNumber(session.questionNumber || 1);
+    setBlitzTimer(session.secondsRemaining ?? 60);
+    setBlitzActive(true);
   };
 
   useEffect(() => {
@@ -267,13 +268,52 @@ export const GamesPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [blitzActive, blitzTimer, triggerConfetti]);
 
-  const handleBlitzAnswer = (val: number) => {
-    if (val === blitzQuestion.answer) {
+  const handleBlitzAnswer = async (val: number) => {
+    if (!blitzSessionId || !blitzActive) return;
+
+    const result = await answerTrustedMiniGame(blitzSessionId, val);
+    if (!result?.ok) {
+      setBlitzActive(false);
+      setBlitzGameOver(true);
+      setBlitzRewardMessage('Phiên chơi không còn hợp lệ. Bé chưa nhận XP/Vàng.');
+      return;
+    }
+
+    if (result.correct) {
       soundManager.playCorrect();
-      setBlitzScore((s) => s + 1);
-      generateBlitzQ();
     } else {
       soundManager.playWrong();
+    }
+
+    setBlitzScore(result.correctCount || 0);
+
+    if (result.completed) {
+      setBlitzActive(false);
+      setBlitzGameOver(true);
+      setBlitzQuestionNumber(result.totalQuestions || 10);
+
+      if (result.rewardGranted && !result.alreadyCompleted) {
+        setBlitzRewardMessage(`Đã được máy chủ xác nhận: +${result.xpEarned || 0} XP • +${result.coinEarned || 0} Vàng.`);
+        await refreshUserProfile();
+        triggerConfetti();
+      } else if (result.alreadyCompleted) {
+        setBlitzRewardMessage('Lượt chơi này đã được ghi nhận trước đó; không nhận thưởng lần thứ hai.');
+      } else {
+        setBlitzRewardMessage('Lượt chơi đã hoàn tất nhưng chưa đủ điều kiện nhận thưởng.');
+      }
+      return;
+    }
+
+    if (result.question) {
+      setBlitzQuestion({
+        a: result.question.a,
+        b: result.question.b,
+        op: result.question.op,
+        answer: 0,
+      });
+      setBlitzOptions(result.question.options);
+      setBlitzQuestionNumber(result.questionNumber || blitzQuestionNumber + 1);
+      setBlitzTimer(result.secondsRemaining ?? blitzTimer);
     }
   };
 
@@ -659,14 +699,15 @@ export const GamesPage: React.FC = () => {
                 </div>
               ) : blitzActive ? (
                 <div>
-                  <div className="flex items-center justify-between mb-8 bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
+                  <div className="mb-3 text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2">🔐 Phiên chơi được máy chủ cấp câu hỏi và xác thực từng câu. XP/Vàng chỉ cộng sau khi máy chủ xác nhận.</div>
+                <div className="flex items-center justify-between mb-8 bg-yellow-50 p-4 rounded-2xl border border-yellow-200">
                     <div className="flex items-center gap-2 font-black text-slate-700">
                       <Timer className="w-5 h-5 text-amber-600" />
                       <span>Còn lại: {blitzTimer}s</span>
                     </div>
                     <div className="flex items-center gap-1.5 font-black text-amber-600 text-lg">
                       <Flame className="w-5 h-5 fill-rose-500 text-rose-500" />
-                      <span>Đúng: {blitzScore} câu</span>
+                      <span>Đúng: {blitzScore}/{blitzQuestionNumber > 0 ? Math.min(10, blitzQuestionNumber - (blitzActive ? 1 : 0)) : 0} câu</span>
                     </div>
                   </div>
 
@@ -698,8 +739,8 @@ export const GamesPage: React.FC = () => {
                   <p className="text-base font-bold text-slate-700">
                     Bạn giải đúng được: <span className="text-amber-500 font-black">{blitzScore} câu</span>
                   </p>
-                  <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    Lượt chơi đã hoàn tất. Phần thưởng tài khoản chưa được cộng.
+                  <p className="text-xs font-black text-emerald-700 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
+                    {blitzRewardMessage || 'Lượt chơi được máy chủ xác thực; phần thưởng chỉ xuất hiện khi máy chủ xác nhận đủ điều kiện.'}
                   </p>
                   <button
                     onClick={startBlitzGame}
