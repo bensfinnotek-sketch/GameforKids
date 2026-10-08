@@ -11,9 +11,10 @@ const cleanEnvValue = (value: unknown): string => {
 
 const cleanApiKey = (value: unknown): string => {
   const cleaned = cleanEnvValue(value);
-  // Be tolerant of accidental copy/paste punctuation such as a trailing comma,
-  // but never invent or fall back to a different project's credential.
-  return cleaned.replace(/[,;]\s*$/, '').trim();
+  // Vercel env values are sometimes pasted with quotes, commas, or whitespace.
+  // Extract only the Firebase Web API key shape; never invent a different key.
+  const match = cleaned.match(/AIza[0-9A-Za-z_-]+/);
+  return match?.[0] ?? '';
 };
 
 const firebaseConfig = {
