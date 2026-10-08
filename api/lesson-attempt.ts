@@ -26,16 +26,22 @@ export async function POST(request:Request){
     const db=getFirestore(adminApp()), userRef=db.collection('users').doc(decoded.uid), attemptRef=userRef.collection('lessonAttempts').doc(attemptId);
     const result=await db.runTransaction(async tx=>{
       const userSnap=await tx.get(userRef), attemptSnap=await tx.get(attemptRef);
-      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:Number(data.xpEarned||0),coinEarned:Number(data.coinEarned||0),gemEarned:Number(data.gemEarned||0),stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1)};}
+      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:0,coinEarned:0,gemEarned:0,stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1)};}
       if(!userSnap.exists)throw new Error('USER_PROFILE_NOT_FOUND');
       const user=userSnap.data()||{}, accuracy=Math.round(score/totalQuestions*100), stars=accuracy>=95?3:accuracy>=80?2:1;
       const xpEarned=lesson.xpReward+(stars===3?20:stars===2?10:0), coinEarned=lesson.coinReward, gemEarned=lesson.gemReward;
       const newXp=Number(user.xp||0)+xpEarned, newLevel=Math.max(Number(user.level||1),getLevelInfo(newXp).level);
+      const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(new Date());
+      const lastActive=typeof user.lastActiveDate==='string'?user.lastActiveDate:'';
+      const yesterday=new Date(`${today}T00:00:00+07:00`); yesterday.setDate(yesterday.getDate()-1);
+      const yesterdayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(yesterday);
+      const currentStreak=Number(user.streak||0);
+      const nextStreak=lastActive===today?currentStreak:(lastActive===yesterdayKey?currentStreak+1:1);
       const completed=Array.isArray(user.completedLessons)?user.completedLessons:[], lessonStars=user.lessonStars&&typeof user.lessonStars==='object'?user.lessonStars:{}, history=Array.isArray(user.history)?user.history:[];
       const nextCompleted=completed.includes(lessonId)?completed:[...completed,lessonId];
-      const nextHistory=[...history,{id:attemptId,lessonId,lessonTitle:lessonId,category:'basic',completedAt:new Date().toISOString(),score,totalQuestions,xpEarned,accuracy,starsEarned:stars,timeSpentSeconds}];
+      const nextHistory=[...history,{id:attemptId,lessonId,lessonTitle:lesson.title,category:lesson.category,completedAt:new Date().toISOString(),score,totalQuestions,xpEarned,accuracy,starsEarned:stars,timeSpentSeconds}];
       tx.set(attemptRef,{uid:decoded.uid,lessonId,score,totalQuestions,timeSpentSeconds,accuracy,starsEarned:stars,xpEarned,coinEarned,gemEarned,submittedAt:FieldValue.serverTimestamp()});
-      tx.update(userRef,{xp:newXp,level:newLevel,coin:Number(user.coin||0)+coinEarned,gem:Number(user.gem||0)+gemEarned,completedLessons:nextCompleted,lessonStars:{...lessonStars,[lessonId]:Math.max(Number(lessonStars[lessonId]||0),stars)},history:nextHistory,updatedAt:FieldValue.serverTimestamp()});
+      tx.update(userRef,{xp:newXp,level:newLevel,coin:Number(user.coin||0)+coinEarned,gem:Number(user.gem||0)+gemEarned,streak:nextStreak,lastActiveDate:today,completedLessons:nextCompleted,lessonStars:{...lessonStars,[lessonId]:Math.max(Number(lessonStars[lessonId]||0),stars)},history:nextHistory,updatedAt:FieldValue.serverTimestamp()});
       return {duplicate:false,xpEarned,coinEarned,gemEarned,stars,accuracy,newLevel};
     });
     return Response.json({ok:true,...result});
