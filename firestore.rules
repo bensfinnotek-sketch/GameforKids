@@ -35,6 +35,18 @@ service cloud.firestore {
       // moved to a backend later without changing the client data model.
       allow update: if (
           isSelf(userId)
+          && resource.data.dataVersion != 2
+          && request.resource.data.dataVersion == 2
+          && request.resource.data.id == userId
+          && request.resource.data.role in ['student', 'parent']
+          && request.resource.data.xp == 0
+          && request.resource.data.coin == 0
+          && request.resource.data.gem == 0
+          && request.resource.data.level == 1
+          && request.resource.data.completedLessons.size() == 0
+          && request.resource.data.history.size() == 0
+        ) || (
+          isSelf(userId)
           && request.resource.data.id == resource.data.id
           && request.resource.data.role == resource.data.role
           && request.resource.data.dataVersion == 2
