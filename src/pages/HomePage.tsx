@@ -29,10 +29,14 @@ export const HomePage: React.FC = () => {
     setActiveLesson, 
     badges, 
     worlds, 
+    dailyChallenges,
     setActiveCategory 
   } = useGame();
 
   const levelInfo = getLevelInfo(user.xp);
+  const completedLessonCount = user.completedLessons.length;
+  const lessonProgress = lessons.length > 0 ? Math.min(100, Math.round((completedLessonCount / lessons.length) * 100)) : 0;
+  const activeChallenges = dailyChallenges.filter((challenge) => !challenge.isCompleted).slice(0, 3);
 
   const handleContinueLearning = () => {
     soundManager.playCorrect();
@@ -147,25 +151,23 @@ export const HomePage: React.FC = () => {
                 Chinh phục câu đố đếm chú cá và giải phóng rương báu bí mật cùng Mini thám hiểm!
               </p>
 
-              {/* Progress bar 70% */}
+              {/* Progress bar từ tiến độ thật của tài khoản */}
               <div className="space-y-1.5 pt-2 max-w-md">
                 <div className="flex justify-between text-xs font-black text-sky-100">
                   <span>Tiến độ bài học</span>
-                  <span>70% hoàn thành</span>
+                  <span>{completedLessonCount}/{lessons.length} bài • {lessonProgress}%</span>
                 </div>
                 <div className="w-full bg-black/25 rounded-full h-3 p-0.5 shadow-inner">
                   <div
                     className="bg-gradient-to-r from-amber-400 to-yellow-300 h-full rounded-full transition-all duration-500 shadow-sm"
-                    style={{ width: '70%' }}
+                    style={{ width: `${lessonProgress}%` }}
                   ></div>
                 </div>
               </div>
             </div>
 
             <div className="pt-6 flex items-center justify-between">
-              <span className="text-xs font-black text-amber-200">
-                ⭐ Thưởng: +50 XP • +10 Gem
-              </span>
+              <span className="text-xs font-black text-sky-100">📚 Dữ liệu tiến độ được đồng bộ từ tài khoản</span>
               <button
                 onClick={handleContinueLearning}
                 className="px-6 py-3.5 rounded-2xl font-black text-sm text-sky-900 bg-white hover:bg-amber-50 shadow-md hover:scale-105 active:scale-95 transition flex items-center gap-2"
@@ -186,25 +188,24 @@ export const HomePage: React.FC = () => {
                     Nhiệm Vụ Hôm Nay
                   </h3>
                 </div>
-                <span className="text-[11px] font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                  +100 XP • +20 Gem
-                </span>
+                <span className="text-[11px] font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Theo nhiệm vụ máy chủ</span>
               </div>
 
-              {/* Checkboxes List */}
+              {/* Nhiệm vụ lấy từ server; không hiển thị trạng thái giả */}
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-slate-700">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                  <span className="line-through text-slate-400">Hoàn thành 3 bài toán</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
-                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 flex-shrink-0"></div>
-                  <span>Chơi 1 mini game toán học</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
-                  <div className="w-5 h-5 rounded-md border-2 border-slate-300 flex-shrink-0"></div>
-                  <span>Đạt 80% chính xác trong quiz</span>
-                </div>
+                {activeChallenges.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700">
+                    🎉 Bé đã hoàn thành các nhiệm vụ đang có!
+                  </div>
+                ) : activeChallenges.map((challenge) => (
+                  <div key={challenge.id} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
+                    <div className="w-5 h-5 rounded-md border-2 border-slate-300 flex-shrink-0 flex items-center justify-center">
+                      <span className="text-[10px]">{challenge.icon}</span>
+                    </div>
+                    <span className="flex-1">{challenge.title}</span>
+                    <span className="text-[10px] font-black text-slate-400">{challenge.progress}/{challenge.targetCount}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
