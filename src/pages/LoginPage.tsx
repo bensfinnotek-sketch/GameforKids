@@ -91,7 +91,7 @@ export const LoginPage: React.FC = () => {
   return (
     <AuthLayout>
       {/* LOGIN CARD */}
-      <div className="w-full max-w-[460px] bg-white rounded-[28px] p-6 sm:p-9 shadow-xl shadow-sky-950/5 border-2 border-sky-100/90 relative animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-[430px] bg-white rounded-[30px] p-6 sm:p-8 shadow-2xl shadow-slate-950/10 border border-white/90 relative animate-in fade-in zoom-in-95 duration-300">
         
         {/* Mascot Avatar at top center */}
         <div className="mb-4">
@@ -101,10 +101,10 @@ export const LoginPage: React.FC = () => {
         {/* Headings */}
         <div className="text-center mb-6 space-y-1.5">
           <h2 className="text-h2 font-black text-slate-900 tracking-tight">
-            Chào mừng bé quay trở lại!
+            Chào mừng bé quay trở lại! 🌟
           </h2>
           <p className="text-body-sm text-slate-500 font-medium leading-snug">
-            Đăng nhập để tiếp tục hành trình khám phá toán học cùng Math Adventure Kids
+            Đăng nhập để tiếp tục hành trình khám phá toán học cùng Mini
           </p>
         </div>
 
@@ -195,7 +195,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading || googleLoading || !firebaseConfigured}
-            className="btn-touch-target w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white text-body-sm font-extrabold shadow-md shadow-sky-500/25 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            className="btn-touch-target w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-600 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-body-sm font-extrabold shadow-md shadow-violet-500/25 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <>
