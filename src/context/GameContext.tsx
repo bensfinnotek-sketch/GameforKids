@@ -439,6 +439,22 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
+    if (reward.duplicate) {
+      const latestProfile = auth.currentUser
+        ? await fetchUserProfileFromFirestore(auth.currentUser.uid)
+        : null;
+      if (latestProfile) {
+        setUser((prev) => ({ ...prev, ...latestProfile, id: auth.currentUser!.uid }));
+      }
+      showReward({
+        id: 'lesson-duplicate-' + Date.now(),
+        title: 'Bài học đã được ghi nhận',
+        message: 'Kết quả này đã được lưu trước đó. Bé không nhận thưởng lần thứ hai.',
+        icon: 'ℹ️',
+      });
+      return;
+    }
+
     const xpBonus = reward.xpEarned;
     const coinBonus = reward.coinEarned;
     const gemBonus = reward.gemEarned;
