@@ -55,7 +55,6 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
           <div 
             onClick={() => handleNav('home')}
             className="cursor-pointer xl:invisible"
-            aria-hidden="true"
           >
             <BrandLogo size="md" showText={true} />
           </div>
