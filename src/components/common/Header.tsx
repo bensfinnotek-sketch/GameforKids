@@ -61,8 +61,7 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
 
           {/* Desktop category navigation lives in the persistent sidebar. */}
 
-          {/* The sidebar is the single desktop navigation surface; this header only keeps account/status controls. */}
-          {/* Right Header Stats & Profile */
+          {/* Right Header Stats & Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
             
             {/* Quick Currency Counters */}
