@@ -1,6 +1,7 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { getLevelInfo } from './lessonRewards';
 
 const GAME_ID = 'game-60s-blitz';
 const QUESTION_COUNT = 10;
@@ -217,8 +218,11 @@ export async function POST(request: Request) {
         : {};
 
       const newXp = Number(user.xp || 0) + REWARD_XP;
+      const newLevel = Math.max(Number(user.level || 1), getLevelInfo(newXp).level);
       const newCoin = Number(user.coin || 0) + REWARD_COIN;
       const newGem = Number(user.gem || 0) + REWARD_GEM;
+      const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
+      highScores[GAME_ID] = Math.max(Number(highScores[GAME_ID] || 0), nextCorrect);
       const date = todayInVietnam();
       progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
 
@@ -232,11 +236,13 @@ export async function POST(request: Request) {
       });
       tx.update(userRef, {
         xp: newXp,
+        level: newLevel,
         coin: newCoin,
         gem: newGem,
         dailyChallengeDate: date,
         dailyChallengeProgress: progress,
         dailyChallengeClaims: claims,
+        highScores,
         updatedAt: FieldValue.serverTimestamp(),
       });
 
@@ -248,6 +254,7 @@ export async function POST(request: Request) {
         xpEarned: REWARD_XP,
         coinEarned: REWARD_COIN,
         gemEarned: REWARD_GEM,
+        newLevel,
       };
     });
 
