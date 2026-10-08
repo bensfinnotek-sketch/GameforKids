@@ -136,14 +136,24 @@ export const logOutUser = async (): Promise<void> => {
 // Sync Firestore User Profile
 export const syncUserProfileToFirestore = async (
   uid: string,
-  profile: Partial<UserProfile>
+  profile: Partial<UserProfile>,
+  options: { includeRewardFields?: boolean } = {}
 ): Promise<void> => {
   try {
     const userDocRef = doc(db, 'users', uid);
+    const {
+      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history,
+      ...clientOwnedProfile
+    } = profile;
+
+    const payload = options.includeRewardFields
+      ? profile
+      : clientOwnedProfile;
+
     await setDoc(
       userDocRef,
       {
-        ...profile,
+        ...payload,
         updatedAt: serverTimestamp(),
       },
       { merge: true }
