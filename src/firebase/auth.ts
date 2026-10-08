@@ -213,6 +213,68 @@ export const submitLessonAttemptToFirestore = async (
   }
 };
 
+export interface TrustedMiniGameQuestion {
+  a: number;
+  b: number;
+  op: '+' | '-' | 'x';
+  options: number[];
+}
+
+export interface TrustedMiniGameResult {
+  ok: boolean;
+  completed?: boolean;
+  correct?: boolean;
+  alreadyCompleted?: boolean;
+  expired?: boolean;
+  rewardGranted?: boolean;
+  correctCount?: number;
+  question?: TrustedMiniGameQuestion;
+  questionNumber?: number;
+  totalQuestions?: number;
+  secondsRemaining?: number;
+  xpEarned?: number;
+  coinEarned?: number;
+  gemEarned?: number;
+  sessionId?: string;
+}
+
+export const startTrustedMiniGame = async (gameId: string): Promise<TrustedMiniGameResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/mini-game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'start', gameId }),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as TrustedMiniGameResult;
+  } catch (err) {
+    console.warn('Trusted mini-game start warning:', err);
+    return null;
+  }
+};
+
+export const answerTrustedMiniGame = async (
+  sessionId: string,
+  value: number
+): Promise<TrustedMiniGameResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/mini-game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'answer', sessionId, value }),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as TrustedMiniGameResult;
+  } catch (err) {
+    console.warn('Trusted mini-game answer warning:', err);
+    return null;
+  }
+};
+
 export interface TrustedDailyChallenge {
   id: string;
   title: string;
