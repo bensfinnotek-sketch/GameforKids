@@ -258,8 +258,7 @@ export const GamesPage: React.FC = () => {
         if (prev <= 1) {
           setBlitzActive(false);
           setBlitzGameOver(true);
-          soundManager.playLevelUp();
-          triggerConfetti();
+          setBlitzRewardMessage('Hết thời gian. Lượt chơi chưa hoàn tất đủ 10 câu nên chưa nhận XP/Vàng.');
           return 0;
         }
         return prev - 1;
