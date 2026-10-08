@@ -117,6 +117,7 @@ export async function POST(request: Request) {
     const userRef = db.collection('users').doc(decoded.uid);
 
     if (action === 'start') {
+      if (body.gameId !== GAME_ID) return Response.json({ error: 'Invalid mini-game' }, { status: 400 });
       const sessionRef = userRef.collection('miniGameSessions').doc();
       const seed = hashSeed(sessionRef.id);
       const firstQuestion = createQuestion(seed, 0);
