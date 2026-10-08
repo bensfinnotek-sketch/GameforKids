@@ -14,7 +14,7 @@ import {
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, query, where, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import { UserProfile } from '../types';
 
