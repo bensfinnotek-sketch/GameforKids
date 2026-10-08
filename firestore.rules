@@ -53,7 +53,7 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'dataVersion', 'id', 'name', 'role', 'avatarEmoji', 'avatarImage',
             'equippedHat', 'equippedBackpack', 'equippedSkin', 'level', 'xp', 'coin', 'gem',
-            'streak', 'lastActiveDate', 'selectedAgeGroup', 'completedLessons', 'lessonStars',
+            'selectedAgeGroup', 'completedLessons', 'lessonStars',
             'unlockedBadges', 'inventory', 'soundEnabled', 'musicEnabled', 'dailyStudyGoalMinutes',
             'history', 'highScores', 'notifications', 'updatedAt'
           ])
@@ -67,7 +67,7 @@ service cloud.firestore {
           && request.resource.data.completedLessons == resource.data.completedLessons
           && request.resource.data.lessonStars == resource.data.lessonStars
           && request.resource.data.unlockedBadges == resource.data.unlockedBadges
-          && request.resource.data.history == resource.data.history
+          && request.resource.data.history == resource.data.history\n          && request.resource.data.streak == resource.data.streak\n          && request.resource.data.lastActiveDate == resource.data.lastActiveDate
         ) || isAdmin();
 
       allow delete: if isAdmin();
