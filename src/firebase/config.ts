@@ -4,13 +4,17 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 
 const env = import.meta.env;
 
+// Firebase Web config is client-side configuration (not a service-account secret).
+// Keep environment variables as the primary source, but use the project's public
+// web config as a production-safe fallback so a missing Vercel build variable
+// cannot crash the entire React app with auth/invalid-api-key.
 const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY || '',
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: env.VITE_FIREBASE_APP_ID || '',
+  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'math-adventure-kids-web.firebaseapp.com',
+  projectId: env.VITE_FIREBASE_PROJECT_ID || 'math-adventure-kids-web',
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'math-adventure-kids-web.firebasestorage.app',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1084759286468',
+  appId: env.VITE_FIREBASE_APP_ID || '1:1084759286468:web:a12d74225194a548efdf91',
 };
 
 const requiredValues = Object.values(firebaseConfig);
@@ -36,16 +40,11 @@ if (firebaseConfigured) {
   auth = getAuth(app);
   db = getFirestore(app);
 } else {
-  app = getApps().length ? getApp() : initializeApp({
-    apiKey: 'missing-config',
-    authDomain: 'missing-config.invalid',
-    projectId: 'missing-config',
-    storageBucket: 'missing-config.invalid',
-    messagingSenderId: 'missing-config',
-    appId: 'missing-config',
-  });
-  auth = getAuth(app);
-  db = getFirestore(app);
+  // Never initialize Firebase Auth with a fake API key. Firebase validates the
+  // key immediately, which previously caused a blank screen before React could render.
+  throw new Error(
+    'Firebase configuration is incomplete. Check the VITE_FIREBASE_* environment variables.'
+  );
 }
 
 export { app, auth, db, firebaseConfigured };
