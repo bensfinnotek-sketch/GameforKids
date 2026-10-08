@@ -223,10 +223,12 @@ export const ChildHomePage: React.FC = () => {
 
         {/* Scrollable / Responsive Nodes Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {worlds.map((world, idx) => {
+          {worlds.map((world) => {
             const isUnlocked = world.isUnlocked || user.xp >= world.requiredXp;
-            const isCompleted = idx === 0;
-            const isCurrent = idx === 1;
+            const worldLessonIds = world.lessons.map((lesson) => lesson.id);
+            const completedWorldLessons = worldLessonIds.filter((id) => completedIds.includes(id)).length;
+            const isCompleted = worldLessonIds.length > 0 && completedWorldLessons === worldLessonIds.length;
+            const isCurrent = !isCompleted && worldLessonIds.includes(nextLesson.id);
 
             return (
               <div
@@ -273,7 +275,7 @@ export const ChildHomePage: React.FC = () => {
 
                 {/* Progress / Requirement */}
                 <span className="text-[10px] font-bold text-slate-400 mt-1">
-                  {isUnlocked ? (isCompleted ? 'Hoàn thành' : 'Đang học') : `${world.requiredXp} XP`}
+                  {isUnlocked ? (isCompleted ? 'Hoàn thành' : completedWorldLessons > 0 ? `${completedWorldLessons}/${worldLessonIds.length} bài` : 'Chưa bắt đầu') : `${world.requiredXp} XP`}
                 </span>
               </div>
             );
