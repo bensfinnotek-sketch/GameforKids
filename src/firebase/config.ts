@@ -35,16 +35,42 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
+const initializeFirebase = (config: typeof firebaseConfig) => {
+  const firebaseApp = getApps().length ? getApp() : initializeApp(config);
+  return {
+    app: firebaseApp,
+    auth: getAuth(firebaseApp),
+    db: getFirestore(firebaseApp),
+  };
+};
+
 if (firebaseConfigured) {
-  app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
+  try {
+    ({ app, auth, db } = initializeFirebase(firebaseConfig));
+  } catch (error) {
+    // A stale/broken Vercel client env must not prevent React from rendering.
+    // Fall back to the known public Firebase Web config used by this project.
+    console.warn('Firebase environment configuration failed; using public project config.', error);
+    ({ app, auth, db } = initializeFirebase({
+      apiKey: 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
+      authDomain: 'math-adventure-kids-web.firebaseapp.com',
+      projectId: 'math-adventure-kids-web',
+      storageBucket: 'math-adventure-kids-web.firebasestorage.app',
+      messagingSenderId: '1084759286468',
+      appId: '1:1084759286468:web:a12d74225194a548efdf91',
+    }));
+  }
 } else {
-  // Never initialize Firebase Auth with a fake API key. Firebase validates the
-  // key immediately, which previously caused a blank screen before React could render.
-  throw new Error(
-    'Firebase configuration is incomplete. Check the VITE_FIREBASE_* environment variables.'
-  );
+  // Use the known public Web config rather than crashing the application during
+  // module evaluation. Firebase Web config is not a secret.
+  ({ app, auth, db } = initializeFirebase({
+    apiKey: 'AIzaSyAFE7LL3heze8Ca9Bfc8fqStkFnZEc8zpI',
+    authDomain: 'math-adventure-kids-web.firebaseapp.com',
+    projectId: 'math-adventure-kids-web',
+    storageBucket: 'math-adventure-kids-web.firebasestorage.app',
+    messagingSenderId: '1084759286468',
+    appId: '1:1084759286468:web:a12d74225194a548efdf91',
+  }));
 }
 
 export { app, auth, db, firebaseConfigured };
