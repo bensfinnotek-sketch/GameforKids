@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
