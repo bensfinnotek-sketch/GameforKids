@@ -33,9 +33,15 @@ export const GamesPage: React.FC = () => {
 
   // GAME 2: Đường đua phép tính (Speed car math race)
   const [raceActive, setRaceActive] = useState(false);
-  const [carPosition, setCarPosition] = useState(10); // 10% to 90%
-  const [raceQuestion, setRaceQuestion] = useState<{ a: number; b: number; ans: number; options: number[] }>({ a: 6, b: 7, ans: 13, options: [12, 13, 14, 15] });
+  const [carPosition, setCarPosition] = useState(10);
+  const [raceQuestion, setRaceQuestion] = useState<{ a: number; b: number; op: '+' | '-' | 'x'; options: number[] }>({ a: 6, b: 7, op: '+', options: [12, 13, 14, 15] });
   const [raceFinished, setRaceFinished] = useState(false);
+  const [raceSessionId, setRaceSessionId] = useState<string | null>(null);
+  const [raceQuestionNumber, setRaceQuestionNumber] = useState(1);
+  const [raceTotalQuestions, setRaceTotalQuestions] = useState(5);
+  const [raceTimer, setRaceTimer] = useState(45);
+  const [raceRewardMessage, setRaceRewardMessage] = useState('');
+  const [raceSubmitting, setRaceSubmitting] = useState(false);
 
   // GAME 3: Kho báu toán học (Safe code riddle)
   const [safeInputs, setSafeInputs] = useState<string[]>(['', '', '']);
@@ -114,39 +120,105 @@ export const GamesPage: React.FC = () => {
   };
 
   // --- GAME 2: Đường đua phép tính ---
-  const generateRaceQ = () => {
-    const a = Math.floor(Math.random() * 9) + 2;
-    const b = Math.floor(Math.random() * 9) + 2;
-    const ans = a + b;
-    const options = Array.from(new Set([ans, ans + 1, ans - 1, ans + 2])).slice(0, 4);
-    options.sort(() => Math.random() - 0.5);
-    setRaceQuestion({ a, b, ans, options });
-  };
-
-  const startRaceGame = () => {
+  const startRaceGame = async () => {
     soundManager.playCorrect();
     setCarPosition(10);
     setRaceFinished(false);
+    setRaceActive(false);
+    setRaceSessionId(null);
+    setRaceQuestionNumber(1);
+    setRaceTotalQuestions(5);
+    setRaceTimer(45);
+    setRaceRewardMessage('');
+    setRaceSubmitting(false);
+
+    const session = await startTrustedMiniGame('game-speed-race');
+    if (!session?.ok || !session.sessionId || !session.question) {
+      setRaceFinished(true);
+      setRaceRewardMessage('Không thể tạo phiên đua an toàn. Bé chưa nhận XP/Vàng.');
+      return;
+    }
+
+    setRaceSessionId(session.sessionId);
+    setRaceQuestion({
+      a: session.question.a,
+      b: session.question.b,
+      op: session.question.op,
+      options: session.question.options,
+    });
+    setRaceQuestionNumber(session.questionNumber || 1);
+    setRaceTotalQuestions(session.totalQuestions || 5);
+    setRaceTimer(session.secondsRemaining ?? 45);
     setRaceActive(true);
-    generateRaceQ();
   };
 
-  const handleRaceAnswer = (opt: number) => {
-    if (opt === raceQuestion.ans) {
+  useEffect(() => {
+    if (!raceActive || raceTimer <= 0) return;
+    const interval = setInterval(() => {
+      setRaceTimer((prev) => {
+        if (prev <= 1) {
+          setRaceActive(false);
+          setRaceFinished(true);
+          setRaceRewardMessage('Hết thời gian. Lượt đua chưa hoàn tất nên chưa nhận XP/Vàng.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [raceActive, raceTimer]);
+
+  const handleRaceAnswer = async (opt: number) => {
+    if (!raceSessionId || !raceActive || raceSubmitting) return;
+
+    setRaceSubmitting(true);
+    const result = await answerTrustedMiniGame(raceSessionId, opt);
+    setRaceSubmitting(false);
+
+    if (!result?.ok) {
+      setRaceActive(false);
+      setRaceFinished(true);
+      setRaceRewardMessage('Phiên đua không còn hợp lệ. Bé chưa nhận XP/Vàng.');
+      return;
+    }
+
+    if (result.correct) {
       soundManager.playCorrect();
-      const nextPos = carPosition + 25;
-      if (nextPos >= 90) {
-        setCarPosition(100);
-        setRaceFinished(true);
-        setRaceActive(false);
-        soundManager.playLevelUp();
-        triggerConfetti();
-      } else {
-        setCarPosition(nextPos);
-        generateRaceQ();
-      }
     } else {
       soundManager.playWrong();
+    }
+
+    const total = result.totalQuestions || raceTotalQuestions;
+    const correctCount = result.correctCount || 0;
+    setCarPosition(Math.min(100, 10 + (correctCount / total) * 80));
+
+    if (result.completed) {
+      setRaceActive(false);
+      setRaceFinished(true);
+      setRaceQuestionNumber(total);
+
+      if (result.rewardGranted && !result.alreadyCompleted) {
+        setRaceRewardMessage(`Đã được máy chủ xác nhận: +${result.xpEarned || 0} XP • +${result.coinEarned || 0} Vàng.`);
+        await refreshUserProfile();
+        soundManager.playLevelUp();
+        triggerConfetti();
+      } else if (result.alreadyCompleted) {
+        setRaceRewardMessage('Lượt đua này đã được ghi nhận trước đó; không nhận thưởng lần thứ hai.');
+      } else {
+        setRaceRewardMessage('Lượt đua đã hoàn tất nhưng chưa đủ điều kiện nhận thưởng.');
+      }
+      return;
+    }
+
+    if (result.question) {
+      setRaceQuestion({
+        a: result.question.a,
+        b: result.question.b,
+        op: result.question.op,
+        options: result.question.options,
+      });
+      setRaceQuestionNumber(result.questionNumber || raceQuestionNumber + 1);
+      setRaceTimer(result.secondsRemaining ?? raceTimer);
     }
   };
 
@@ -482,6 +554,9 @@ export const GamesPage: React.FC = () => {
               <h2 className="font-heading text-2xl sm:text-3xl font-black text-slate-800 mb-2">
                 Trả Lời Đúng Để Xe Tăng Tốc!
               </h2>
+              <p className="text-xs font-bold text-slate-500 mb-4">
+                🔐 Máy chủ cấp câu hỏi theo độ tuổi của bé và xác thực từng câu. XP/Vàng chỉ cộng khi hoàn thành đủ lượt.
+              </p>
 
               {/* Race Track Canvas Bar */}
               <div className="my-6 relative bg-slate-900 rounded-3xl h-24 p-3 border-4 border-slate-700 flex items-center overflow-hidden">
@@ -508,17 +583,23 @@ export const GamesPage: React.FC = () => {
                 </div>
               ) : raceActive ? (
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-rose-50 rounded-2xl border border-rose-200 px-4 py-3 text-xs font-black text-slate-700">
+                    <span>⏱️ {raceTimer}s</span>
+                    <span>Câu {raceQuestionNumber}/{raceTotalQuestions}</span>
+                    <span>Đúng: {Math.round(((carPosition - 10) / 80) * raceTotalQuestions)}</span>
+                  </div>
                   <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200">
                     <span className="font-heading font-black text-3xl text-rose-600">
-                      {raceQuestion.a} + {raceQuestion.b} = ?
+                      {raceQuestion.a} {raceQuestion.op === 'x' ? '×' : raceQuestion.op} {raceQuestion.b} = ?
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {raceQuestion.options.map((opt, i) => (
                       <button
                         key={i}
+                        disabled={raceSubmitting}
                         onClick={() => handleRaceAnswer(opt)}
-                        className="py-3.5 rounded-2xl border-2 border-slate-200 font-heading font-black text-2xl hover:bg-rose-50 hover:border-rose-400 transition"
+                        className="py-3.5 rounded-2xl border-2 border-slate-200 font-heading font-black text-2xl hover:bg-rose-50 hover:border-rose-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {opt}
                       </button>
@@ -527,12 +608,17 @@ export const GamesPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="py-6 space-y-3">
-                  <span className="text-6xl block">🏆</span>
+                  <span className="text-6xl block">🏁</span>
                   <h3 className="font-heading font-black text-2xl text-emerald-600">
-                    VỀ ĐÍCH ĐẦU TIÊN!
+                    ĐÃ HOÀN TẤT LƯỢT ĐUA!
                   </h3>
-                  <p className="text-xs font-black text-amber-600 bg-amber-50 py-2 rounded-xl border border-amber-200">
-                    Lượt chơi đã hoàn tất. XP/Vàng chưa được cộng vì mini game chưa có xác thực máy chủ.
+                  {raceRewardMessage && (
+                    <p className="text-xs font-black text-emerald-700 bg-emerald-50 py-2 rounded-xl border border-emerald-200">
+                      {raceRewardMessage}
+                    </p>
+                  )}
+                  <p className="text-xs font-bold text-slate-500">
+                    Điểm đúng trong lượt đua được máy chủ xác thực và có thể dùng để cập nhật kỷ lục.
                   </p>
                   <button
                     onClick={startRaceGame}
