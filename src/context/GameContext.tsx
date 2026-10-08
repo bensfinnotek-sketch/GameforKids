@@ -85,6 +85,31 @@ const STORAGE_KEY = 'math_adventure_kids_user_v2';
 const TREASURE_STORAGE_KEY = 'math_adventure_kids_treasure_v2';
 const CHALLENGES_STORAGE_KEY = 'math_adventure_kids_challenges_v2';
 
+const createEmptyUserProfile = (): UserProfile => ({
+  dataVersion: 2,
+  id: '',
+  name: 'Bé Thám Hiểm',
+  role: 'student',
+  avatarEmoji: '🤠',
+  level: 1,
+  xp: 0,
+  coin: 0,
+  gem: 0,
+  streak: 0,
+  lastActiveDate: '',
+  selectedAgeGroup: '6-8',
+  completedLessons: [],
+  lessonStars: {},
+  unlockedBadges: [],
+  inventory: [],
+  soundEnabled: true,
+  musicEnabled: true,
+  dailyStudyGoalMinutes: 20,
+  history: [],
+  highScores: {},
+  notifications: [],
+});
+
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Firebase is the authentication source of truth. Local storage is used only for UI preferences/cache.
   const [lessons] = useState<Lesson[]>(INITIAL_LESSONS);
@@ -129,28 +154,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [user, setUser] = useState<UserProfile>(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached) as Partial<UserProfile>;
-        return {
-          ...INITIAL_USER,
-          ...parsed,
-          completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : INITIAL_USER.completedLessons,
-          lessonStars: parsed.lessonStars && typeof parsed.lessonStars === 'object' ? parsed.lessonStars : INITIAL_USER.lessonStars,
-          unlockedBadges: Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : INITIAL_USER.unlockedBadges,
-          inventory: Array.isArray(parsed.inventory) ? parsed.inventory : INITIAL_USER.inventory,
-          history: Array.isArray(parsed.history) ? parsed.history : INITIAL_USER.history,
-          highScores: parsed.highScores && typeof parsed.highScores === 'object' ? parsed.highScores : INITIAL_USER.highScores,
-          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_USER.notifications,
-        } as UserProfile;
-      }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    return INITIAL_USER;
-  });
+  const [user, setUser] = useState<UserProfile>(() => createEmptyUserProfile());
 
   const navigateTo = useCallback((tabOrRoute: string) => {
     soundManager.playClick();
@@ -204,21 +208,26 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firebaseUser.email?.split('@')[0] ||
         'Bé Thám Hiểm';
 
+      // Never hydrate an account from the old demo profile. Only schema v2 data
+      // persisted for this Firebase UID is treated as real account data.
+      const isRealProfile = existingProfile?.dataVersion === 2;
       const mergedProfile: UserProfile = {
-        ...INITIAL_USER,
-        ...(existingProfile || {}),
+        ...createEmptyUserProfile(),
+        ...(isRealProfile ? existingProfile : {}),
+        dataVersion: 2,
         id: firebaseUser.uid,
-        name: existingProfile?.name || fallbackName,
-        role: existingProfile?.role || 'student',
-        avatarEmoji: existingProfile?.avatarEmoji || INITIAL_USER.avatarEmoji,
+        name: isRealProfile && existingProfile?.name ? existingProfile.name : fallbackName,
+        role: isRealProfile && existingProfile?.role ? existingProfile.role : 'student',
+        avatarEmoji: isRealProfile && existingProfile?.avatarEmoji ? existingProfile.avatarEmoji : '🤠',
       };
 
       setUser(mergedProfile);
       setIsAuthenticated(true);
       setAuthReady(true);
 
-      // First login / Google redirect: create a real Firestore profile.
-      if (!existingProfile) {
+      // First login, or a legacy profile from the old demo dataset: persist a clean
+      // zeroed account so every user starts from their own real Firebase state.
+      if (!isRealProfile) {
         await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
       }
     });
@@ -670,7 +679,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(TREASURE_STORAGE_KEY);
     localStorage.removeItem(CHALLENGES_STORAGE_KEY);
-    setUser(INITIAL_USER);
+    setUser(createEmptyUserProfile());
     setTreasureItems(INITIAL_TREASURE_ITEMS);
     setDailyChallenges(INITIAL_DAILY_CHALLENGES);
   }, []);
