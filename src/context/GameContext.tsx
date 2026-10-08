@@ -191,7 +191,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
-    const unsubscribe = firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = firebaseOnAuthStateChanged(auth, (firebaseUser) => {
       if (!mounted) return;
 
       if (!firebaseUser) {
@@ -200,36 +200,47 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
-      if (!mounted) return;
-
       const fallbackName =
         firebaseUser.displayName ||
         firebaseUser.email?.split('@')[0] ||
         'Bé Thám Hiểm';
 
-      // Never hydrate an account from the old demo profile. Only schema v2 data
-      // persisted for this Firebase UID is treated as real account data.
-      const isRealProfile = existingProfile?.dataVersion === 2;
-      const mergedProfile: UserProfile = {
+      // Unlock the app immediately after Firebase confirms the session. The
+      // Firestore profile is hydrated in the background so a slow network does
+      // not make the whole application feel stuck on the auth gate.
+      setUser({
         ...createEmptyUserProfile(),
-        ...(isRealProfile ? existingProfile : {}),
-        dataVersion: 2,
         id: firebaseUser.uid,
-        name: isRealProfile && existingProfile?.name ? existingProfile.name : fallbackName,
-        role: isRealProfile && existingProfile?.role ? existingProfile.role : 'student',
-        avatarEmoji: isRealProfile && existingProfile?.avatarEmoji ? existingProfile.avatarEmoji : '🤠',
-      };
-
-      setUser(mergedProfile);
+        name: fallbackName,
+      });
       setIsAuthenticated(true);
       setAuthReady(true);
 
-      // First login, or a legacy profile from the old demo dataset: persist a clean
-      // zeroed account so every user starts from their own real Firebase state.
-      if (!isRealProfile) {
-        await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
-      }
+      void (async () => {
+        const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
+        if (!mounted) return;
+
+        const isRealProfile = existingProfile?.dataVersion === 2;
+        const mergedProfile: UserProfile = {
+          ...createEmptyUserProfile(),
+          ...(isRealProfile ? existingProfile : {}),
+          dataVersion: 2,
+          id: firebaseUser.uid,
+          name: isRealProfile && existingProfile?.name ? existingProfile.name : fallbackName,
+          role: isRealProfile && existingProfile?.role ? existingProfile.role : 'student',
+          avatarEmoji: isRealProfile && existingProfile?.avatarEmoji ? existingProfile.avatarEmoji : '🤠',
+        };
+
+        setUser(mergedProfile);
+
+        // First login, or a legacy profile from the old demo dataset: persist a clean
+        // zeroed account so every user starts from their own real Firebase state.
+        if (!isRealProfile) {
+          await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
+        }
+      })().catch((error) => {
+        console.warn('Background profile hydration warning:', error);
+      });
     });
 
     return () => {
