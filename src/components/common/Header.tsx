@@ -11,7 +11,8 @@ import {
   UserCheck, 
   Sparkles,
   Check,
-  CheckCheck
+  CheckCheck,
+  LogOut
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from './BrandLogo';
