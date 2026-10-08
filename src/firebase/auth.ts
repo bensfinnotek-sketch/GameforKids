@@ -212,6 +212,71 @@ export const submitLessonAttemptToFirestore = async (
   }
 };
 
+export interface TrustedDailyChallenge {
+  id: string;
+  title: string;
+  description: string;
+  targetCount: number;
+  currentCount: number;
+  completed: boolean;
+  claimed: boolean;
+  rewardXP: number;
+  rewardGem: number;
+  rewardCoin: number;
+  icon: string;
+}
+
+export interface TrustedDailyChallengeResult {
+  ok: boolean;
+  duplicate?: boolean;
+  notCompleted?: boolean;
+  xpEarned?: number;
+  coinEarned?: number;
+  gemEarned?: number;
+  newLevel?: number;
+  streak?: number;
+  date?: string;
+  challenges?: TrustedDailyChallenge[];
+}
+
+export const fetchDailyChallengesFromServer = async (): Promise<TrustedDailyChallenge[] | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/daily-challenge', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { challenges?: TrustedDailyChallenge[] };
+    return Array.isArray(data.challenges) ? data.challenges : null;
+  } catch (err) {
+    console.warn('Trusted daily challenge fetch warning:', err);
+    return null;
+  }
+};
+
+export const claimDailyChallengeOnServer = async (
+  challengeId: string
+): Promise<TrustedDailyChallengeResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/daily-challenge', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ challengeId }),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as TrustedDailyChallengeResult;
+  } catch (err) {
+    console.warn('Trusted daily challenge claim warning:', err);
+    return null;
+  }
+};
+
 export const fetchUserProfileFromFirestore = async (
   uid: string
 ): Promise<Partial<UserProfile> | null> => {
