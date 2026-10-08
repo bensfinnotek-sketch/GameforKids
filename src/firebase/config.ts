@@ -14,9 +14,18 @@ const firebaseConfig = {
 };
 
 const requiredValues = Object.values(firebaseConfig);
-const firebaseConfigured = requiredValues.every(Boolean) &&
-  !firebaseConfig.apiKey.includes('Demo') &&
-  !firebaseConfig.projectId.includes('math-adventure-kids');
+const hasPlaceholderValues = [
+  'YOUR_FIREBASE_WEB_API_KEY',
+  'YOUR_PROJECT_ID',
+  'YOUR_MESSAGING_SENDER_ID',
+  'YOUR_FIREBASE_APP_ID',
+].some((placeholder) => Object.values(firebaseConfig).some((value) => value.includes(placeholder)));
+
+const firebaseConfigured = requiredValues.every(Boolean)
+  && !hasPlaceholderValues
+  && !firebaseConfig.apiKey.includes('Demo')
+  && firebaseConfig.authDomain !== 'missing-config.invalid'
+  && firebaseConfig.projectId !== 'missing-config';
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -27,8 +36,6 @@ if (firebaseConfigured) {
   auth = getAuth(app);
   db = getFirestore(app);
 } else {
-  // Keep the UI renderable even when Vercel/Firebase environment variables
-  // are missing. Authentication helpers will surface a clear configuration error.
   app = getApps().length ? getApp() : initializeApp({
     apiKey: 'missing-config',
     authDomain: 'missing-config.invalid',
