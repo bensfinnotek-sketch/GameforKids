@@ -76,6 +76,7 @@ interface GameContextType {
   loginWithAuth: (profile: Partial<UserProfile>) => void;
   logout: () => Promise<void>;
   navigateTo: (routeOrTab: string) => void;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -665,6 +666,18 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   }, []);
 
+  const refreshUserProfile = useCallback(async () => {
+    if (!auth.currentUser) return;
+    const latestProfile = await fetchUserProfileFromFirestore(auth.currentUser.uid);
+    if (latestProfile) {
+      setUser((prev) => ({ ...prev, ...latestProfile, id: auth.currentUser!.uid }));
+    }
+    const trustedChallenges = await fetchDailyChallengesFromServer();
+    if (trustedChallenges) {
+      setDailyChallenges(trustedChallenges as DailyChallenge[]);
+    }
+  }, []);
+
   const loginWithAuth = useCallback((profile: Partial<UserProfile>) => {
     setIsAuthenticated(true);
     setUser((prev) => ({
@@ -694,10 +707,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resetProgress = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(TREASURE_STORAGE_KEY);
-    localStorage.removeItem(CHALLENGES_STORAGE_KEY);
     setUser(createEmptyUserProfile());
     setTreasureItems(INITIAL_TREASURE_ITEMS);
-    setDailyChallenges(INITIAL_DAILY_CHALLENGES);
+    setDailyChallenges([]);
   }, []);
 
   return (
@@ -741,6 +753,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         loginWithAuth,
         logout,
         navigateTo,
+        refreshUserProfile,
       }}
     >
       {children}
