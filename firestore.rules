@@ -67,7 +67,7 @@ service cloud.firestore {
           && request.resource.data.completedLessons == resource.data.completedLessons
           && request.resource.data.lessonStars == resource.data.lessonStars
           && request.resource.data.unlockedBadges == resource.data.unlockedBadges
-          && request.resource.data.history == resource.data.history\n          && request.resource.data.streak == resource.data.streak\n          && request.resource.data.lastActiveDate == resource.data.lastActiveDate
+          && request.resource.data.history == resource.data.history
         ) || isAdmin();
 
       allow delete: if isAdmin();
