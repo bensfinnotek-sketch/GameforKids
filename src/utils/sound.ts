@@ -2,9 +2,23 @@
 class SoundPlayer {
   private ctx: AudioContext | null = null;
   private enabled: boolean = true;
+  private userGestureUnlocked = false;
 
   constructor() {
-    // AudioContext will be initialized on first user gesture
+    // Never create AudioContext during page load. Chrome blocks Web Audio
+    // until the user interacts with the page, so unlock it from a real gesture.
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        this.userGestureUnlocked = true;
+        this.initCtx();
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('keydown', unlock);
+        window.removeEventListener('touchstart', unlock);
+      };
+      window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+      window.addEventListener('keydown', unlock, { once: true });
+      window.addEventListener('touchstart', unlock, { once: true, passive: true });
+    }
   }
 
   public setEnabled(enabled: boolean) {
@@ -16,6 +30,8 @@ class SoundPlayer {
   }
 
   private initCtx() {
+    if (!this.userGestureUnlocked) return;
+
     if (!this.ctx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {

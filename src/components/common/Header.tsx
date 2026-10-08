@@ -11,7 +11,8 @@ import {
   UserCheck, 
   Sparkles,
   Check,
-  CheckCheck
+  CheckCheck,
+  LogOut
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from './BrandLogo';
@@ -19,7 +20,7 @@ import { getLevelInfo } from '../../data/mockData';
 import { soundManager } from '../../utils/sound';
 
 export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => {
-  const { user, activeTab, setActiveTab, toggleSound, markAllNotificationsRead } = useGame();
+  const { user, activeTab, setActiveTab, toggleSound, markAllNotificationsRead, logout } = useGame();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -220,6 +221,19 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
               <span>Đăng nhập</span>
             </button>
 
+            {/* Secure Logout */}
+            <button
+              onClick={async () => {
+                soundManager.playClick();
+                await logout();
+              }}
+              className="hidden md:flex btn-touch-target items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-caption font-extrabold border border-rose-200 transition cursor-pointer"
+              title="Đăng xuất an toàn"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Đăng xuất</span>
+            </button>
+
             {/* Avatar & User Mini Pill */}
             <button
               onClick={() => handleNav('profile')}
@@ -295,10 +309,21 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
 
           <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
             <button
-              onClick={() => handleNav('login')}
+              onClick={() => handleNav('profile')}
               className="btn-touch-target w-full text-caption font-bold text-sky-800 bg-sky-100/80 px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-2 border border-sky-200"
             >
-              <span>🔑 Đăng Nhập / Tạo Tài Khoản</span>
+              <span>👤 Hồ sơ & bảo mật tài khoản</span>
+            </button>
+            <button
+              onClick={async () => {
+                setMobileMenuOpen(false);
+                soundManager.playClick();
+                await logout();
+              }}
+              className="btn-touch-target w-full text-caption font-extrabold text-rose-700 bg-rose-50 px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-2 border border-rose-200"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Đăng xuất</span>
             </button>
             <div className="flex items-center justify-between">
               <button

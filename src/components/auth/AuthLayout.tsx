@@ -3,6 +3,7 @@ import { Compass, Sparkles, ArrowLeft, Star, Heart, ShieldCheck, CheckCircle2 } 
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from '../common/BrandLogo';
 import { soundManager } from '../../utils/sound';
+import mathIsland from '../../assets/images/mini_math_island_1791350375195.jpg';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -18,7 +19,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#e0f2fe] via-[#f0f9ff] to-[#fdfbf7] flex flex-col justify-between selection:bg-amber-200 selection:text-amber-900">
+    <div
+      className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#e0f2fe] via-[#f0f9ff] to-[#fdfbf7] flex flex-col justify-between selection:bg-amber-200 selection:text-amber-900"
+      style={{
+        backgroundImage: `linear-gradient(180deg, rgba(224,242,254,.72), rgba(240,249,255,.9) 48%, rgba(253,251,247,.96)), url(${mathIsland})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       
       {/* BACKGROUND FLOATING MATH & ADVENTURE DECORATIONS */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
@@ -128,7 +136,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             {/* Immersive Island Artwork Card */}
             <div className="relative rounded-3xl overflow-hidden border-4 border-white shadow-xl bg-gradient-to-tr from-sky-300 via-amber-200 to-emerald-200 group">
               <img
-                src="/src/assets/images/mini_math_island_1791350375195.jpg"
+                src={mathIsland}
                 alt="Đảo Toán Học Math Adventure Kids với Thám Hiểm Mini"
                 className="w-full h-64 xl:h-72 object-cover object-center group-hover:scale-105 transition-transform duration-700"
               />

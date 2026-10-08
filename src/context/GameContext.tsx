@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -16,7 +16,6 @@ import {
   World
 } from '../types';
 import { 
-  INITIAL_USER, 
   INITIAL_LESSONS, 
   INITIAL_BADGES, 
   INITIAL_TREASURE_ITEMS, 
@@ -85,6 +84,31 @@ const STORAGE_KEY = 'math_adventure_kids_user_v2';
 const TREASURE_STORAGE_KEY = 'math_adventure_kids_treasure_v2';
 const CHALLENGES_STORAGE_KEY = 'math_adventure_kids_challenges_v2';
 
+const createEmptyUserProfile = (): UserProfile => ({
+  dataVersion: 2,
+  id: '',
+  name: 'Bé Thám Hiểm',
+  role: 'student',
+  avatarEmoji: '🤠',
+  level: 1,
+  xp: 0,
+  coin: 0,
+  gem: 0,
+  streak: 0,
+  lastActiveDate: '',
+  selectedAgeGroup: '6-8',
+  completedLessons: [],
+  lessonStars: {},
+  unlockedBadges: [],
+  inventory: [],
+  soundEnabled: true,
+  musicEnabled: true,
+  dailyStudyGoalMinutes: 20,
+  history: [],
+  highScores: {},
+  notifications: [],
+});
+
 export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Firebase is the authentication source of truth. Local storage is used only for UI preferences/cache.
   const [lessons] = useState<Lesson[]>(INITIAL_LESSONS);
@@ -129,28 +153,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [user, setUser] = useState<UserProfile>(() => {
-    try {
-      const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached) as Partial<UserProfile>;
-        return {
-          ...INITIAL_USER,
-          ...parsed,
-          completedLessons: Array.isArray(parsed.completedLessons) ? parsed.completedLessons : INITIAL_USER.completedLessons,
-          lessonStars: parsed.lessonStars && typeof parsed.lessonStars === 'object' ? parsed.lessonStars : INITIAL_USER.lessonStars,
-          unlockedBadges: Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : INITIAL_USER.unlockedBadges,
-          inventory: Array.isArray(parsed.inventory) ? parsed.inventory : INITIAL_USER.inventory,
-          history: Array.isArray(parsed.history) ? parsed.history : INITIAL_USER.history,
-          highScores: parsed.highScores && typeof parsed.highScores === 'object' ? parsed.highScores : INITIAL_USER.highScores,
-          notifications: Array.isArray(parsed.notifications) ? parsed.notifications : INITIAL_USER.notifications,
-        } as UserProfile;
-      }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    return INITIAL_USER;
-  });
+  const [user, setUser] = useState<UserProfile>(() => createEmptyUserProfile());
 
   const navigateTo = useCallback((tabOrRoute: string) => {
     soundManager.playClick();
@@ -187,7 +190,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let mounted = true;
 
-    const unsubscribe = firebaseOnAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = firebaseOnAuthStateChanged(auth, (firebaseUser) => {
       if (!mounted) return;
 
       if (!firebaseUser) {
@@ -196,31 +199,47 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
-      if (!mounted) return;
-
       const fallbackName =
         firebaseUser.displayName ||
         firebaseUser.email?.split('@')[0] ||
         'Bé Thám Hiểm';
 
-      const mergedProfile: UserProfile = {
-        ...INITIAL_USER,
-        ...(existingProfile || {}),
+      // Unlock the app immediately after Firebase confirms the session. The
+      // Firestore profile is hydrated in the background so a slow network does
+      // not make the whole application feel stuck on the auth gate.
+      setUser({
+        ...createEmptyUserProfile(),
         id: firebaseUser.uid,
-        name: existingProfile?.name || fallbackName,
-        role: existingProfile?.role || 'student',
-        avatarEmoji: existingProfile?.avatarEmoji || INITIAL_USER.avatarEmoji,
-      };
-
-      setUser(mergedProfile);
+        name: fallbackName,
+      });
       setIsAuthenticated(true);
       setAuthReady(true);
 
-      // First login / Google redirect: create a real Firestore profile.
-      if (!existingProfile) {
-        await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
-      }
+      void (async () => {
+        const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
+        if (!mounted) return;
+
+        const isRealProfile = existingProfile?.dataVersion === 2;
+        const mergedProfile: UserProfile = {
+          ...createEmptyUserProfile(),
+          ...(isRealProfile ? existingProfile : {}),
+          dataVersion: 2,
+          id: firebaseUser.uid,
+          name: isRealProfile && existingProfile?.name ? existingProfile.name : fallbackName,
+          role: isRealProfile && existingProfile?.role ? existingProfile.role : 'student',
+          avatarEmoji: isRealProfile && existingProfile?.avatarEmoji ? existingProfile.avatarEmoji : '🤠',
+        };
+
+        setUser(mergedProfile);
+
+        // First login, or a legacy profile from the old demo dataset: persist a clean
+        // zeroed account so every user starts from their own real Firebase state.
+        if (!isRealProfile) {
+          await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
+        }
+      })().catch((error) => {
+        console.warn('Background profile hydration warning:', error);
+      });
     });
 
     return () => {
@@ -377,10 +396,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   }, []);
 
-  const completeLesson = useCallback((
-    lessonId: string, 
-    score: number, 
-    totalQuestions: number, 
+  const completeLesson = useCallback(async (
+    lessonId: string,
+    score: number,
+    totalQuestions: number,
     timeSpentSeconds: number
   ) => {
     const lesson = lessons.find((l) => l.id === lessonId);
@@ -394,40 +413,43 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       score < 0 ||
       score > totalQuestions ||
       timeSpentSeconds < 0 ||
-      timeSpentSeconds > 86400
+      timeSpentSeconds > 86400 ||
+      totalQuestions !== lesson.totalQuestions ||
+      !auth.currentUser
     ) {
       return;
     }
 
-    const accuracy = Math.round((score / totalQuestions) * 100);
-    
-    // Star Calculation:
-    // 3 stars: accuracy >= 95%
-    // 2 stars: accuracy >= 80%
-    // 1 star: completed
-    let stars = 1;
-    if (accuracy >= 95) stars = 3;
-    else if (accuracy >= 80) stars = 2;
+    // Rewards are granted only after the trusted backend validates the attempt.
+    // The browser never decides the XP/coin/gem amounts.
+    const reward = await submitLessonAttemptToFirestore(auth.currentUser.uid, {
+      lessonId,
+      score,
+      totalQuestions,
+      timeSpentSeconds,
+    });
 
-    if (auth.currentUser) {
-      void submitLessonAttemptToFirestore(auth.currentUser.uid, {
-        lessonId,
-        score,
-        totalQuestions,
-        timeSpentSeconds,
+    if (!reward?.ok || reward.xpEarned == null || reward.coinEarned == null || reward.gemEarned == null) {
+      showReward({
+        id: 'lesson-error-' + Date.now(),
+        title: 'Chưa ghi nhận được kết quả',
+        message: 'Kết nối máy chủ phần thưởng chưa hoàn tất. Bé chưa bị trừ hay cộng gì cả; hãy thử lại nhé.',
+        icon: '⚠️',
       });
+      return;
     }
 
-    const xpBonus = lesson.xpReward + (stars === 3 ? 20 : stars === 2 ? 10 : 0);
-    const coinBonus = lesson.coinReward;
-    const gemBonus = lesson.gemReward;
+    const xpBonus = reward.xpEarned;
+    const coinBonus = reward.coinEarned;
+    const gemBonus = reward.gemEarned;
+    const stars = reward.stars || 1;
+    const accuracy = reward.accuracy ?? Math.round((score / totalQuestions) * 100);
 
     setUser((prev) => {
-      const alreadyCompleted = prev.completedLessons.includes(lessonId);
-      const newCompleted = alreadyCompleted ? prev.completedLessons : [...prev.completedLessons, lessonId];
-      const newXp = prev.xp + xpBonus;
-      const newLevel = checkLevelUp(prev.xp, newXp, prev.level);
-
+      const newCompleted = prev.completedLessons.includes(lessonId)
+        ? prev.completedLessons
+        : [...prev.completedLessons, lessonId];
+      const newLevel = Math.max(prev.level, reward.newLevel || prev.level);
       const historyItem: StudyHistoryItem = {
         id: 'hist-' + Date.now(),
         lessonId: lesson.id,
@@ -442,7 +464,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         timeSpentSeconds,
       };
 
-      // Check badge unlocks
       const newBadges = [...prev.unlockedBadges];
       if (newCompleted.length >= 1 && !newBadges.includes('badge-starter')) {
         newBadges.push('badge-starter');
@@ -469,7 +490,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return {
         ...prev,
-        xp: newXp,
+        xp: prev.xp + xpBonus,
         level: newLevel,
         coin: prev.coin + coinBonus,
         gem: prev.gem + gemBonus,
@@ -483,29 +504,21 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     });
 
-    // Update daily challenges count
     setDailyChallenges((prev) =>
-      prev.map((c) => {
-        if (c.id === 'dc-1') {
-          const nextCount = c.currentCount + 1;
-          return {
-            ...c,
-            currentCount: nextCount,
-            completed: nextCount >= c.targetCount,
-          };
+      prev.map((challenge) => {
+        if (challenge.id === 'dc-1') {
+          const nextCount = challenge.currentCount + 1;
+          return { ...challenge, currentCount: nextCount, completed: nextCount >= challenge.targetCount };
         }
-        if (c.id === 'dc-3' && accuracy === 100) {
-          return {
-            ...c,
-            completed: true,
-          };
+        if (challenge.id === 'dc-3' && accuracy === 100) {
+          return { ...challenge, completed: true };
         }
-        return c;
+        return challenge;
       })
     );
 
     triggerConfetti();
-  }, [lessons, checkLevelUp, showReward, triggerConfetti, addNotification]);
+  }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
   const claimDailyChallenge = useCallback((challengeId: string) => {
     const challenge = dailyChallenges.find((c) => c.id === challengeId);
@@ -670,7 +683,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(TREASURE_STORAGE_KEY);
     localStorage.removeItem(CHALLENGES_STORAGE_KEY);
-    setUser(INITIAL_USER);
+    setUser(createEmptyUserProfile());
     setTreasureItems(INITIAL_TREASURE_ITEMS);
     setDailyChallenges(INITIAL_DAILY_CHALLENGES);
   }, []);

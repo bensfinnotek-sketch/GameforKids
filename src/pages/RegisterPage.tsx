@@ -44,6 +44,7 @@ export const RegisterPage: React.FC = () => {
         setSuccessMessage('Đăng ký Google thành công! Đang thiết lập hồ sơ...');
 
         const finalProfile = {
+          dataVersion: 2,
           id: user.uid,
           name: name.trim() || user.displayName || user.email?.split('@')[0] || 'Bé Thám Hiểm',
           role,
@@ -91,6 +92,7 @@ export const RegisterPage: React.FC = () => {
       setSuccessMessage('Đăng ký thành công! Đang khởi tạo hành trình phiêu lưu...');
 
       const finalProfile = {
+        dataVersion: 2,
         id: user.uid,
         name: name.trim() || email.split('@')[0],
         role,

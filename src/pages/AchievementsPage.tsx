@@ -12,7 +12,7 @@ import {
   Medal
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { getLevelInfo, LEADERBOARD } from '../data/mockData';
+import { getLevelInfo } from '../data/mockData';
 
 export const AchievementsPage: React.FC = () => {
   const { user, badges } = useGame();
@@ -150,66 +150,41 @@ export const AchievementsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Leaderboard */}
+        {/* Right Column: Real learner activity */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-md">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-xl border border-amber-200">
-                🏆
+              <div className="w-10 h-10 rounded-2xl bg-sky-100 flex items-center justify-center text-xl border border-sky-200">
+                📈
               </div>
               <div>
-                <h3 className="font-heading font-black text-lg text-slate-800 leading-tight">
-                  Bảng Vàng Tuần
-                </h3>
-                <p className="text-xs font-bold text-slate-400">
-                  Top các nhà thám hiểm tuần này
-                </p>
+                <h3 className="font-heading font-black text-lg text-slate-800 leading-tight">Hoạt động thật của bé</h3>
+                <p className="text-xs font-bold text-slate-400">Dữ liệu lấy từ các lượt học đã ghi nhận</p>
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              {LEADERBOARD.map((item) => (
-                <div
-                  key={item.rank}
-                  className={`p-3 rounded-2xl border transition-all flex items-center justify-between ${
-                    item.isUser
-                      ? 'bg-amber-50 border-amber-300 ring-2 ring-amber-200'
-                      : 'bg-slate-50/70 border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center font-heading font-black text-xs ${
-                      item.rank === 1
-                        ? 'bg-amber-400 text-slate-900 shadow-sm'
-                        : item.rank === 2
-                        ? 'bg-slate-300 text-slate-800'
-                        : item.rank === 3
-                        ? 'bg-amber-700 text-white'
-                        : 'text-slate-400 font-bold'
-                    }`}>
-                      {item.rank}
-                    </span>
-                    <span className="text-xl">{item.avatar}</span>
-                    <div>
-                      <h4 className="font-bold text-xs text-slate-800 leading-tight">
-                        {item.name}
-                      </h4>
-                      <span className="text-[10px] text-slate-400">Cấp {item.level}</span>
+            {user.history.length === 0 ? (
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-center">
+                <div className="text-3xl mb-2">🧭</div>
+                <p className="text-sm font-black text-slate-700">Chưa có lượt học nào</p>
+                <p className="text-[11px] font-semibold text-slate-400 mt-1">Hoàn thành bài đầu tiên để bắt đầu xây dựng thành tích thật.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {user.history.slice(0, 5).map((item) => (
+                  <div key={item.id} className="p-3 rounded-2xl border border-slate-200 bg-slate-50/70">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-black text-slate-800 truncate">{item.lessonTitle}</span>
+                      <span className="text-[10px] font-black text-emerald-600 whitespace-nowrap">{item.accuracy}%</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[10px] font-bold text-slate-400">
+                      <span>{item.completedAt}</span>
+                      <span>+{item.xpEarned} XP</span>
                     </div>
                   </div>
-
-                  <span className="font-heading font-black text-xs text-amber-600">
-                    {item.xp} XP
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span className="text-xs font-bold text-slate-400">
-                Bảng xếp hạng cập nhật mỗi Chủ Nhật hàng tuần ✨
-              </span>
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

@@ -14,7 +14,7 @@ import {
   User as FirebaseUser,
   AuthError
 } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, query, where, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './config';
 import { UserProfile } from '../types';
 
@@ -45,6 +45,9 @@ export const mapAuthError = (error: unknown): string => {
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
       return 'Email hoặc mật khẩu chưa chính xác. Vui lòng kiểm tra lại nhé!';
+    case 'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+    case 'auth/invalid-api-key':
+      return 'Cấu hình Firebase trên bản Production chưa hợp lệ. Vui lòng kiểm tra VITE_FIREBASE_API_KEY trong Vercel rồi triển khai lại.';
     case 'auth/user-not-found':
       return 'Tài khoản chưa tồn tại. Bé hoặc Ba Mẹ hãy đăng ký tài khoản mới nhé!';
     case 'auth/email-already-in-use':
@@ -136,14 +139,24 @@ export const logOutUser = async (): Promise<void> => {
 // Sync Firestore User Profile
 export const syncUserProfileToFirestore = async (
   uid: string,
-  profile: Partial<UserProfile>
+  profile: Partial<UserProfile>,
+  options: { includeRewardFields?: boolean } = {}
 ): Promise<void> => {
   try {
     const userDocRef = doc(db, 'users', uid);
+    const {
+      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history,
+      ...clientOwnedProfile
+    } = profile;
+
+    const payload = options.includeRewardFields
+      ? profile
+      : clientOwnedProfile;
+
     await setDoc(
       userDocRef,
       {
-        ...profile,
+        ...payload,
         updatedAt: serverTimestamp(),
       },
       { merge: true }
@@ -153,6 +166,17 @@ export const syncUserProfileToFirestore = async (
   }
 };
 
+export interface TrustedLessonRewardResult {
+  ok: boolean;
+  duplicate?: boolean;
+  xpEarned?: number;
+  coinEarned?: number;
+  gemEarned?: number;
+  stars?: number;
+  accuracy?: number;
+  newLevel?: number;
+}
+
 export const submitLessonAttemptToFirestore = async (
   uid: string,
   attempt: {
@@ -161,22 +185,29 @@ export const submitLessonAttemptToFirestore = async (
     totalQuestions: number;
     timeSpentSeconds: number;
   }
-): Promise<string | null> => {
+): Promise<TrustedLessonRewardResult | null> => {
   try {
     if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
 
-    const attemptsRef = collection(db, 'users', uid, 'lessonAttempts');
-    const result = await addDoc(attemptsRef, {
-      lessonId: attempt.lessonId,
-      score: attempt.score,
-      totalQuestions: attempt.totalQuestions,
-      timeSpentSeconds: attempt.timeSpentSeconds,
-      submittedAt: serverTimestamp(),
+    const token = await auth.currentUser.getIdToken();
+    const attemptId = `attempt-${crypto.randomUUID()}`;
+    const response = await fetch('/api/lesson-attempt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ...attempt, attemptId }),
     });
 
-    return result.id;
+    if (!response.ok) {
+      console.warn('Trusted lesson reward request failed:', response.status);
+      return null;
+    }
+
+    return (await response.json()) as TrustedLessonRewardResult;
   } catch (err) {
-    console.warn('Firestore lesson attempt submission warning:', err);
+    console.warn('Trusted lesson reward submission warning:', err);
     return null;
   }
 };
