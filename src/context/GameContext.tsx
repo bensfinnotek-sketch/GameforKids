@@ -16,7 +16,6 @@ import {
   World
 } from '../types';
 import { 
-  INITIAL_USER, 
   INITIAL_LESSONS, 
   INITIAL_BADGES, 
   INITIAL_TREASURE_ITEMS, 
