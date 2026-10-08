@@ -508,6 +508,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         ...prev,
         xp: prev.xp + xpBonus,
         level: newLevel,
+        streak: reward.streak ?? prev.streak,
         coin: prev.coin + coinBonus,
         gem: prev.gem + gemBonus,
         completedLessons: newCompleted,
