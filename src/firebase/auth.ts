@@ -145,7 +145,7 @@ export const syncUserProfileToFirestore = async (
   try {
     const userDocRef = doc(db, 'users', uid);
     const {
-      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history,
+      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history, streak, lastActiveDate, dailyChallengeDate, dailyChallengeProgress, dailyChallengeClaims,
       ...clientOwnedProfile
     } = profile;
 
@@ -174,7 +174,8 @@ export interface TrustedLessonRewardResult {
   gemEarned?: number;
   stars?: number;
   accuracy?: number;
-  newLevel?: number;\n  streak?: number;
+  newLevel?: number;
+  streak?: number;
 }
 
 export const submitLessonAttemptToFirestore = async (
