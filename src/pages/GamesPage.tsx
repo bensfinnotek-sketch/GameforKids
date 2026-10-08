@@ -57,6 +57,7 @@ export const GamesPage: React.FC = () => {
   const [blitzSessionId, setBlitzSessionId] = useState<string | null>(null);
   const [blitzQuestionNumber, setBlitzQuestionNumber] = useState(1);
   const [blitzRewardMessage, setBlitzRewardMessage] = useState('');
+  const [blitzSubmitting, setBlitzSubmitting] = useState(false);
 
   // GAME 6: Thợ săn hình học
   const [shapeTarget, setShapeTarget] = useState<'triangle' | 'circle' | 'square' | 'star'>('triangle');
@@ -89,8 +90,7 @@ export const GamesPage: React.FC = () => {
         if (prev <= 1) {
           setBubbleActive(false);
           setBubbleGameOver(true);
-          soundManager.playLevelUp();
-          triggerConfetti();
+          setBlitzRewardMessage('Hết thời gian. Lượt chơi chưa hoàn tất đủ 10 câu nên chưa nhận XP/Vàng.');
           return 0;
         }
         return prev - 1;
@@ -269,9 +269,11 @@ export const GamesPage: React.FC = () => {
   }, [blitzActive, blitzTimer, triggerConfetti]);
 
   const handleBlitzAnswer = async (val: number) => {
-    if (!blitzSessionId || !blitzActive) return;
+    if (!blitzSessionId || !blitzActive || blitzSubmitting) return;
 
+    setBlitzSubmitting(true);
     const result = await answerTrustedMiniGame(blitzSessionId, val);
+    setBlitzSubmitting(false);
     if (!result?.ok) {
       setBlitzActive(false);
       setBlitzGameOver(true);
@@ -707,7 +709,7 @@ export const GamesPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1.5 font-black text-amber-600 text-lg">
                       <Flame className="w-5 h-5 fill-rose-500 text-rose-500" />
-                      <span>Đúng: {blitzScore}/{blitzQuestionNumber > 0 ? Math.min(10, blitzQuestionNumber - (blitzActive ? 1 : 0)) : 0} câu</span>
+                      <span>Đúng: {blitzScore} câu • Câu {Math.min(blitzQuestionNumber, 10)}/10</span>
                     </div>
                   </div>
 
@@ -723,6 +725,7 @@ export const GamesPage: React.FC = () => {
                       <button
                         key={i}
                         onClick={() => handleBlitzAnswer(opt)}
+                        disabled={blitzSubmitting}
                         className="py-4 rounded-2xl bg-white hover:bg-sky-50 border-2 border-sky-200 text-2xl font-black text-slate-800 shadow-md hover:scale-105 active:scale-95 transition"
                       >
                         {opt}
