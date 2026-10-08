@@ -1323,7 +1323,7 @@ export const MINI_GAMES: MiniGame[] = [
   {
     id: 'game-speed-race',
     title: 'Đường Đua Phép Tính',
-    description: 'Trả lời đúng các phép tính để xe đua của Mini tăng tốc vượt qua các đối thủ trên đường đua!',
+    description: 'Trả lời các phép tính phù hợp với độ tuổi để xe đua tăng tốc; máy chủ xác thực từng câu trước khi ghi nhận thành tích.',
     category: 'Phản xạ nhanh',
     xpReward: 55,
     coinReward: 35,
@@ -1359,7 +1359,7 @@ export const MINI_GAMES: MiniGame[] = [
   {
     id: 'game-60s-blitz',
     title: '60 Giây Thử Thách',
-    description: 'Trong vòng 60 giây, giải đúng càng nhiều câu toán tư duy càng nhận nhiều Coin và XP thưởng!',
+    description: 'Trong 60 giây, giải 10 câu toán do máy chủ cấp. Hoàn thành đủ lượt mới được ghi nhận XP/Vàng và kỷ lục.',
     category: 'Tốc độ',
     xpReward: 70,
     coinReward: 50,
