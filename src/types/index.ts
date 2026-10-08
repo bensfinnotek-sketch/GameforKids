@@ -189,6 +189,8 @@ export interface NotificationItem {
 }
 
 export interface UserProfile {
+  /** Version of the persisted account schema. 2+ means real Firebase-backed data. */
+  dataVersion?: number;
   id: string;
   name: string;
   role: 'student' | 'parent' | 'teacher' | 'admin';
