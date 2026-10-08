@@ -153,6 +153,17 @@ export const syncUserProfileToFirestore = async (
   }
 };
 
+export interface TrustedLessonRewardResult {
+  ok: boolean;
+  duplicate?: boolean;
+  xpEarned?: number;
+  coinEarned?: number;
+  gemEarned?: number;
+  stars?: number;
+  accuracy?: number;
+  newLevel?: number;
+}
+
 export const submitLessonAttemptToFirestore = async (
   uid: string,
   attempt: {
@@ -161,22 +172,29 @@ export const submitLessonAttemptToFirestore = async (
     totalQuestions: number;
     timeSpentSeconds: number;
   }
-): Promise<string | null> => {
+): Promise<TrustedLessonRewardResult | null> => {
   try {
     if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
 
-    const attemptsRef = collection(db, 'users', uid, 'lessonAttempts');
-    const result = await addDoc(attemptsRef, {
-      lessonId: attempt.lessonId,
-      score: attempt.score,
-      totalQuestions: attempt.totalQuestions,
-      timeSpentSeconds: attempt.timeSpentSeconds,
-      submittedAt: serverTimestamp(),
+    const token = await auth.currentUser.getIdToken();
+    const attemptId = `attempt-${crypto.randomUUID()}`;
+    const response = await fetch('/api/lesson-attempt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ...attempt, attemptId }),
     });
 
-    return result.id;
+    if (!response.ok) {
+      console.warn('Trusted lesson reward request failed:', response.status);
+      return null;
+    }
+
+    return (await response.json()) as TrustedLessonRewardResult;
   } catch (err) {
-    console.warn('Firestore lesson attempt submission warning:', err);
+    console.warn('Trusted lesson reward submission warning:', err);
     return null;
   }
 };
