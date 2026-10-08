@@ -396,10 +396,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }));
   }, []);
 
-  const completeLesson = useCallback((
-    lessonId: string, 
-    score: number, 
-    totalQuestions: number, 
+  const completeLesson = useCallback(async (
+    lessonId: string,
+    score: number,
+    totalQuestions: number,
     timeSpentSeconds: number
   ) => {
     const lesson = lessons.find((l) => l.id === lessonId);
@@ -413,40 +413,43 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       score < 0 ||
       score > totalQuestions ||
       timeSpentSeconds < 0 ||
-      timeSpentSeconds > 86400
+      timeSpentSeconds > 86400 ||
+      totalQuestions !== lesson.totalQuestions ||
+      !auth.currentUser
     ) {
       return;
     }
 
-    const accuracy = Math.round((score / totalQuestions) * 100);
-    
-    // Star Calculation:
-    // 3 stars: accuracy >= 95%
-    // 2 stars: accuracy >= 80%
-    // 1 star: completed
-    let stars = 1;
-    if (accuracy >= 95) stars = 3;
-    else if (accuracy >= 80) stars = 2;
+    // Rewards are granted only after the trusted backend validates the attempt.
+    // The browser never decides the XP/coin/gem amounts.
+    const reward = await submitLessonAttemptToFirestore(auth.currentUser.uid, {
+      lessonId,
+      score,
+      totalQuestions,
+      timeSpentSeconds,
+    });
 
-    if (auth.currentUser) {
-      void submitLessonAttemptToFirestore(auth.currentUser.uid, {
-        lessonId,
-        score,
-        totalQuestions,
-        timeSpentSeconds,
+    if (!reward?.ok || reward.xpEarned == null || reward.coinEarned == null || reward.gemEarned == null) {
+      showReward({
+        id: 'lesson-error-' + Date.now(),
+        title: 'Chưa ghi nhận được kết quả',
+        message: 'Kết nối máy chủ phần thưởng chưa hoàn tất. Bé chưa bị trừ hay cộng gì cả; hãy thử lại nhé.',
+        icon: '⚠️',
       });
+      return;
     }
 
-    const xpBonus = lesson.xpReward + (stars === 3 ? 20 : stars === 2 ? 10 : 0);
-    const coinBonus = lesson.coinReward;
-    const gemBonus = lesson.gemReward;
+    const xpBonus = reward.xpEarned;
+    const coinBonus = reward.coinEarned;
+    const gemBonus = reward.gemEarned;
+    const stars = reward.stars || 1;
+    const accuracy = reward.accuracy ?? Math.round((score / totalQuestions) * 100);
 
     setUser((prev) => {
-      const alreadyCompleted = prev.completedLessons.includes(lessonId);
-      const newCompleted = alreadyCompleted ? prev.completedLessons : [...prev.completedLessons, lessonId];
-      const newXp = prev.xp + xpBonus;
-      const newLevel = checkLevelUp(prev.xp, newXp, prev.level);
-
+      const newCompleted = prev.completedLessons.includes(lessonId)
+        ? prev.completedLessons
+        : [...prev.completedLessons, lessonId];
+      const newLevel = Math.max(prev.level, reward.newLevel || prev.level);
       const historyItem: StudyHistoryItem = {
         id: 'hist-' + Date.now(),
         lessonId: lesson.id,
@@ -461,7 +464,6 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         timeSpentSeconds,
       };
 
-      // Check badge unlocks
       const newBadges = [...prev.unlockedBadges];
       if (newCompleted.length >= 1 && !newBadges.includes('badge-starter')) {
         newBadges.push('badge-starter');
@@ -488,7 +490,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return {
         ...prev,
-        xp: newXp,
+        xp: prev.xp + xpBonus,
         level: newLevel,
         coin: prev.coin + coinBonus,
         gem: prev.gem + gemBonus,
@@ -502,29 +504,21 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
     });
 
-    // Update daily challenges count
     setDailyChallenges((prev) =>
-      prev.map((c) => {
-        if (c.id === 'dc-1') {
-          const nextCount = c.currentCount + 1;
-          return {
-            ...c,
-            currentCount: nextCount,
-            completed: nextCount >= c.targetCount,
-          };
+      prev.map((challenge) => {
+        if (challenge.id === 'dc-1') {
+          const nextCount = challenge.currentCount + 1;
+          return { ...challenge, currentCount: nextCount, completed: nextCount >= challenge.targetCount };
         }
-        if (c.id === 'dc-3' && accuracy === 100) {
-          return {
-            ...c,
-            completed: true,
-          };
+        if (challenge.id === 'dc-3' && accuracy === 100) {
+          return { ...challenge, completed: true };
         }
-        return c;
+        return challenge;
       })
     );
 
     triggerConfetti();
-  }, [lessons, checkLevelUp, showReward, triggerConfetti, addNotification]);
+  }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
   const claimDailyChallenge = useCallback((challengeId: string) => {
     const challenge = dailyChallenges.find((c) => c.id === challengeId);
