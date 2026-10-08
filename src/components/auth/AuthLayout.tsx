@@ -19,7 +19,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#e0f2fe] via-[#f0f9ff] to-[#fdfbf7] flex flex-col justify-between selection:bg-amber-200 selection:text-amber-900">
+    <div
+      className="min-h-screen relative overflow-hidden bg-gradient-to-b from-[#e0f2fe] via-[#f0f9ff] to-[#fdfbf7] flex flex-col justify-between selection:bg-amber-200 selection:text-amber-900"
+      style={{
+        backgroundImage: `linear-gradient(180deg, rgba(224,242,254,.72), rgba(240,249,255,.9) 48%, rgba(253,251,247,.96)), url(${mathIsland})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       
       {/* BACKGROUND FLOATING MATH & ADVENTURE DECORATIONS */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
