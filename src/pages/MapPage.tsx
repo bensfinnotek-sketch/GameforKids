@@ -94,6 +94,59 @@ export const MapPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Interactive treasure route inspired by the supplied map reference */}
+      <section aria-label="Bản đồ kho báu tương tác" className="mb-10">
+        <div className="rounded-[28px] overflow-hidden border-4 border-sky-200 shadow-xl relative bg-[#079bd9]">
+          <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, #baf5ff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #baf5ff 0 2px, transparent 3px)', backgroundSize: '64px 58px, 92px 74px' }} />
+          <div className="relative z-10 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-white">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black drop-shadow">🏴‍☠️ Bản đồ kho báu của bé</h2>
+                <p className="text-xs sm:text-sm font-semibold text-sky-50">Chạm vào hòn đảo để xem bài tiếp theo và cột mốc của mình.</p>
+              </div>
+              <div className="rounded-2xl bg-white/20 border border-white/30 px-3 py-2 text-xs font-black">
+                {user.completedLessons.length} bài đã hoàn thành
+              </div>
+            </div>
+            <div className="relative min-h-[310px] sm:min-h-[390px] rounded-3xl overflow-hidden bg-gradient-to-b from-cyan-400/70 to-blue-600/70 border border-white/25">
+              <svg aria-hidden="true" viewBox="0 0 1000 360" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+                <path d="M80 270 C170 280 170 190 290 205 S390 100 510 130 S640 240 735 185 S840 80 930 95" fill="none" stroke="white" strokeWidth="5" strokeDasharray="15 13" strokeLinecap="round" opacity=".95" />
+              </svg>
+              {worlds.slice(0, 6).map((world, index) => {
+                const positions = [
+                  'left-[4%] bottom-[8%]',
+                  'left-[22%] top-[38%]',
+                  'left-[39%] top-[9%]',
+                  'left-[56%] bottom-[9%]',
+                  'left-[70%] top-[31%]',
+                  'right-[3%] top-[5%]',
+                ];
+                const complete = world.nodes.filter((node) => user.completedLessons.includes(node.lessonId || '')).length;
+                const unlocked = world.isUnlocked || user.xp >= world.requiredXp;
+                return (
+                  <button
+                    key={world.id}
+                    onClick={() => handleWorldClick(world)}
+                    className={`absolute ${positions[index]} w-[92px] sm:w-[124px] -translate-y-0 flex flex-col items-center gap-1.5 focus-visible:outline focus-visible:outline-4 focus-visible:outline-amber-300`}
+                    aria-label={`Mở ${world.name}, ${complete} bài đã hoàn thành`}
+                  >
+                    <span className={`w-16 h-14 sm:w-20 sm:h-16 rounded-[48%] border-4 border-cyan-100 shadow-lg flex items-center justify-center text-3xl sm:text-4xl ${unlocked ? 'bg-gradient-to-b from-yellow-300 to-amber-500' : 'bg-slate-400'}`}>
+                      {unlocked ? world.icon : '🔒'}
+                    </span>
+                    <span className="max-w-full rounded-xl bg-white/95 px-2 py-1 text-[10px] sm:text-xs font-black text-slate-800 shadow-md text-center leading-tight">{world.name}</span>
+                    <span className="rounded-full bg-slate-950/55 px-2 py-0.5 text-[9px] sm:text-[10px] font-extrabold text-white">{complete}/{world.nodes.length} bài</span>
+                  </button>
+                );
+              })}
+              <div className="absolute right-[22%] bottom-[8%] text-4xl sm:text-5xl drop-shadow-lg pointer-events-none" aria-hidden="true">🐉</div>
+              <div className="absolute left-[47%] top-[43%] text-3xl sm:text-4xl drop-shadow-lg pointer-events-none" aria-hidden="true">⛵</div>
+              <div className="absolute left-[46%] bottom-[4%] text-3xl drop-shadow-lg pointer-events-none" aria-hidden="true">🧰</div>
+            </div>
+            <p className="text-white/90 text-[11px] font-semibold mt-3">Mẹo cho phụ huynh: mỗi đảo hiển thị số bài đã hoàn thành; chọn đảo để xem nhiệm vụ tiếp theo. Các cột mốc được tính từ tiến trình tài khoản.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Worlds Grid (6 Chapters) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {worlds.map((world) => {
