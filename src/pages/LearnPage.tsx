@@ -68,6 +68,7 @@ export const LearnPage: React.FC = () => {
   if (activeLesson) {
     return (
       <QuizPage
+        key={activeLesson.id}
         lesson={activeLesson}
         onBack={() => setActiveLesson(null)}
       />
