@@ -35,6 +35,9 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [finalElapsedSeconds, setFinalElapsedSeconds] = useState(0);
+  const [starsEarned, setStarsEarned] = useState(0);
+  const [completionResult, setCompletionResult] = useState<{ duplicate?: boolean; xpEarned?: number; coinEarned?: number; gemEarned?: number; stars?: number } | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [startTime] = useState<number>(Date.now());
   const [streakInQuiz, setStreakInQuiz] = useState(0);
@@ -88,9 +91,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
       const actualScore = score;
       const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
       setFinalScore(actualScore);
+      setFinalElapsedSeconds(elapsedSeconds);
       setSaveError(false);
-      const saved = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds);
-      if (saved) {
+      const result = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds);
+      if (result.ok) {
+        setCompletionResult(result);
+        setStarsEarned(result.stars || 0);
         setIsFinished(true);
       } else {
         setSaveError(true);
@@ -101,9 +107,6 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   // If Finished Modal Screen (Phần 12 & Phần 44)
   if (isFinished) {
     const accuracy = Math.round((finalScore / questions.length) * 100);
-    let starsEarned = 1;
-    if (accuracy >= 95) starsEarned = 3;
-    else if (accuracy >= 80) starsEarned = 2;
 
     const handleNextLesson = () => {
       soundManager.playClick();
@@ -169,22 +172,21 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
             </div>
             <div className="flex flex-col items-center border-x border-slate-200">
               <span className="text-xs font-bold text-slate-400">Điểm XP</span>
-              <span className="text-2xl font-black text-amber-500">+{lesson.xpReward}</span>
-              <span className="text-[10px] font-bold text-slate-400">Thám hiểm</span>
+              <span className="text-2xl font-black text-amber-500">+{completionResult?.xpEarned ?? 0}</span>
+              <span className="text-[10px] font-bold text-slate-400">XP đã xác nhận</span>
             </div>
             <div className="flex flex-col items-center">
               <span className="text-xs font-bold text-slate-400">Kho báu</span>
-              <span className="text-xl font-black text-purple-600">+{lesson.gemReward} 💎</span>
-              <span className="text-[10px] font-bold text-slate-400">+{lesson.coinReward} 🪙</span>
+              <span className="text-xl font-black text-purple-600">+{completionResult?.gemEarned ?? 0} 💎</span>
+              <span className="text-[10px] font-bold text-slate-400">+{completionResult?.coinEarned ?? 0} 🪙</span>
             </div>
           </div>
 
-          {/* Badge Unlocked Notification Banner */}
-          <div className="bg-amber-50 border-2 border-amber-200 p-3.5 rounded-2xl flex items-center justify-center gap-2">
-            <span className="text-2xl">🎖️</span>
-            <span className="text-xs font-black text-amber-900">
-              Huy hiệu đạt được: "Nỗ lực tuyệt vời"
-            </span>
+          <div className="bg-emerald-50 border-2 border-emerald-200 p-3.5 rounded-2xl text-xs font-black text-emerald-900">
+            {completionResult?.duplicate
+              ? 'Kết quả bài học đã được lưu trước đó; hệ thống không cộng thưởng lần hai.'
+              : 'Kết quả bài học đã được máy chủ xác nhận và lưu vào tài khoản.'}
+            <span className="block mt-1 font-bold">Thời gian làm bài: {finalElapsedSeconds} giây</span>
           </div>
 
           {saveError && (
@@ -384,7 +386,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
             <span className="text-3xl flex-shrink-0">{isCorrect ? '🎉' : '💪'}</span>
             <div>
               <h4 className="font-heading font-black text-base text-slate-800">
-                {isCorrect ? 'TUYỆT VỜI! 🎉 +20 XP • +5 Gem' : 'Suýt nữa rồi! 💪 Hãy thử lại nhé.'}
+                {isCorrect ? 'TUYỆT VỜI! 🎉 Câu trả lời đã được tính vào điểm bài học.' : 'Suýt nữa rồi! 💪 Hãy thử lại nhé.'}
               </h4>
               <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-0.5">
                 {isCorrect
