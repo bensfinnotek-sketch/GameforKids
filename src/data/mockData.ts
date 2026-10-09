@@ -833,6 +833,24 @@ export const INITIAL_QUESTIONS: Record<string, QuizQuestion[]> = {
 };
 
 export const getQuestionsForLesson = (lesson: Lesson): QuizQuestion[] => {
+  if (lesson.ageGroup === '2-3') {
+    const toddlerQuestions: Record<string, QuizQuestion[]> = {
+      'lesson-toddler-1': [
+        { id: 'toddler-fish-1', lessonId: lesson.id, type: 'visual-counting', questionText: 'Có mấy chú cá? Chạm và đếm nhé!', hint: 'Chỉ từng chú cá một lần.', explanation: 'Đúng rồi, có 2 chú cá!', visualType: 'fish', visualData: { count: 2, emoji: '🐟' }, options: [{ id: 'a', text: '1', isCorrect: false }, { id: 'b', text: '2', isCorrect: true }, { id: 'c', text: '3', isCorrect: false }] },
+        { id: 'toddler-fish-2', lessonId: lesson.id, type: 'visual-counting', questionText: 'Hai chú cá gặp thêm một bạn. Có tất cả mấy bạn?', hint: 'Đếm 1, 2 rồi thêm 1.', explanation: '2 thêm 1 là 3 chú cá.', visualType: 'fish', visualData: { count: 3, emoji: '🐟' }, options: [{ id: 'a', text: '1', isCorrect: false }, { id: 'b', text: '2', isCorrect: false }, { id: 'c', text: '3', isCorrect: true }] },
+      ],
+      'lesson-toddler-2': [
+        { id: 'toddler-match-1', lessonId: lesson.id, questionText: 'Tìm món đồ giống chú gấu này nhé!', hint: 'Nhìn hình dáng của chú gấu.', explanation: 'Hai chú gấu giống nhau!', visualType: 'shapes', visualData: { emoji: '🧸' }, options: [{ id: 'a', text: '🧸', isCorrect: true }, { id: 'b', text: '🍎', isCorrect: false }, { id: 'c', text: '🚗', isCorrect: false }] },
+        { id: 'toddler-match-2', lessonId: lesson.id, questionText: 'Bông hoa nào giống mẫu?', hint: 'Tìm bông hoa có cùng hình.', explanation: 'Con tìm đúng bông hoa rồi!', options: [{ id: 'a', text: '⭐', isCorrect: false }, { id: 'b', text: '🌼', isCorrect: true }, { id: 'c', text: '🐠', isCorrect: false }] },
+      ],
+      'lesson-toddler-3': [
+        { id: 'toddler-size-1', lessonId: lesson.id, questionText: 'Con vật nào to hơn?', hint: 'Quan sát hai con vật.', explanation: 'Voi to hơn chuột.', options: [{ id: 'a', text: '🐘', isCorrect: true }, { id: 'b', text: '🐭', isCorrect: false }] },
+        { id: 'toddler-size-2', lessonId: lesson.id, questionText: 'Quả nào nhỏ hơn?', hint: 'Nhìn kích thước của hai quả.', explanation: 'Quả dâu nhỏ hơn quả dưa hấu.', options: [{ id: 'a', text: '🍉', isCorrect: false }, { id: 'b', text: '🍓', isCorrect: true }] },
+      ],
+    };
+    return toddlerQuestions[lesson.id] || toddlerQuestions['lesson-toddler-1'];
+  }
+
   if (INITIAL_QUESTIONS[lesson.id]) {
     return INITIAL_QUESTIONS[lesson.id];
   }
