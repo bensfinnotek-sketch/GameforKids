@@ -157,7 +157,7 @@ const AppContent: React.FC = () => {
           return <WorldDetailPage />;
         }
         if (activeTab.startsWith('lesson/')) {
-          return <InteractiveLessonPage />;
+          return <InteractiveLessonPage key={activeTab} />;
         }
         return <ChildHomePage />;
     }
