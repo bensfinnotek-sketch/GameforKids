@@ -34,7 +34,8 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
     completeLesson, 
     triggerConfetti, 
     navigateTo, 
-    activeTab 
+    activeTab,
+    user
   } = useGame();
 
   // Find target lesson
@@ -50,7 +51,9 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [score, setScore] = useState(0);
   const [showHint, setShowHint] = useState(false);
-  const [earnedStars, setEarnedStars] = useState(3);
+  const [earnedStars, setEarnedStars] = useState(0);
+  const [startTime] = useState<number>(Date.now());
+  const [saveError, setSaveError] = useState(false);
 
   const currentQ = questions[quizIndex] || questions[0];
 
@@ -110,24 +113,35 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
     }
   };
 
-  const handleNextQuizQuestion = () => {
+  const handleNextQuizQuestion = async () => {
     soundManager.playClick();
-    setFeedback(null);
-    setSelectedOptionId(null);
-    setFillValue('');
-    setShowHint(false);
-
     if (quizIndex + 1 < questions.length) {
+      setFeedback(null);
+      setSelectedOptionId(null);
+      setFillValue('');
+      setShowHint(false);
       setQuizIndex((prev) => prev + 1);
-    } else {
-      // Completed all questions!
-      soundManager.playFanfare();
-      triggerConfetti();
-      const finalStars = score >= questions.length - 1 ? 3 : score >= Math.floor(questions.length / 2) ? 2 : 1;
-      setEarnedStars(finalStars);
-      completeLesson(lesson.id, score + 1, questions.length, 180);
-      setCurrentStage('completed');
+      return;
     }
+
+    // Only move to the completion screen after the server confirms the real attempt.
+    const finalScore = Math.min(questions.length, score);
+    const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
+    setSaveError(false);
+    const saved = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds);
+    if (!saved) {
+      setSaveError(true);
+      setFeedback({ isCorrect: false, message: 'Kết quả chưa được lưu. Hãy nhấn Tiếp tục để thử lưu lại; tiến độ chưa được cộng.' });
+      return;
+    }
+
+    soundManager.playFanfare();
+    triggerConfetti();
+    const accuracy = finalScore / questions.length;
+    const finalStars = accuracy >= 0.95 ? 3 : accuracy >= 0.8 ? 2 : 1;
+    setEarnedStars(finalStars);
+    setFeedback(null);
+    setCurrentStage('completed');
   };
 
   const handleExitLesson = () => {
@@ -497,6 +511,12 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
         </div>
       )}
 
+      {saveError && currentStage === 'quiz' && (
+        <div role="alert" className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+          Chưa lưu được kết quả lên máy chủ. Tiến độ chưa được cập nhật; hãy thử lại khi kết nối ổn định.
+        </div>
+      )}
+
       {/* STAGE 6: HOÀN THÀNH (COMPLETED CELEBRATION) */}
       {currentStage === 'completed' && (
         <div className="bg-white rounded-[28px] p-6 sm:p-12 border-2 border-emerald-200 shadow-2xl text-center space-y-6 animate-in zoom-in-95">
@@ -534,15 +554,15 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
           <div className="grid grid-cols-3 gap-3 max-w-md mx-auto bg-slate-50 p-4 rounded-3xl border border-slate-200">
             <div>
               <span className="text-caption text-slate-400 font-bold block">Kinh nghiệm</span>
-              <span className="text-h3 font-black text-amber-600">+{lesson.xpReward} XP</span>
+              <span className="text-caption font-black text-emerald-700">Đã xác nhận</span>
             </div>
             <div>
               <span className="text-caption text-slate-400 font-bold block">Tiền vàng</span>
-              <span className="text-h3 font-black text-yellow-600">+{lesson.coinReward} 🪙</span>
+              <span className="text-caption font-black text-emerald-700">Đã lưu</span>
             </div>
             <div>
               <span className="text-caption text-slate-400 font-bold block">Đá quý</span>
-              <span className="text-h3 font-black text-purple-600">+{lesson.gemReward} 💎</span>
+              <span className="text-caption font-black text-emerald-700">Đã lưu</span>
             </div>
           </div>
 
@@ -550,11 +570,21 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
             <button
               onClick={() => {
                 soundManager.playClick();
-                navigateTo('child/home');
+                const sameAgeLessons = lessons.filter((item) => item.ageGroup === lesson.ageGroup);
+                const currentPosition = sameAgeLessons.findIndex((item) => item.id === lesson.id);
+                const nextLesson = [
+                  ...sameAgeLessons.slice(currentPosition + 1),
+                  ...sameAgeLessons.slice(0, Math.max(0, currentPosition)),
+                ].find((item) => !user.completedLessons.includes(item.id) && item.id !== lesson.id);
+                if (nextLesson) {
+                  navigateTo(`lesson/${nextLesson.id}`);
+                } else {
+                  navigateTo('learn');
+                }
               }}
               className="btn-touch-target flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold text-body-sm shadow-md transition"
             >
-              TIẾP TỤC HÀNH TRÌNH ➔
+              HỌC BÀI TIẾP THEO ➔
             </button>
           </div>
         </div>
