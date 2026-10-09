@@ -294,7 +294,7 @@ export const answerTrustedMiniGame = async (
     console.warn('Trusted mini-game answer warning:', err);
     return null;
   }
-};;
+};
 
 export interface TrustedDailyChallenge {
   id: string;
