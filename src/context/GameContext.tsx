@@ -391,7 +391,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     timeSpentSeconds: number
   ) => {
     const lesson = lessons.find((l) => l.id === lessonId);
-    if (!lesson) return;
+    if (!lesson) return false;
 
     if (
       !Number.isInteger(score) ||
