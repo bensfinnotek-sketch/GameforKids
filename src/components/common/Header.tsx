@@ -12,7 +12,9 @@ import {
   Sparkles,
   Check,
   CheckCheck,
-  LogOut
+  LogOut,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from './BrandLogo';
@@ -23,6 +25,14 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
   const { user, activeTab, setActiveTab, toggleSound, markAllNotificationsRead, logout } = useGame();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem('math-adventure-theme') === 'dark'; } catch { return false; }
+  });
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark-mode', darkMode);
+    try { localStorage.setItem('math-adventure-theme', darkMode ? 'dark' : 'light'); } catch { /* private browsing */ }
+  }, [darkMode]);
 
   const levelInfo = getLevelInfo(user.xp);
   const unreadCount = user.notifications.filter((n) => !n.isRead).length;
@@ -197,6 +207,16 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
                 </div>
               )}
             </div>
+
+            {/* Light / Dark appearance */}
+            <button
+              onClick={() => setDarkMode((value) => !value)}
+              aria-label={darkMode ? 'Bật chế độ sáng' : 'Bật chế độ tối'}
+              title={darkMode ? 'Chế độ tối — nhấn để chuyển sang sáng' : 'Chế độ sáng — nhấn để chuyển sang tối'}
+              className="p-2 rounded-2xl text-slate-500 hover:text-sky-600 hover:bg-sky-50 transition border border-slate-200"
+            >
+              {darkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+            </button>
 
             {/* Sound Toggle */}
             <button
