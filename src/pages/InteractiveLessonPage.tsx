@@ -51,6 +51,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
   const [score, setScore] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [earnedStars, setEarnedStars] = useState(3);
+  const [lessonStartedAt] = useState(() => Date.now());
 
   const currentQ = questions[quizIndex] || questions[0];
 
@@ -123,9 +124,11 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
       // Completed all questions!
       soundManager.playFanfare();
       triggerConfetti();
-      const finalStars = score >= questions.length - 1 ? 3 : score >= Math.floor(questions.length / 2) ? 2 : 1;
+      const finalScore = score + (feedback?.isCorrect ? 1 : 0);
+      const finalStars = finalScore === questions.length ? 3 : finalScore >= Math.ceil(questions.length / 2) ? 2 : 1;
       setEarnedStars(finalStars);
-      completeLesson(lesson.id, score + 1, questions.length, 180);
+      const timeSpentSeconds = Math.max(1, Math.round((Date.now() - lessonStartedAt) / 1000));
+      completeLesson(lesson.id, finalScore, questions.length, timeSpentSeconds);
       setCurrentStage('completed');
     }
   };
