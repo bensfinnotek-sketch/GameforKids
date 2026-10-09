@@ -24,7 +24,7 @@ import { soundManager } from '../../utils/sound';
 import { getLevelInfo } from '../../data/mockData';
 
 export const Sidebar: React.FC = () => {
-  const { user, activeTab, setActiveTab, toggleSound } = useGame();
+  const { user, activeTab, setActiveTab, toggleSound, isAuthenticated } = useGame();
   const levelInfo = getLevelInfo(user.xp);
 
   const menuItems = [
@@ -113,6 +113,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Bottom Area: Special Management Portals */}
       <div className="pt-3 border-t border-slate-100 space-y-2">
+        {!isAuthenticated && (
         {/* Login Page quick link */}
         <button
           onClick={() => handleNav('login')}
@@ -124,6 +125,8 @@ export const Sidebar: React.FC = () => {
           </div>
           <span className="text-[10px] bg-white px-1.5 py-0.5 rounded font-bold text-sky-600">Vào học</span>
         </button>
+
+        )}
 
         {/* Parent, Teacher & Admin Links */}
         <div className="grid grid-cols-3 gap-1.5">
