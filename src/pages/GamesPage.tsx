@@ -96,7 +96,7 @@ export const GamesPage: React.FC = () => {
         if (prev <= 1) {
           setBubbleActive(false);
           setBubbleGameOver(true);
-          setBlitzRewardMessage('Hết thời gian. Lượt chơi chưa hoàn tất đủ 10 câu nên chưa nhận XP/Vàng.');
+          // The bubble game has no server reward session; do not overwrite Blitz status here.
           return 0;
         }
         return prev - 1;

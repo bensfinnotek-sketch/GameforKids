@@ -35,16 +35,6 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const navItems = [
-    { id: 'home', label: 'Trang chủ', emoji: '🏠' },
-    { id: 'learn', label: 'Học Toán', emoji: '📚' },
-    { id: 'map', label: 'Bản đồ', emoji: '🗺️' },
-    { id: 'games', label: 'Trò chơi', emoji: '🎮' },
-    { id: 'challenges', label: 'Thử thách', emoji: '🎯' },
-    { id: 'achievements', label: 'Thành tích', emoji: '🏆' },
-    { id: 'treasure', label: 'Kho báu', emoji: '🎁' },
-    { id: 'pricing', label: 'Gói VIP', emoji: '👑' },
-  ];
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b-2 border-sky-100 shadow-xs select-none">
@@ -257,26 +247,6 @@ export const Header: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
               <span className="text-[10px] font-bold text-slate-500 block">Ngọc</span>
               <span className="text-xs font-black text-purple-600">💎 {user.gem}</span>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNav(item.id)}
-                  className={`flex items-center gap-2.5 p-3 rounded-2xl font-black text-xs text-left transition ${
-                    isActive 
-                      ? 'bg-sky-500 text-white shadow-md' 
-                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="text-lg">{item.emoji}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">

@@ -25,6 +25,16 @@ import {
 } from '../data/mockData';
 import { soundManager } from '../utils/sound';
 
+export interface LessonCompletionResult {
+  ok: boolean;
+  duplicate?: boolean;
+  xpEarned?: number;
+  coinEarned?: number;
+  gemEarned?: number;
+  stars?: number;
+  accuracy?: number;
+}
+
 export interface RewardNotification {
   id: string;
   title: string;
@@ -57,7 +67,7 @@ interface GameContextType {
   addXP: (amount: number, reason?: string) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
-  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => void;
+  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => Promise<LessonCompletionResult>;
   claimDailyChallenge: (challengeId: string) => void;
   purchaseItem: (item: TreasureItem) => { success: boolean; message: string };
   equipItem: (item: TreasureItem) => void;
@@ -391,7 +401,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     timeSpentSeconds: number
   ) => {
     const lesson = lessons.find((l) => l.id === lessonId);
-    if (!lesson) return;
+    if (!lesson) return { ok: false };
 
     if (
       !Number.isInteger(score) ||
@@ -405,7 +415,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       totalQuestions !== lesson.totalQuestions ||
       !auth.currentUser
     ) {
-      return;
+      return { ok: false };
     }
 
     // Rewards are granted only after the trusted backend validates the attempt.
@@ -424,7 +434,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         message: 'Kết nối máy chủ phần thưởng chưa hoàn tất. Bé chưa bị trừ hay cộng gì cả; hãy thử lại nhé.',
         icon: '⚠️',
       });
-      return;
+      return { ok: false };
     }
 
     if (reward.duplicate) {
@@ -440,7 +450,15 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         message: 'Kết quả này đã được lưu trước đó. Bé không nhận thưởng lần thứ hai.',
         icon: 'ℹ️',
       });
-      return;
+      return {
+        ok: true,
+        duplicate: true,
+        xpEarned: 0,
+        coinEarned: 0,
+        gemEarned: 0,
+        stars: latestProfile?.lessonStars?.[lessonId] || 0,
+        accuracy: latestProfile?.history?.find((item) => item.lessonId === lessonId)?.accuracy,
+      };
     }
 
     const xpBonus = reward.xpEarned;
@@ -515,6 +533,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     triggerConfetti();
+    return { ok: true, xpEarned: xpBonus, coinEarned: coinBonus, gemEarned: gemBonus, stars, accuracy };
   }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
   const claimDailyChallenge = useCallback(async (challengeId: string) => {

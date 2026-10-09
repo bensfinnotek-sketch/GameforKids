@@ -98,7 +98,19 @@ function createQuestion(seed: number, index: number, ageGroup: AgeGroup, gameId:
         op = '+';
       }
     }
+  } else if (ageGroup === '4-5') {
+    // Keep the 60-second game age-appropriate: count and add small groups only.
+    a = Math.floor(next() * 5) + 1;
+    b = Math.floor(next() * 5) + 1;
+    op = '+';
+  } else if (ageGroup === '6-8') {
+    // Early primary learners practise addition and subtraction without negative results.
+    a = Math.floor(next() * 10) + 1;
+    b = Math.floor(next() * 10) + 1;
+    op = mode > 0.5 ? '-' : '+';
+    if (op === '-' && a < b) [a, b] = [b, a];
   } else {
+    // Older learners can practise all three operations.
     a = Math.floor(next() * 10) + 1;
     b = Math.floor(next() * 10) + 1;
     if (mode > 0.65) {
@@ -280,7 +292,7 @@ export async function POST(request: Request) {
       const newCoin = Number(user.coin || 0) + config.rewardCoin;
       const newGem = Number(user.gem || 0) + config.rewardGem;
       const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
-      highScores[GAME_ID] = Math.max(Number(highScores[GAME_ID] || 0), nextCorrect);
+      highScores[gameId] = Math.max(Number(highScores[gameId] || 0), nextCorrect);
       const date = todayInVietnam();
       progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
 
