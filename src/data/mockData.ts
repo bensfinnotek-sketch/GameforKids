@@ -521,7 +521,55 @@ export const INITIAL_LESSONS: Lesson[] = [
     thumbnailEmoji: '🌡️',
     worldId: 'world-1',
     totalQuestions: 3,
+  },,
+  {
+    id: 'lesson-25',
+    title: 'Siêu thị tí hon: Cộng tiền mua hàng',
+    description: 'Giúp Mini chọn món ăn và cộng số tiền trong giỏ hàng.',
+    category: 'basic', ageGroup: '6-8', level: 3, difficulty: 'Dễ',
+    xpReward: 45, coinReward: 20, gemReward: 4, durationMinutes: 7,
+    thumbnailEmoji: '🛒', worldId: 'world-2', totalQuestions: 3,
   },
+  {
+    id: 'lesson-26',
+    title: 'Thợ làm bánh: Gấp đôi công thức',
+    description: 'Tính số bánh cần làm khi số bạn tham gia bữa tiệc tăng gấp đôi.',
+    category: 'thinking', ageGroup: '6-8', level: 4, difficulty: 'Trung bình',
+    xpReward: 55, coinReward: 25, gemReward: 5, durationMinutes: 8,
+    thumbnailEmoji: '🧁', worldId: 'world-3', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-27',
+    title: 'Nhà thám hiểm phân số bánh pizza',
+    description: 'Chia bánh pizza công bằng và nhận biết một phần hai, một phần tư.',
+    category: 'basic', ageGroup: '9-11', level: 4, difficulty: 'Trung bình',
+    xpReward: 65, coinReward: 35, gemReward: 8, durationMinutes: 9,
+    thumbnailEmoji: '🍕', worldId: 'world-5', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-28',
+    title: 'Giải mã quy luật của robot',
+    description: 'Tìm số tiếp theo trong chuỗi và lập trình robot vượt mê cung.',
+    category: 'logic', ageGroup: '9-11', level: 5, difficulty: 'Trung bình',
+    xpReward: 70, coinReward: 40, gemReward: 10, durationMinutes: 10,
+    thumbnailEmoji: '🤖', worldId: 'world-3', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-29',
+    title: 'Đội cứu hộ: Quãng đường và thời gian',
+    description: 'Dùng phép nhân và chia để giúp đội cứu hộ đến đúng nơi.',
+    category: 'thinking', ageGroup: '9-11', level: 6, difficulty: 'Thử thách',
+    xpReward: 85, coinReward: 45, gemReward: 12, durationMinutes: 11,
+    thumbnailEmoji: '🚑', worldId: 'world-2', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-30',
+    title: 'Phòng thí nghiệm đo lường',
+    description: 'Khám phá centimet, mét, gam và kilogam qua các thí nghiệm nhỏ.',
+    category: 'geometry', ageGroup: '6-8', level: 3, difficulty: 'Dễ',
+    xpReward: 50, coinReward: 25, gemReward: 6, durationMinutes: 8,
+    thumbnailEmoji: '🧪', worldId: 'world-4', totalQuestions: 3,
+  }
 ];
 
 // 50+ QUESTIONS MAPPING
