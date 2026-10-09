@@ -7,6 +7,19 @@ import { soundManager } from '../utils/sound';
 export const AgesPage: React.FC = () => {
   const { activeAgeGroup, setActiveAgeGroup, setActiveTab } = useGame();
 
+  const toddlerCard = {
+    id: '2-3' as AgeGroup,
+    title: 'Bé khám phá đầu đời',
+    ageRange: '2–3 tuổi',
+    subtitle: 'Nhìn, nghe, chạm và làm quen số lượng thật nhẹ nhàng',
+    badgeEmoji: '🐳',
+    topics: ['Nhận biết 1–3 đồ vật quen thuộc', 'Ghép hình giống nhau', 'Phân biệt to–nhỏ, ít–nhiều', 'Màu sắc cơ bản với hình ảnh đơn giản'],
+    description: 'Hoạt động ngắn 2–4 phút, mỗi màn hình chỉ có một nhiệm vụ, ít chữ và hình lớn. Người lớn đồng hành cùng bé; không dùng đồng hồ đếm ngược hay hiệu ứng nhấp nháy.',
+    gradient: 'from-teal-400/10 via-cyan-300/20 to-sky-400/10',
+    borderColor: 'border-teal-300',
+    buttonColor: 'bg-teal-500 hover:bg-teal-600 shadow-teal-500/25',
+  };
+
   const ageCards: {
     id: AgeGroup;
     title: string;
@@ -19,6 +32,7 @@ export const AgesPage: React.FC = () => {
     buttonColor: string;
     description: string;
   }[] = [
+    toddlerCard,
     {
       id: '4-5',
       title: 'Nhà thám hiểm tí hon',
@@ -88,7 +102,7 @@ export const AgesPage: React.FC = () => {
       <div className="text-center max-w-3xl mx-auto mb-12">
         <div className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider mb-3">
           <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-          Phân Tầng Theo Năng Lực
+          Lộ Trình Theo Độ Tuổi
         </div>
         <h1 className="font-heading text-3xl sm:text-5xl font-black text-slate-800 tracking-tight">
           Chọn Hành Trình Của Bạn 🎯
