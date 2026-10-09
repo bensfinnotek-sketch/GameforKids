@@ -24,7 +24,7 @@ interface QuizPageProps {
 }
 
 export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
-  const { completeLesson, triggerConfetti, setActiveTab, setActiveLesson, lessons } = useGame();
+  const { completeLesson, triggerConfetti, setActiveTab, setActiveLesson, lessons, user } = useGame();
   
   const [questions] = useState<QuizQuestion[]>(() => getQuestionsForLesson(lesson));
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -34,6 +34,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   const [showHint, setShowHint] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
+  const [saveError, setSaveError] = useState(false);
   const [startTime] = useState<number>(Date.now());
   const [streakInQuiz, setStreakInQuiz] = useState(0);
 
@@ -73,7 +75,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
     setIsCorrect(null);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     soundManager.playClick();
     if (currentIndex + 1 < questions.length) {
       setCurrentIndex((prev) => prev + 1);
@@ -83,16 +85,21 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
       setShowHint(false);
     } else {
       // Completed entire quiz!
-      const finalScore = score + (isCorrect ? 1 : 0);
-      const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-      completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds);
-      setIsFinished(true);
+      const actualScore = score;
+      const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
+      setFinalScore(actualScore);
+      setSaveError(false);
+      const saved = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds);
+      if (saved) {
+        setIsFinished(true);
+      } else {
+        setSaveError(true);
+      }
     }
   };
 
   // If Finished Modal Screen (Phần 12 & Phần 44)
   if (isFinished) {
-    const finalScore = score;
     const accuracy = Math.round((finalScore / questions.length) * 100);
     let starsEarned = 1;
     if (accuracy >= 95) starsEarned = 3;
@@ -100,7 +107,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
 
     const handleNextLesson = () => {
       soundManager.playClick();
-      const nextL = lessons.find((l) => l.id !== lesson.id && l.ageGroup === lesson.ageGroup);
+      const sameAgeLessons = lessons.filter((l) => l.ageGroup === lesson.ageGroup);
+      const currentPosition = sameAgeLessons.findIndex((l) => l.id === lesson.id);
+      const nextL = [
+        ...sameAgeLessons.slice(currentPosition + 1),
+        ...sameAgeLessons.slice(0, Math.max(0, currentPosition)),
+      ].find((l) => !user.completedLessons.includes(l.id) && l.id !== lesson.id);
       if (nextL) {
         setActiveLesson(nextL);
       } else {
@@ -175,7 +187,13 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
             </span>
           </div>
 
-          {/* Buttons: VỀ BẢN ĐỒ / HỌC BÀI TIẾP */}
+          {saveError && (
+        <div role="alert" className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+          Chưa lưu được kết quả lên máy chủ. Bài học chưa được đánh dấu hoàn thành; hãy thử tiếp tục lại khi có kết nối.
+        </div>
+      )}
+
+      {/* Buttons: VỀ BẢN ĐỒ / HỌC BÀI TIẾP */}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleBackToMap}
