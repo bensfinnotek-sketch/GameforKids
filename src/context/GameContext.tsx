@@ -57,7 +57,7 @@ interface GameContextType {
   addXP: (amount: number, reason?: string) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
-  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => void;
+  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => Promise<boolean>;
   claimDailyChallenge: (challengeId: string) => void;
   purchaseItem: (item: TreasureItem) => { success: boolean; message: string };
   equipItem: (item: TreasureItem) => void;
@@ -405,7 +405,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       totalQuestions !== lesson.totalQuestions ||
       !auth.currentUser
     ) {
-      return;
+      return false;
     }
 
     // Rewards are granted only after the trusted backend validates the attempt.
@@ -424,7 +424,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         message: 'Kết nối máy chủ phần thưởng chưa hoàn tất. Bé chưa bị trừ hay cộng gì cả; hãy thử lại nhé.',
         icon: '⚠️',
       });
-      return;
+      return false;
     }
 
     if (reward.duplicate) {
@@ -440,7 +440,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         message: 'Kết quả này đã được lưu trước đó. Bé không nhận thưởng lần thứ hai.',
         icon: 'ℹ️',
       });
-      return;
+      return true;
     }
 
     const xpBonus = reward.xpEarned;
@@ -515,6 +515,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     triggerConfetti();
+    return true;
   }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
   const claimDailyChallenge = useCallback(async (challengeId: string) => {
