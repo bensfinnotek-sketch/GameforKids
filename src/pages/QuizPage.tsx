@@ -88,7 +88,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
       setShowHint(false);
     } else {
       // Completed entire quiz!
-      const actualScore = score;
+      // React state updates asynchronously; include the last answer, which was just checked.
+      const actualScore = score + (isCorrect ? 1 : 0);
       const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
       setFinalScore(actualScore);
       setFinalElapsedSeconds(elapsedSeconds);
