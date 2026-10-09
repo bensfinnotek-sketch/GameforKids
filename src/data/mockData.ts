@@ -569,6 +569,30 @@ export const INITIAL_LESSONS: Lesson[] = [
     category: 'geometry', ageGroup: '6-8', level: 3, difficulty: 'Dễ',
     xpReward: 50, coinReward: 25, gemReward: 6, durationMinutes: 8,
     thumbnailEmoji: '🧪', worldId: 'world-4', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-toddler-1',
+    title: 'Ba chú cá con',
+    description: 'Chạm và đếm tối đa ba chú cá to, rõ ràng cùng Mini.',
+    category: 'basic', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 2, gemReward: 0, durationMinutes: 3,
+    thumbnailEmoji: '🐟', worldId: 'world-1', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-toddler-2',
+    title: 'Tìm hình giống nhau',
+    description: 'Chọn đồ vật có hình giống mẫu, mỗi lượt chỉ có ít lựa chọn.',
+    category: 'thinking', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 2, gemReward: 0, durationMinutes: 3,
+    thumbnailEmoji: '🧸', worldId: 'world-1', totalQuestions: 3,
+  },
+  {
+    id: 'lesson-toddler-3',
+    title: 'To hay nhỏ?',
+    description: 'Quan sát hai món đồ quen thuộc và chọn món to hơn.',
+    category: 'thinking', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 2, gemReward: 0, durationMinutes: 3,
+    thumbnailEmoji: '🐘', worldId: 'world-1', totalQuestions: 3,
   }
 ];
 
@@ -815,7 +839,7 @@ export const getQuestionsForLesson = (lesson: Lesson): QuizQuestion[] => {
 
   // Lessons without hand-authored question sets still receive real, solvable
   // math questions instead of placeholder answers about XP or the lesson title.
-  const ageMax = lesson.ageGroup === '4-5' ? 10 : lesson.ageGroup === '6-8' ? 20 : 100;
+  const ageMax = lesson.ageGroup === '2-3' ? 3 : lesson.ageGroup === '4-5' ? 10 : lesson.ageGroup === '6-8' ? 20 : 100;
   const base = Math.max(2, Math.min(ageMax - 2, lesson.level * 3 + 2));
   const makeOptions = (answer: number, salt: number) => {
     const candidates = new Set<number>([answer, answer + 1, Math.max(0, answer - 1), answer + 2, answer + salt + 1]);
