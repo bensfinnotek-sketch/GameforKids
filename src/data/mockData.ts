@@ -764,49 +764,93 @@ export const getQuestionsForLesson = (lesson: Lesson): QuizQuestion[] => {
   if (INITIAL_QUESTIONS[lesson.id]) {
     return INITIAL_QUESTIONS[lesson.id];
   }
-  return [
-    {
-      id: `${lesson.id}-q1`,
-      lessonId: lesson.id,
-      questionText: `Khám phá bài học "${lesson.title}": Hãy chọn phép toán đúng để giúp Mini tiếp tục hành trình!`,
-      hint: 'Đọc kỹ câu hỏi và các lựa chọn bên dưới nhé!',
-      visualType: 'formula',
-      visualData: { expression: `Mini đang chờ bạn ✨ (${lesson.title})` },
-      options: [
-        { id: 'o1', text: 'Đáp án chính xác (Thử thách 1)', isCorrect: true, explanation: 'Giỏi quá! Tư duy toán học của bạn rất nhạy bén!' },
-        { id: 'o2', text: 'Lựa chọn số 2', isCorrect: false },
-        { id: 'o3', text: 'Lựa chọn số 3', isCorrect: false },
-        { id: 'o4', text: 'Lựa chọn số 4', isCorrect: false },
-      ],
-    },
-    {
-      id: `${lesson.id}-q2`,
-      lessonId: lesson.id,
-      questionText: 'Khi ghép 4 miếng ghép hình vuông bằng nhau lại, ta có thể tạo thành hình gì lớn hơn?',
-      hint: 'Hãy tưởng tượng xếp 4 viên gạch cạnh nhau.',
-      visualType: 'shapes',
-      visualData: { emoji: '🟦', shape: 'square' },
-      options: [
-        { id: 'o1', text: 'Hình vuông lớn hoặc Hình chữ nhật dài', isCorrect: true, explanation: 'Chính xác! 4 hình vuông có thể tạo hình vuông 2x2 hoặc hình chữ nhật 1x4!' },
-        { id: 'o2', text: 'Hình tròn', isCorrect: false },
-        { id: 'o3', text: 'Hình tam giác đều', isCorrect: false },
-        { id: 'o4', text: 'Hình ngôi sao 5 cánh', isCorrect: false },
-      ],
-    },
-    {
-      id: `${lesson.id}-q3`,
-      lessonId: lesson.id,
-      questionText: `Sau khi hoàn thành thử thách này, bạn sẽ nhận được bao nhiêu điểm XP?`,
-      visualType: 'numbers',
-      visualData: { count: lesson.xpReward, expression: `+${lesson.xpReward} XP` },
-      options: [
-        { id: 'o1', text: `+${lesson.xpReward} XP siêu giá trị!`, isCorrect: true, explanation: `Hoan hô! Nhận ngay +${lesson.xpReward} XP về túi thám hiểm!` },
-        { id: 'o2', text: '+0 XP', isCorrect: false },
-        { id: 'o3', text: '+5 XP', isCorrect: false },
-        { id: 'o4', text: '+1 XP', isCorrect: false },
-      ],
-    },
+
+  // Lessons without hand-authored question sets still receive real, solvable
+  // math questions instead of placeholder answers about XP or the lesson title.
+  const ageMax = lesson.ageGroup === '4-5' ? 10 : lesson.ageGroup === '6-8' ? 20 : 100;
+  const base = Math.max(2, Math.min(ageMax - 2, lesson.level * 3 + 2));
+  const makeOptions = (answer: number, salt: number) => {
+    const candidates = new Set<number>([answer, answer + 1, Math.max(0, answer - 1), answer + 2, answer + salt + 1]);
+    const values = Array.from(candidates).slice(0, 4);
+    while (values.length < 4) values.push(answer + values.length + 2);
+    return values
+      .sort((a, b) => ((a * 7 + salt * 11) % 13) - ((b * 7 + salt * 11) % 13))
+      .map((value, index) => ({
+        id: `option-${salt}-${index}`,
+        text: String(value),
+        isCorrect: value === answer,
+        explanation: value === answer ? 'Chính xác! Con đã tìm được đáp án.' : 'Thử đếm lại hoặc tính từng bước nhé.',
+      }));
+  };
+
+  const isSubtraction = /trừ|bớt|còn lại|hiệu/i.test(lesson.title + ' ' + lesson.description);
+  const isMultiplication = /nhân|bảng cửu chương|gấp đôi|gấp ba/i.test(lesson.title + ' ' + lesson.description);
+  const isGeometry = lesson.category === 'geometry';
+  const values = [
+    { a: base, b: Math.max(1, Math.floor(base / 2)), salt: 1 },
+    { a: Math.max(2, base - 1), b: 2, salt: 2 },
+    { a: Math.max(3, base - 2), b: 3, salt: 3 },
   ];
+
+  return values.map(({ a, b, salt }, index) => {
+    let answer: number;
+    let expression: string;
+    let prompt: string;
+    let hint: string;
+    if (isGeometry) {
+      const shapes = [
+        { prompt: 'Hình nào có 3 cạnh?', answer: 3, options: [4, 3, 0, 1], hint: 'Hãy đếm các cạnh thẳng của hình tam giác.' },
+        { prompt: 'Hình vuông có bao nhiêu cạnh bằng nhau?', answer: 4, options: [3, 4, 5, 2], hint: 'Con đếm lần lượt từng cạnh của hình vuông nhé.' },
+        { prompt: 'Một hình tròn có bao nhiêu góc nhọn?', answer: 0, options: [1, 2, 0, 4], hint: 'Hình tròn không có cạnh thẳng hay đỉnh.' },
+      ][index];
+      answer = shapes.answer;
+      expression = shapes.prompt;
+      prompt = shapes.prompt;
+      hint = shapes.hint;
+      return {
+        id: `${lesson.id}-generated-${index + 1}`,
+        lessonId: lesson.id,
+        type: 'multiple-choice' as const,
+        questionText: prompt,
+        hint,
+        explanation: `Đáp án là ${answer}. ${hint}`,
+        visualType: 'shapes' as const,
+        visualData: { emoji: ['🔺', '🟦', '⚪'][index], shape: ['triangle', 'square', 'circle'][index] },
+        options: shapes.options.map((value, optionIndex) => ({
+          id: `option-${index}-${optionIndex}`, text: String(value), isCorrect: value === answer,
+        })),
+      };
+    }
+
+    if (isMultiplication) {
+      answer = a * b;
+      expression = `${a} × ${b}`;
+      prompt = `Có ${a} nhóm, mỗi nhóm có ${b} viên kẹo. Có tất cả bao nhiêu viên?`;
+      hint = 'Phép nhân là cách cộng lặp lại cùng một số.';
+    } else if (isSubtraction) {
+      answer = a + b - b;
+      expression = `${a + b} − ${b}`;
+      prompt = `Mini có ${a + b} viên ngọc, tặng bạn ${b} viên. Mini còn lại bao nhiêu viên?`;
+      hint = 'Lấy số ban đầu trừ đi số đã tặng.';
+    } else {
+      answer = a + b;
+      expression = `${a} + ${b}`;
+      prompt = `Có ${a} chú cá xanh và ${b} chú cá vàng. Có tất cả bao nhiêu chú cá?`;
+      hint = 'Con có thể đếm tiếp từ số lớn hơn.';
+    }
+
+    return {
+      id: `${lesson.id}-generated-${index + 1}`,
+      lessonId: lesson.id,
+      type: 'multiple-choice' as const,
+      questionText: prompt,
+      hint,
+      explanation: `${expression} = ${answer}. ${hint}`,
+      visualType: 'formula' as const,
+      visualData: { expression: `${expression} = ?`, emoji: '🐠' },
+      options: makeOptions(answer, salt),
+    };
+  });
 };
 
 // 15+ BADGES
