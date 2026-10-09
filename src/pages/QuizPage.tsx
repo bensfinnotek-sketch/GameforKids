@@ -189,12 +189,6 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
             <span className="block mt-1 font-bold">Thời gian làm bài: {finalElapsedSeconds} giây</span>
           </div>
 
-          {saveError && (
-        <div role="alert" className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
-          Chưa lưu được kết quả lên máy chủ. Bài học chưa được đánh dấu hoàn thành; hãy thử tiếp tục lại khi có kết nối.
-        </div>
-      )}
-
       {/* Buttons: VỀ BẢN ĐỒ / HỌC BÀI TIẾP */}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <button
@@ -254,6 +248,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
           style={{ width: `${progressPercent}%` }}
         ></div>
       </div>
+
+      {saveError && (
+        <div role="alert" className="mb-5 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+          Chưa lưu được kết quả lên máy chủ. Bài học chưa được đánh dấu hoàn thành; hãy nhấn Tiếp tục để thử lưu lại khi có kết nối.
+        </div>
+      )}
 
       {/* Main Question Card */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-sky-100 shadow-xl relative overflow-hidden">
