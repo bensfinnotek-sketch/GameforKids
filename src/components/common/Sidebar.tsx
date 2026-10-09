@@ -113,8 +113,8 @@ export const Sidebar: React.FC = () => {
 
       {/* Bottom Area: Special Management Portals */}
       <div className="pt-3 border-t border-slate-100 space-y-2">
+        {/* Login shortcut is only shown when no authenticated session exists. */}
         {!isAuthenticated && (
-        {/* Login Page quick link */}
         <button
           onClick={() => handleNav('login')}
           className="btn-touch-target w-full p-2 rounded-xl text-caption font-bold text-sky-800 bg-sky-50 hover:bg-sky-100 flex items-center justify-between border border-sky-200 transition"
