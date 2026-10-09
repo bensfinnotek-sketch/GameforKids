@@ -54,6 +54,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
   const [earnedStars, setEarnedStars] = useState(0);
   const [startTime] = useState<number>(Date.now());
   const [saveError, setSaveError] = useState(false);
+  const [completionResult, setCompletionResult] = useState<{ duplicate?: boolean; xpEarned?: number; coinEarned?: number; gemEarned?: number; stars?: number } | null>(null);
 
   const currentQ = questions[quizIndex] || questions[0];
 
@@ -102,7 +103,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
       setScore((prev) => prev + 1);
       setFeedback({
         isCorrect: true,
-        message: '🎉 Chính xác tuyệt vời! Bạn nhận được +10 XP!',
+        message: '🎉 Chính xác tuyệt vời! Câu trả lời đã được tính vào điểm bài học.',
       });
     } else {
       soundManager.playWrong();
@@ -128,8 +129,8 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
     const finalScore = Math.min(questions.length, score);
     const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
     setSaveError(false);
-    const saved = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds);
-    if (!saved) {
+    const result = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds);
+    if (!result.ok) {
       setSaveError(true);
       setFeedback({ isCorrect: false, message: 'Kết quả chưa được lưu. Hãy nhấn Tiếp tục để thử lưu lại; tiến độ chưa được cộng.' });
       return;
@@ -137,9 +138,8 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
 
     soundManager.playFanfare();
     triggerConfetti();
-    const accuracy = finalScore / questions.length;
-    const finalStars = accuracy >= 0.95 ? 3 : accuracy >= 0.8 ? 2 : 1;
-    setEarnedStars(finalStars);
+    setCompletionResult(result);
+    setEarnedStars(result.stars || 0);
     setFeedback(null);
     setCurrentStage('completed');
   };
@@ -550,19 +550,25 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
             ))}
           </div>
 
+          <p className="text-caption font-bold text-emerald-700">
+            {completionResult?.duplicate
+              ? 'Kết quả đã được lưu trước đó; không cộng thưởng lần hai.'
+              : 'Phần thưởng bên dưới đã được máy chủ xác nhận.'}
+          </p>
+
           {/* Rewards Box */}
           <div className="grid grid-cols-3 gap-3 max-w-md mx-auto bg-slate-50 p-4 rounded-3xl border border-slate-200">
             <div>
               <span className="text-caption text-slate-400 font-bold block">Kinh nghiệm</span>
-              <span className="text-caption font-black text-emerald-700">Đã xác nhận</span>
+              <span className="text-h3 font-black text-amber-600">+{completionResult?.xpEarned ?? 0} XP</span>
             </div>
             <div>
               <span className="text-caption text-slate-400 font-bold block">Tiền vàng</span>
-              <span className="text-caption font-black text-emerald-700">Đã lưu</span>
+              <span className="text-h3 font-black text-yellow-600">+{completionResult?.coinEarned ?? 0} 🪙</span>
             </div>
             <div>
               <span className="text-caption text-slate-400 font-bold block">Đá quý</span>
-              <span className="text-caption font-black text-emerald-700">Đã lưu</span>
+              <span className="text-h3 font-black text-purple-600">+{completionResult?.gemEarned ?? 0} 💎</span>
             </div>
           </div>
 
