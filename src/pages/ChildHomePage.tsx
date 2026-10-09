@@ -41,7 +41,7 @@ export const ChildHomePage: React.FC = () => {
 
   const currentLessonProgressPercent = completedIds.includes(nextLesson.id) ? 100 : 0;
   const completedToday = dailyChallenges.filter((challenge) => challenge.completed).length;
-  const totalToday = dailyChallenges.length || 3;
+  const totalToday = dailyChallenges.length;
 
   const handleContinueLearning = () => {
     soundManager.playLevelUp();
@@ -190,7 +190,7 @@ export const ChildHomePage: React.FC = () => {
           <button onClick={() => navigateTo('challenges')} className="text-left bg-white p-5 rounded-3xl border-2 border-emerald-100 shadow-sm hover:border-emerald-300 transition-all">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center"><Target className="w-5 h-5" /></div>
-              <div><p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Nhiệm vụ hôm nay</p><p className="text-xl font-black text-slate-900">{completedToday} / {totalToday}</p></div>
+              <div><p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Nhiệm vụ hôm nay</p><p className="text-xl font-black text-slate-900">{totalToday > 0 ? `${completedToday} / ${totalToday}` : '—'}</p></div>
             </div>
             <p className="mt-3 text-xs font-bold text-emerald-600">🎯 Làm thêm một nhiệm vụ nhé!</p>
           </button>
@@ -225,7 +225,9 @@ export const ChildHomePage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {worlds.map((world) => {
             const isUnlocked = world.isUnlocked || user.xp >= world.requiredXp;
-            const worldLessonIds = world.lessons.map((lesson) => lesson.id);
+            const worldLessonIds = lessons
+              .filter((lesson) => lesson.worldId === world.id || lesson.category === world.category)
+              .map((lesson) => lesson.id);
             const completedWorldLessons = worldLessonIds.filter((id) => completedIds.includes(id)).length;
             const isCompleted = worldLessonIds.length > 0 && completedWorldLessons === worldLessonIds.length;
             const isCurrent = !isCompleted && worldLessonIds.includes(nextLesson.id);
