@@ -53,6 +53,7 @@ import { OnboardingModal } from './components/common/OnboardingModal';
 import { HomePage } from './pages/HomePage';
 import { AgesPage } from './pages/AgesPage';
 import { LearnPage } from './pages/LearnPage';
+import { ExamPage } from './pages/ExamPage';
 import { MapPage } from './pages/MapPage';
 import { GamesPage } from './pages/GamesPage';
 import { ChallengesPage } from './pages/ChallengesPage';
@@ -132,6 +133,8 @@ const AppContent: React.FC = () => {
         return <AgesPage />;
       case 'learn':
         return <LearnPage />;
+      case 'exam':
+        return <ExamPage />;
       case 'map':
         return <MapPage />;
       case 'games':
