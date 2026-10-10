@@ -18,6 +18,7 @@ import {
   GraduationCap,
   Settings
 } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from './BrandLogo';
 import { soundManager } from '../../utils/sound';
@@ -30,6 +31,7 @@ export const Sidebar: React.FC = () => {
   const menuItems = [
     { id: 'home', label: 'Trang chủ', icon: Home, emoji: '🏠' },
     { id: 'learn', label: 'Học Toán', icon: BookOpen, emoji: '📚' },
+    { id: 'exam', label: 'Thi thử Toán', icon: GraduationCap, emoji: '📝' },
     { id: 'map', label: 'Bản đồ thế giới', icon: Map, emoji: '🗺️' },
     { id: 'games', label: 'Trò chơi', icon: Gamepad2, emoji: '🎮' },
     { id: 'challenges', label: 'Thử thách ngày', icon: Target, emoji: '🎯' },
