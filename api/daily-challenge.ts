@@ -100,7 +100,12 @@ export async function POST(request: Request) {
     const decoded = await authenticate(request);
     if (!decoded) return Response.json({ error: 'Missing authentication token' }, { status: 401 });
 
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const challengeId = typeof body.challengeId === 'string' ? body.challengeId : '';
     const challenge = CHALLENGES.find((item) => item.id === challengeId);
     if (!challenge) return Response.json({ error: 'Invalid daily challenge' }, { status: 400 });
