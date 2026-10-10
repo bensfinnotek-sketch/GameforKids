@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, Compass, Lock, MapPin, Play, Star, X, Trophy, Sparkles, Clock } from 'lucide-react';
+import { CheckCircle2, Compass, Lock, Star, X, Trophy, Sparkles, Clock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { World, Lesson } from '../types';
 import { soundManager } from '../utils/sound';
@@ -14,7 +14,6 @@ const islandColors = [
 export const MapPage: React.FC = () => {
   const { worlds, user, setActiveCategory, setActiveTab, setActiveLesson, lessons, activeAgeGroup, setActiveAgeGroup } = useGame();
   const [selectedWorld, setSelectedWorld] = useState<World | null>(null);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const ageLessons = useMemo(() => lessons.filter((lesson) => lesson.ageGroup === activeAgeGroup), [lessons, activeAgeGroup]);
   const completedCount = ageLessons.filter((lesson) => user.completedLessons.includes(lesson.id)).length;
   const progress = ageLessons.length ? Math.round(completedCount / ageLessons.length * 100) : 0;
@@ -22,14 +21,12 @@ export const MapPage: React.FC = () => {
   const openWorld = (world: World) => {
     soundManager.playClick();
     setSelectedWorld(world);
-    setSelectedLesson(null);
   };
   const startLesson = (lesson: Lesson) => {
     soundManager.playCorrect();
     setActiveLesson(lesson);
     setActiveTab('learn');
     setSelectedWorld(null);
-    setSelectedLesson(null);
   };
 
   return (
@@ -107,7 +104,7 @@ export const MapPage: React.FC = () => {
       {selectedWorld && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={selectedWorld.name}>
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border-4 border-sky-200 bg-white p-5 shadow-2xl sm:p-7">
-            <div className="flex items-start justify-between gap-4"><div><span className="text-xs font-black uppercase tracking-wider text-sky-600">Chặng {selectedWorld.order} • Bản đồ phiêu lưu</span><h2 className="mt-1 text-2xl font-black text-slate-800">{selectedWorld.icon} {selectedWorld.name}</h2><p className="mt-1 text-sm font-medium text-slate-500">{selectedWorld.description}</p></div><button onClick={() => { setSelectedWorld(null); setSelectedLesson(null); }} aria-label="Đóng" className="rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"><X className="h-5 w-5" /></button></div>
+            <div className="flex items-start justify-between gap-4"><div><span className="text-xs font-black uppercase tracking-wider text-sky-600">Chặng {selectedWorld.order} • Bản đồ phiêu lưu</span><h2 className="mt-1 text-2xl font-black text-slate-800">{selectedWorld.icon} {selectedWorld.name}</h2><p className="mt-1 text-sm font-medium text-slate-500">{selectedWorld.description}</p></div><button onClick={() => { setSelectedWorld(null); }} aria-label="Đóng" className="rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"><X className="h-5 w-5" /></button></div>
             <div className="mt-5 space-y-3">
               {ageLessons.filter((lesson) => lesson.worldId === selectedWorld.id).map((lesson, index) => {
                 const done = user.completedLessons.includes(lesson.id);
