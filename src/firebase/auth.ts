@@ -178,6 +178,11 @@ export interface TrustedLessonRewardResult {
   streak?: number;
 }
 
+// Keep a pending ID when the server outcome is uncertain. If the user retries
+// after a timeout or 5xx, the backend can return the original result without
+// awarding XP, coins, gems, or progress a second time.
+const pendingLessonAttemptIds = new Map<string, string>();
+
 export const submitLessonAttemptToFirestore = async (
   uid: string,
   attempt: {
@@ -187,26 +192,49 @@ export const submitLessonAttemptToFirestore = async (
     timeSpentSeconds: number;
   }
 ): Promise<TrustedLessonRewardResult | null> => {
+  if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
+
+  const pendingKey = `${uid}:${attempt.lessonId}`;
+  const attemptId = pendingLessonAttemptIds.get(pendingKey) || `attempt-${crypto.randomUUID()}`;
+  pendingLessonAttemptIds.set(pendingKey, attemptId);
+
   try {
-    if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
-
     const token = await auth.currentUser.getIdToken();
-    const attemptId = `attempt-${crypto.randomUUID()}`;
-    const response = await fetch('/api/lesson-attempt', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ ...attempt, attemptId }),
-    });
+    const requestBody = JSON.stringify({ ...attempt, attemptId });
 
-    if (!response.ok) {
-      console.warn('Trusted lesson reward request failed:', response.status);
-      return null;
+    for (let retry = 0; retry < 2; retry += 1) {
+      try {
+        const response = await fetch('/api/lesson-attempt', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: requestBody,
+        });
+
+        if (response.ok) {
+          const result = (await response.json()) as TrustedLessonRewardResult;
+          pendingLessonAttemptIds.delete(pendingKey);
+          return result;
+        }
+
+        console.warn('Trusted lesson reward request failed:', response.status);
+        // A client error is definitive; transient server errors may occur after
+        // the transaction commits, so retain the same ID for the next attempt.
+        if (response.status < 500) {
+          pendingLessonAttemptIds.delete(pendingKey);
+          return null;
+        }
+      } catch (err) {
+        if (retry === 1) {
+          console.warn('Trusted lesson reward submission warning:', err);
+          return null;
+        }
+      }
     }
 
-    return (await response.json()) as TrustedLessonRewardResult;
+    return null;
   } catch (err) {
     console.warn('Trusted lesson reward submission warning:', err);
     return null;
