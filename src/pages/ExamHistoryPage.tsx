@@ -1,0 +1,111 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft, BookOpen, Clock3, History, RefreshCw, Trophy } from 'lucide-react';
+import { useGame } from '../context/GameContext';
+import { fetchExamAttemptHistory, TrustedExamAttemptHistoryItem } from '../firebase/auth';
+
+const formatDate = (timestamp: number | null) => {
+  if (!timestamp) return 'Thời gian chưa có';
+  return new Date(timestamp).toLocaleString('vi-VN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
+};
+
+const formatDuration = (seconds: number) => {
+  const safeSeconds = Math.max(0, seconds);
+  return `${Math.floor(safeSeconds / 60)} phút ${safeSeconds % 60} giây`;
+};
+
+export const ExamHistoryPage: React.FC = () => {
+  const { setActiveTab, isAuthenticated, authReady } = useGame();
+  const [attempts, setAttempts] = useState<TrustedExamAttemptHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadHistory = useCallback(async () => {
+    if (!authReady) return;
+    if (!isAuthenticated) {
+      setAttempts([]);
+      setLoading(false);
+      setError('Đăng nhập để xem lịch sử luyện thi của tài khoản.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const result = await fetchExamAttemptHistory(20);
+    if (result === null) {
+      setError('Chưa tải được lịch sử. Hãy kiểm tra kết nối rồi thử lại.');
+    } else {
+      setAttempts(result);
+    }
+    setLoading(false);
+  }, [authReady, isAuthenticated]);
+
+  useEffect(() => { void loadHistory(); }, [loadHistory]);
+
+  return (
+    <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
+      <button onClick={() => setActiveTab('exam')} className="mb-4 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-white">
+        <ArrowLeft className="h-4 w-4" /> Quay lại phòng luyện thi
+      </button>
+      <section className="overflow-hidden rounded-[2rem] border border-sky-100 bg-white shadow-xl">
+        <header className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 p-6 text-white sm:p-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15"><History className="h-7 w-7" /></div>
+            <div>
+              <h1 className="text-2xl font-black sm:text-3xl">Lịch sử luyện thi</h1>
+              <p className="mt-1 text-sm text-blue-50">Theo dõi điểm số qua từng lần làm bài của bé.</p>
+            </div>
+          </div>
+        </header>
+        <div className="p-4 sm:p-7">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-500">Hiển thị tối đa 20 lần làm bài gần nhất.</p>
+            <button onClick={() => void loadHistory()} disabled={loading || !isAuthenticated} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-50">
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Làm mới
+            </button>
+          </div>
+          {loading ? (
+            <div className="rounded-2xl bg-sky-50 p-8 text-center font-bold text-sky-800">Đang tải lịch sử luyện thi…</div>
+          ) : error ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
+              <p className="font-bold text-amber-900">{error}</p>
+              {isAuthenticated && <button onClick={() => void loadHistory()} className="mt-4 rounded-xl bg-amber-500 px-4 py-2 font-black text-white">Thử lại</button>}
+            </div>
+          ) : attempts.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-sky-100 p-8 text-center">
+              <BookOpen className="mx-auto h-10 w-10 text-sky-500" />
+              <h2 className="mt-3 text-lg font-black text-slate-800">Chưa có lượt thi nào</h2>
+              <p className="mt-1 text-sm text-slate-500">Bắt đầu làm bài thi thử để kết quả xuất hiện tại đây nhé!</p>
+              <button onClick={() => setActiveTab('exam')} className="mt-4 rounded-xl bg-sky-600 px-5 py-3 font-black text-white">Bắt đầu luyện thi</button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {attempts.map((attempt, index) => {
+                const accuracy = attempt.totalQuestions > 0 ? Math.round(attempt.correctCount / attempt.totalQuestions * 100) : 0;
+                return (
+                  <article key={attempt.id} className="rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"><Trophy className="h-6 w-6" /></div>
+                        <div>
+                          <h2 className="font-black text-slate-800">Lần làm bài #{attempts.length - index}</h2>
+                          <p className="mt-1 text-sm text-slate-500">{formatDate(attempt.submittedAt)}</p>
+                          <p className="mt-1 text-xs font-semibold text-slate-500"><Clock3 className="mr-1 inline h-3.5 w-3.5" /> {formatDuration(attempt.timeSpentSeconds)} · {attempt.answeredCount}/{attempt.totalQuestions} câu đã trả lời</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-5 rounded-xl bg-sky-50 px-4 py-3 sm:min-w-44">
+                        <div><div className="text-xs font-bold text-sky-700">Điểm số</div><div className="text-2xl font-black text-sky-900">{attempt.score}/100</div></div>
+                        <div className="text-right"><div className="text-xs font-bold text-slate-500">Chính xác</div><div className="font-black text-slate-800">{accuracy}%</div></div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+};
