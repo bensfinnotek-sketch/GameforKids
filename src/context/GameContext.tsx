@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore, purchaseTreasureItemOnServer } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -69,7 +69,7 @@ interface GameContextType {
   addGems: (amount: number) => void;
   completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => Promise<LessonCompletionResult>;
   claimDailyChallenge: (challengeId: string) => void;
-  purchaseItem: (item: TreasureItem) => { success: boolean; message: string };
+  purchaseItem: (item: TreasureItem) => Promise<{ success: boolean; message: string }>;
   equipItem: (item: TreasureItem) => void;
   toggleSound: () => void;
   switchRole: (role: 'student' | 'parent' | 'teacher' | 'admin') => void;
@@ -585,49 +585,52 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       icon: '💎',
     });
   }, [dailyChallenges, showReward, triggerConfetti]);
-  const purchaseItem = useCallback((item: TreasureItem) => {
+  const purchaseItem = useCallback(async (item: TreasureItem) => {
+    if (!auth.currentUser) {
+      return { success: false, message: 'Bạn cần đăng nhập để mua vật phẩm nhé.' };
+    }
     if (user.inventory.includes(item.id)) {
       return { success: false, message: 'Bạn đã sở hữu vật phẩm này rồi!' };
     }
 
-    if (item.priceType === 'coin' && user.coin < item.price) {
-      return { success: false, message: `CHƯA ĐỦ TIỀN VÀNG! Cần thêm ${item.price - user.coin} vàng nữa.` };
+    const result = await purchaseTreasureItemOnServer(item.id);
+    if (!result?.ok) {
+      if (result?.insufficientFunds) {
+        const missing = Math.max(0, (result.required || item.price) - (result.balance || 0));
+        const currencyName = result.currency === 'gem' ? 'ngọc' : 'vàng';
+        return { success: false, message: `Chưa đủ ${currencyName}! Bé cần thêm ${missing} ${currencyName} nữa.` };
+      }
+      return { success: false, message: 'Chưa mua được vật phẩm do kết nối chưa ổn định. Bé hãy thử lại nhé.' };
     }
-    if (item.priceType === 'gem' && user.gem < item.price) {
-      return { success: false, message: `CHƯA ĐỦ GEM! Cần thêm ${item.price - user.gem} ngọc quý nữa.` };
+    if (result.alreadyOwned) {
+      if (result.inventory) setUser((prev) => ({ ...prev, inventory: result.inventory!, coin: result.coin ?? prev.coin, gem: result.gem ?? prev.gem }));
+      return { success: false, message: 'Vật phẩm này đã được sở hữu trên tài khoản rồi.' };
     }
 
-    // Deduct and add to inventory
     setUser((prev) => ({
       ...prev,
-      coin: item.priceType === 'coin' ? prev.coin - item.price : prev.coin,
-      gem: item.priceType === 'gem' ? prev.gem - item.price : prev.gem,
-      inventory: [...prev.inventory, item.id],
+      coin: result.coin ?? prev.coin,
+      gem: result.gem ?? prev.gem,
+      inventory: result.inventory ?? [...prev.inventory, item.id],
     }));
-
-    setTreasureItems((prev) =>
-      prev.map((i) => (i.id === item.id ? { ...i, unlocked: true } : i))
-    );
+    setTreasureItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, unlocked: true } : i)));
 
     soundManager.playCoin();
     triggerConfetti();
-
     showReward({
       id: 'buy-' + Date.now(),
       title: '🎉 Mua sắm thành công!',
       message: `Bạn đã mở khóa ${item.name}`,
       icon: item.previewEmoji,
     });
-
     addNotification(
       '🎁 Kho báu mới!',
       `Bạn vừa mở khóa thành công "${item.name}". Hãy vào trang phục để diện ngay!`,
       item.previewEmoji,
       'treasure'
     );
-
     return { success: true, message: `Đã mở khóa ${item.name} thành công!` };
-  }, [user, showReward, triggerConfetti, addNotification]);
+  }, [user.inventory, showReward, triggerConfetti, addNotification]);
 
   const equipItem = useCallback((item: TreasureItem) => {
     soundManager.playClick();
