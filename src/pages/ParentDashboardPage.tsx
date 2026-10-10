@@ -94,6 +94,11 @@ export const ParentDashboardPage: React.FC = () => {
     .sort((a, b) => b.accuracy - a.accuracy);
   const strongestCategory = rankedCategories[0];
   const focusCategory = rankedCategories.length > 1 ? rankedCategories[rankedCategories.length - 1] : null;
+  // Offer lightweight practice ideas from saved accuracy data; these are guidance, not a diagnosis.
+  const practiceRecommendations = rankedCategories
+    .filter((item) => item.accuracy < 80)
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, 3);
 
   const handleSaveGoal = () => {
     soundManager.playClick();
@@ -314,6 +319,39 @@ export const ParentDashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
+        <section className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-fuchsia-100 shadow-sm" aria-labelledby="practice-recommendations-heading">
+          <h3 id="practice-recommendations-heading" className="font-heading text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-fuchsia-600" /> Gợi ý luyện tập tiếp theo
+          </h3>
+          <p className="text-sm text-slate-500 mb-5">Gợi ý dựa trên độ chính xác trong lịch sử đã lưu; hãy học nhẹ nhàng và động viên bé trong quá trình luyện tập.</p>
+          {user.history.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-fuchsia-200 bg-fuchsia-50/50 p-4 text-sm text-slate-600">
+              Bé chưa có kết quả được lưu. Khi bé hoàn thành vài bài học, phụ huynh sẽ thấy gợi ý phù hợp hơn tại đây.
+            </div>
+          ) : practiceRecommendations.length > 0 ? (
+            <div className="space-y-3">
+              {practiceRecommendations.map((item) => (
+                <article key={item.category} className="rounded-2xl border border-fuchsia-100 bg-fuchsia-50/50 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="font-black text-slate-800">{item.category}</h4>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-fuchsia-800">{item.accuracy}% chính xác</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {item.accuracy < 50
+                      ? 'Nên quay lại kiến thức nền tảng, luyện từng bước trong khoảng 5–10 phút rồi nghỉ ngắn.'
+                      : 'Nên luyện thêm 2–3 bài tương tự với tốc độ thoải mái, sau đó thử lại để xem mức tiến bộ.'}
+                  </p>
+                  <p className="mt-2 text-xs font-semibold text-slate-500">Dựa trên {item.total} lần hoàn thành đã lưu.</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+              <p className="font-bold text-emerald-900">Bé đang đạt từ 80% độ chính xác ở các môn đã ghi nhận 🎉</p>
+              <p className="mt-1 text-sm text-emerald-800">Tiếp tục ôn tập đa dạng, duy trì thói quen đều đặn và khen ngợi sự cố gắng của bé.</p>
+            </div>
+          )}
+        </section>
         </div>
 
         {/* Right: Parental Controls & Screen Time Goal */}
