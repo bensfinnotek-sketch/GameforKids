@@ -18,7 +18,6 @@ import {
   GraduationCap,
   Settings
 } from 'lucide-react';
-import { GraduationCap } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { BrandLogo } from './BrandLogo';
 import { soundManager } from '../../utils/sound';
