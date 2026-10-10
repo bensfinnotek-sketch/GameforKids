@@ -54,6 +54,7 @@ import { HomePage } from './pages/HomePage';
 import { AgesPage } from './pages/AgesPage';
 import { LearnPage } from './pages/LearnPage';
 import { ExamPage } from './pages/ExamPage';
+import { ExamHistoryPage } from './pages/ExamHistoryPage';
 import { MapPage } from './pages/MapPage';
 import { GamesPage } from './pages/GamesPage';
 import { ChallengesPage } from './pages/ChallengesPage';
@@ -80,7 +81,7 @@ const AppContent: React.FC = () => {
 
   const isAuthRoute = ['login', 'register', 'forgot-password', 'resend-confirmation'].includes(activeTab);
   const protectedRouteRole = activeTab === 'admin' ? 'admin' : activeTab === 'teacher' ? 'teacher' : activeTab === 'parent' ? 'parent' : null;
-  const requiresAuth = !isAuthRoute && (protectedRouteRole !== null || activeTab === 'child/home' || activeTab === 'home' || activeTab.startsWith('world/') || activeTab.startsWith('lesson/'));
+  const requiresAuth = !isAuthRoute && (protectedRouteRole !== null || activeTab === 'child/home' || activeTab === 'home' || activeTab === 'exam-history' || activeTab.startsWith('world/') || activeTab.startsWith('lesson/'));
 
   useEffect(() => {
     if (!authReady || !isAuthenticated || !isAuthRoute) return;
@@ -135,6 +136,8 @@ const AppContent: React.FC = () => {
         return <LearnPage />;
       case 'exam':
         return <ExamPage />;
+      case 'exam-history':
+        return <ExamHistoryPage />;
       case 'map':
         return <MapPage />;
       case 'games':
