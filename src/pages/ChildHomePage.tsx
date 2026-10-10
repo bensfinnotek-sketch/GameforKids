@@ -7,12 +7,12 @@ import { World, Lesson } from '../types';
 
 const getStudyDateKey = (value: string): string => {
   const input = (value || '').trim();
-  const vietnameseDate = input.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/);
+  const vietnameseDate = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (vietnameseDate) {
     const [, day, month, year] = vietnameseDate;
     return year + '-' + String(Number(month)).padStart(2, '0') + '-' + String(Number(day)).padStart(2, '0');
   }
-  const isoDate = input.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  const isoDate = input.match(/^(\d{4}-\d{2}-\d{2})/);
   if (isoDate) return isoDate[1];
   const parsed = new Date(input);
   if (Number.isNaN(parsed.getTime())) return '';
