@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const decoded = await getAuth(adminApp()).verifyIdToken(header.slice(7));
     const body = await request.json();
     const answers = body.answers;
-    const timeSpentSeconds = Number(body.timeSpentSeconds);
+    const timeSpentSeconds = body.timeSpentSeconds;
 
     if (
       !answers || typeof answers !== 'object' || Array.isArray(answers) ||
