@@ -225,8 +225,12 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAuthReady(true);
 
       void (async () => {
-        const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
+        const profileResult = await fetchUserProfileFromFirestoreResult(firebaseUser.uid);
         if (!mounted || auth.currentUser?.uid !== firebaseUser.uid) return;
+        // A failed read is not the same as a first-time account. Keep syncing
+        // disabled until a later auth/profile refresh can read the saved data.
+        if (profileResult.status === 'error') return;
+        const existingProfile = profileResult.status === 'found' ? profileResult.profile : null;
 
         const isRealProfile = existingProfile?.dataVersion === 2;
         const mergedProfile: UserProfile = {
