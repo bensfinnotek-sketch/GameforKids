@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, Clock3, History, RefreshCw, Trophy } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { fetchExamAttemptHistory, TrustedExamAttemptHistoryItem } from '../firebase/auth';
+import { fetchExamAttemptHistory } from '../firebase/auth';
+import type { TrustedExamAttemptHistoryItem } from '../firebase/auth';
 
 const formatDate = (timestamp: number | null) => {
   if (!timestamp) return 'Thời gian chưa có';
