@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Trophy, 
   Sparkles, 
@@ -9,7 +9,8 @@ import {
   Award, 
   TrendingUp, 
   Crown,
-  Medal
+  Medal,
+  Filter
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { getLevelInfo } from '../data/mockData';
@@ -17,6 +18,15 @@ import { getLevelInfo } from '../data/mockData';
 export const AchievementsPage: React.FC = () => {
   const { user, badges } = useGame();
   const levelInfo = getLevelInfo(user.xp);
+  const [badgeStatus, setBadgeStatus] = useState<'all' | 'unlocked' | 'locked'>('all');
+  const [badgeCategory, setBadgeCategory] = useState('all');
+  const badgeCategories = Array.from(new Set(badges.map((badge) => badge.category)));
+  const filteredBadges = badges.filter((badge) => {
+    const unlocked = user.unlockedBadges.includes(badge.id);
+    const matchesStatus = badgeStatus === 'all' || (badgeStatus === 'unlocked' ? unlocked : !unlocked);
+    const matchesCategory = badgeCategory === 'all' || badge.category === badgeCategory;
+    return matchesStatus && matchesCategory;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -106,8 +116,54 @@ export const AchievementsPage: React.FC = () => {
             </span>
           </div>
 
+          <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-700">
+              <Filter className="h-4 w-4 text-purple-600" /> Lọc bộ sưu tập huy hiệu
+            </div>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc huy hiệu theo trạng thái">
+              {([
+                { value: 'all', label: 'Tất cả' },
+                { value: 'unlocked', label: 'Đã mở khóa' },
+                { value: 'locked', label: 'Chưa mở khóa' },
+              ] as const).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setBadgeStatus(option.value)}
+                  aria-pressed={badgeStatus === option.value}
+                  className={`rounded-full px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${badgeStatus === option.value ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 hover:bg-purple-50'}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Lọc huy hiệu theo loại">
+              <button
+                type="button"
+                onClick={() => setBadgeCategory('all')}
+                aria-pressed={badgeCategory === 'all'}
+                className={`rounded-full px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${badgeCategory === 'all' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-indigo-50'}`}
+              >
+                Mọi loại
+              </button>
+              {badgeCategories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setBadgeCategory(category)}
+                  aria-pressed={badgeCategory === category}
+                  className={`rounded-full px-3 py-2 text-xs font-bold transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${badgeCategory === category ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-indigo-50'}`}
+                >
+                  {category === 'mastery' ? 'Thành thạo' : category === 'streak' ? 'Chuỗi ngày' : category === 'accuracy' ? 'Chính xác' : category === 'game' ? 'Trò chơi' : category}
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-xs font-semibold text-slate-500" aria-live="polite">
+              Đang hiển thị {filteredBadges.length} / {badges.length} huy hiệu
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {badges.map((badge) => {
+            {filteredBadges.map((badge) => {
               const isUnlocked = user.unlockedBadges.includes(badge.id);
 
               return (
@@ -148,6 +204,20 @@ export const AchievementsPage: React.FC = () => {
               );
             })}
           </div>
+          {filteredBadges.length === 0 && (
+            <div className="rounded-2xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-6 text-center">
+              <Trophy className="mx-auto h-8 w-8 text-purple-500" />
+              <p className="mt-2 font-bold text-slate-700">Chưa có huy hiệu phù hợp</p>
+              <p className="mt-1 text-sm text-slate-500">Thử chọn trạng thái hoặc loại huy hiệu khác nhé.</p>
+              <button
+                type="button"
+                onClick={() => { setBadgeStatus('all'); setBadgeCategory('all'); }}
+                className="mt-3 rounded-xl bg-purple-600 px-4 py-2 text-sm font-bold text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Real learner activity */}
