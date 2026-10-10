@@ -32,8 +32,8 @@ export const TreasurePage: React.FC = () => {
     (item) => activeFilter === 'all' || item.category === activeFilter
   );
 
-  const handleBuy = (item: TreasureItem) => {
-    const res = purchaseItem(item);
+  const handleBuy = async (item: TreasureItem) => {
+    const res = await purchaseItem(item);
     setPurchaseMsg({ text: res.message, success: res.success });
     setTimeout(() => setPurchaseMsg(null), 4000);
   };
