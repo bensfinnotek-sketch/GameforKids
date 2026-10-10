@@ -42,6 +42,14 @@ export const ChildHomePage: React.FC = () => {
   const currentLessonProgressPercent = completedIds.includes(nextLesson.id) ? 100 : 0;
   const completedToday = dailyChallenges.filter((challenge) => challenge.completed).length;
   const totalToday = dailyChallenges.length;
+  const todayKey = new Date().toLocaleDateString('vi-VN');
+  const studySecondsToday = (user.history || []).reduce((total, item) => {
+    const completedDate = (item.completedAt || '').split(' ')[0];
+    return completedDate === todayKey ? total + Math.max(0, item.timeSpentSeconds || 0) : total;
+  }, 0);
+  const studyMinutesToday = Math.floor(studySecondsToday / 60);
+  const dailyGoalMinutes = Math.max(1, user.dailyStudyGoalMinutes || 20);
+  const dailyGoalPercent = Math.min(100, Math.round((studyMinutesToday / dailyGoalMinutes) * 100));
 
   const handleContinueLearning = () => {
     soundManager.playLevelUp();
@@ -197,7 +205,35 @@ export const ChildHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. MATH ADVENTURE WORLD MAP NODES */}
+      {/* 4. DAILY STUDY GOAL */}
+      <section aria-label="Mục tiêu học tập hôm nay" className="rounded-3xl border-2 border-violet-100 bg-gradient-to-r from-violet-50 via-white to-fuchsia-50 p-5 sm:p-7 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-2xl" aria-hidden="true">⏱️</div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900">Mục tiêu học tập hôm nay</h2>
+              <p className="mt-1 text-sm text-slate-600">Mỗi ngày một chút, bé sẽ tiến bộ từng bước!</p>
+              <p className="mt-2 text-sm font-bold text-violet-800">{studyMinutesToday} / {dailyGoalMinutes} phút đã học</p>
+            </div>
+          </div>
+          <div className="sm:w-2/5">
+            <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-600">
+              <span>Tiến độ hôm nay</span><span>{dailyGoalPercent}%</span>
+            </div>
+            <div className="h-3.5 overflow-hidden rounded-full bg-violet-100" role="progressbar" aria-label="Tiến độ mục tiêu học tập hôm nay" aria-valuemin={0} aria-valuemax={100} aria-valuenow={dailyGoalPercent}>
+              <div className={`h-full rounded-full transition-all duration-500 ${dailyGoalPercent >= 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-violet-500 to-fuchsia-500'}`} style={{ width: `${dailyGoalPercent}%` }} />
+            </div>
+            <p className={`mt-2 text-xs font-semibold ${dailyGoalPercent >= 100 ? 'text-emerald-700' : 'text-slate-500'}`} aria-live="polite">
+              {dailyGoalPercent >= 100 ? '🎉 Tuyệt vời! Bé đã hoàn thành mục tiêu hôm nay!' : `Còn ${Math.max(0, dailyGoalMinutes - studyMinutesToday)} phút nữa để hoàn thành mục tiêu.`}
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={() => navigateTo('challenges')} className="mt-4 rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-extrabold text-violet-700 transition hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2">
+          Khám phá nhiệm vụ hôm nay <ArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" />
+        </button>
+      </section>
+
+      {/* 5. MATH ADVENTURE WORLD MAP NODES */}
       <section aria-label="Bản đồ thế giới">
         <div className="flex items-center justify-between mb-4">
           <div>
