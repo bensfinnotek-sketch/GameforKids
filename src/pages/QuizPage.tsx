@@ -10,7 +10,8 @@ import {
   Flame,
   Star,
   MapPin,
-  Heart
+  Heart,
+  Volume2
 } from 'lucide-react';
 import { Lesson, QuizQuestion } from '../types';
 import { getQuestionsForLesson } from '../data/mockData';
@@ -44,6 +45,15 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
 
   const currentQ = questions[currentIndex];
   const progressPercent = Math.round(((currentIndex) / questions.length) * 100);
+
+  const speakQuestion = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(`${currentQ?.questionText || ''}. ${currentQ?.hint || ''}`);
+    utterance.lang = 'vi-VN';
+    utterance.rate = lesson.ageGroup === '2-3' ? 0.78 : 0.95;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSelectOption = (optionId: string) => {
     if (isAnswerSubmitted) return;
@@ -285,13 +295,18 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
         </div>
 
         {/* Question Title */}
-        <h3 className="font-heading text-xl sm:text-2xl font-black text-slate-800 leading-snug mb-6">
-          {currentQ.questionText}
-        </h3>
+        <div className="mb-6 flex items-start gap-3">
+          <h3 className={`font-heading flex-1 font-black text-slate-800 leading-snug ${lesson.ageGroup === '2-3' ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
+            {currentQ.questionText}
+          </h3>
+          <button type="button" onClick={speakQuestion} aria-label="Nghe đọc câu hỏi" className="flex min-h-12 min-w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-sky-200 bg-sky-50 text-sky-700 transition hover:bg-sky-100 focus:outline-none focus:ring-4 focus:ring-sky-200">
+            <Volume2 className="h-6 w-6" />
+          </button>
+        </div>
 
         {/* Visual Graphic Representation */}
         {currentQ.visualData && (
-          <div className="mb-8 p-6 bg-gradient-to-b from-sky-50 to-white rounded-3xl border-2 border-sky-200/60 flex flex-col items-center justify-center text-center">
+          <div className={`mb-8 p-6 bg-gradient-to-b from-sky-50 to-white rounded-3xl border-2 border-sky-200/60 flex flex-col items-center justify-center text-center ${lesson.ageGroup === '2-3' ? 'min-h-36' : ''}`}>
             
             {/* Visual Fish or Apples Counting */}
             {(currentQ.visualType === 'apples' || currentQ.visualType === 'fish') && currentQ.visualData.count && (
@@ -299,7 +314,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
                 {Array.from({ length: currentQ.visualData.count }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-14 h-14 bg-white rounded-2xl shadow-md border-2 border-amber-200 flex items-center justify-center text-3xl animate-bounce hover:scale-110 cursor-pointer transition-transform"
+                    className={`bg-white rounded-2xl shadow-md border-2 border-amber-200 flex items-center justify-center animate-bounce hover:scale-110 cursor-pointer transition-transform ${lesson.ageGroup === '2-3' ? 'h-20 w-20 text-5xl' : 'h-14 w-14 text-3xl'}`}
                     style={{ animationDelay: `${i * 0.08}s` }}
                     title={`Chạm vào để đếm: ${i + 1}`}
                   >
@@ -311,11 +326,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
 
             {/* Visual Shapes Sequence */}
             {currentQ.visualType === 'shapes' && currentQ.visualData.items && (
-              <div className="flex items-center gap-3 text-3xl flex-wrap justify-center">
+              <div className={`flex items-center gap-3 flex-wrap justify-center ${lesson.ageGroup === '2-3' ? 'text-5xl' : 'text-3xl'}`}>
                 {currentQ.visualData.items.map((item, idx) => (
                   <span
                     key={idx}
-                    className="p-3 bg-white rounded-2xl shadow-xs border border-slate-200 text-3xl"
+                    className={`bg-white rounded-2xl shadow-xs border border-slate-200 ${lesson.ageGroup === '2-3' ? 'p-5 text-5xl' : 'p-3 text-3xl'}`}
                   >
                     {item}
                   </span>
@@ -357,7 +372,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
                 key={option.id}
                 onClick={() => handleSelectOption(option.id)}
                 disabled={isAnswerSubmitted}
-                className={`p-4 rounded-2xl border-2 text-left font-bold transition-all flex items-center justify-between ${optionStyles}`}
+                className={`rounded-2xl border-2 text-left font-bold transition-all flex items-center justify-between ${lesson.ageGroup === '2-3' ? 'min-h-24 p-5' : 'p-4'} ${optionStyles}`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-xl font-heading font-black text-sm flex items-center justify-center ${
@@ -365,7 +380,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
                   }`}>
                     {letter}
                   </div>
-                  <span className="text-base sm:text-lg">{option.text}</span>
+                  <span className={lesson.ageGroup === '2-3' ? 'text-3xl sm:text-4xl' : 'text-base sm:text-lg'}>{option.text}</span>
                 </div>
 
                 {isAnswerSubmitted && option.isCorrect && (
