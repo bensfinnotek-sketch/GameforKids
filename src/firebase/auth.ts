@@ -435,3 +435,33 @@ export const submitExamAttemptToServer = async (
   }
 };
 
+
+export interface TrustedExamAttemptHistoryItem {
+  id: string;
+  examId: string;
+  score: number;
+  correctCount: number;
+  answeredCount: number;
+  totalQuestions: number;
+  timeSpentSeconds: number;
+  submittedAt: number | null;
+}
+
+export const fetchExamAttemptHistory = async (
+  limit = 20,
+): Promise<TrustedExamAttemptHistoryItem[] | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const safeLimit = Number.isInteger(limit) ? Math.min(50, Math.max(1, limit)) : 20;
+    const response = await fetch(`/api/exam-attempt?limit=${safeLimit}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { attempts?: TrustedExamAttemptHistoryItem[] };
+    return Array.isArray(data.attempts) ? data.attempts : null;
+  } catch (error) {
+    console.warn('Trusted exam history fetch warning:', error);
+    return null;
+  }
+};
