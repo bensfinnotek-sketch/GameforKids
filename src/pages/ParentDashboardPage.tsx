@@ -13,7 +13,8 @@ import {
   Award,
   ArrowLeft,
   BookOpen,
-  History
+  History,
+  Download
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
@@ -60,6 +61,40 @@ export const ParentDashboardPage: React.FC = () => {
     soundManager.playClick();
     switchRole('student');
     setActiveTab('home');
+  };
+
+  const handleExportHistory = () => {
+    if (filteredHistory.length === 0) return;
+
+    const escapeCsvCell = (value: string | number) => {
+      let safeValue = String(value);
+      // Prevent spreadsheet formula injection from user-generated text fields.
+      if (/^[=+@\\-\\t\\r]/.test(safeValue)) safeValue = `'${safeValue}`;
+      return `"${safeValue.replace(/"/g, '""')}"`;
+    };
+    const rows = [
+      ['Thời gian hoàn thành', 'Tên bài học', 'Môn học', 'Điểm', 'Tổng câu hỏi', 'Độ chính xác (%)', 'Thời gian (giây)', 'Sao đạt được'],
+      ...filteredHistory.map((item) => [
+        item.completedAt,
+        item.lessonTitle,
+        item.category,
+        item.score,
+        item.totalQuestions,
+        Math.max(0, Math.min(100, item.accuracy)),
+        Math.max(0, item.timeSpentSeconds),
+        item.starsEarned
+      ])
+    ];
+    const csv = '\\uFEFF' + rows.map((row) => row.map(escapeCsvCell).join(',')).join('\\r\\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bao-cao-hoc-tap-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -276,7 +311,8 @@ export const ParentDashboardPage: React.FC = () => {
           </span>
         </div>
         {user.history.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="Lọc hoạt động theo môn học">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc hoạt động theo môn học">
             <button
               type="button"
               onClick={() => { setHistoryCategory('all'); setHistoryLimit(5); }}
@@ -296,6 +332,16 @@ export const ParentDashboardPage: React.FC = () => {
                 {category}
               </button>
             ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleExportHistory}
+              disabled={filteredHistory.length === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-200 bg-white px-4 py-2.5 text-sm font-bold text-sky-700 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+            >
+              <Download className="w-4 h-4" />
+              Tải báo cáo CSV
+            </button>
           </div>
         )}
         {user.history.length === 0 ? (
