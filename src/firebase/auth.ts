@@ -399,3 +399,39 @@ export const fetchStudentProfilesFromFirestore = async (): Promise<UserProfile[]
     return [];
   }
 };
+
+export interface TrustedExamAttemptResult {
+  ok: boolean;
+  attemptId?: string;
+  correctCount?: number;
+  score?: number;
+  answeredCount?: number;
+  totalQuestions?: number;
+}
+
+export const submitExamAttemptToServer = async (
+  answers: Record<string, number>,
+  timeSpentSeconds: number,
+): Promise<TrustedExamAttemptResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/exam-attempt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ answers, timeSpentSeconds }),
+    });
+    if (!response.ok) {
+      console.warn('Trusted exam result save failed:', response.status);
+      return null;
+    }
+    return (await response.json()) as TrustedExamAttemptResult;
+  } catch (error) {
+    console.warn('Trusted exam result submission warning:', error);
+    return null;
+  }
+};
+
