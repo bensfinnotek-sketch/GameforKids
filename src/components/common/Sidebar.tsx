@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Crown,
   GraduationCap,
+  History,
   Settings
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
