@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   BookOpen,
   History,
-  Download
+  Download,
+  Search
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
@@ -26,12 +27,13 @@ export const ParentDashboardPage: React.FC = () => {
 
   const [historyCategory, setHistoryCategory] = useState('all');
   const [historyPeriod, setHistoryPeriod] = useState<'all' | '7' | '30'>('all');
+  const [historySearch, setHistorySearch] = useState('');
   const [historyLimit, setHistoryLimit] = useState(5);
   const historyCategories = Array.from(new Set(user.history.map((item) => item.category)));
   const categoryFilteredHistory = historyCategory === 'all'
     ? user.history
     : user.history.filter((item) => item.category === historyCategory);
-  const filteredHistory = historyPeriod === 'all'
+  const dateFilteredHistory = historyPeriod === 'all'
     ? categoryFilteredHistory
     : categoryFilteredHistory.filter((item) => {
         // completedAt is stored as dd/mm/yyyy in the Vietnamese locale.
@@ -44,6 +46,12 @@ export const ParentDashboardPage: React.FC = () => {
         startDate.setDate(startDate.getDate() - (Number(historyPeriod) - 1));
         return completedDate >= startDate && completedDate <= new Date(today.getFullYear(), today.getMonth(), today.getDate());
       });
+  const normalizedHistorySearch = historySearch.trim().toLocaleLowerCase('vi');
+  const filteredHistory = normalizedHistorySearch
+    ? dateFilteredHistory.filter((item) =>
+        `${item.lessonTitle} ${item.category} ${item.completedAt}`.toLocaleLowerCase('vi').includes(normalizedHistorySearch)
+      )
+    : dateFilteredHistory;
 
   const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 0);
   const totalMinutes = Math.round(totalTimeSeconds / 60);
@@ -364,6 +372,17 @@ export const ParentDashboardPage: React.FC = () => {
                   </button>
                 ))}
               </div>
+            <label className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-500 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100 sm:max-w-xs">
+              <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <input
+                type="search"
+                value={historySearch}
+                onChange={(event) => { setHistorySearch(event.target.value); setHistoryLimit(5); }}
+                placeholder="Tìm tên bài học, môn học..."
+                aria-label="Tìm trong lịch sử học tập"
+                className="min-w-0 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
+            </label>
             <button
               type="button"
               onClick={handleExportHistory}
@@ -422,7 +441,7 @@ export const ParentDashboardPage: React.FC = () => {
           <div className="rounded-2xl border-2 border-dashed border-sky-100 p-6 text-center">
             <BookOpen className="w-8 h-8 mx-auto text-sky-500" />
             <p className="mt-3 font-bold text-slate-700">Chưa có hoạt động trong chủ đề này</p>
-            <p className="mt-1 text-sm text-slate-500">Hãy chọn môn khác hoặc xem tất cả hoạt động.</p>
+            <p className="mt-1 text-sm text-slate-500">{historySearch.trim() ? 'Thử từ khóa khác hoặc xóa nội dung tìm kiếm.' : 'Hãy chọn môn khác hoặc xem tất cả hoạt động.'}</p>
           </div>
         )}
       </section>
