@@ -225,10 +225,16 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAuthReady(true);
 
       void (async () => {
-        const profileResult = await fetchUserProfileFromFirestoreResult(firebaseUser.uid);
+        let profileResult = await fetchUserProfileFromFirestoreResult(firebaseUser.uid);
+        // Retry transient Firestore failures briefly. Never treat a failed read
+        // as a missing profile, because doing so could overwrite saved progress.
+        for (let retry = 0; profileResult.status === 'error' && retry < 2; retry += 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, 500 * (retry + 1)));
+          if (!mounted || auth.currentUser?.uid !== firebaseUser.uid) return;
+          profileResult = await fetchUserProfileFromFirestoreResult(firebaseUser.uid);
+        }
         if (!mounted || auth.currentUser?.uid !== firebaseUser.uid) return;
-        // A failed read is not the same as a first-time account. Keep syncing
-        // disabled until a later auth/profile refresh can read the saved data.
+        // If all reads fail, keep syncing disabled rather than writing defaults.
         if (profileResult.status === 'error') return;
         const existingProfile = profileResult.status === 'found' ? profileResult.profile : null;
 
