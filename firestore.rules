@@ -26,7 +26,8 @@ service cloud.firestore {
 
       allow create: if isSelf(userId)
         && request.resource.data.id == userId
-        && request.resource.data.role in ['student', 'parent'];
+        && request.resource.data.role in ['student', 'parent']
+        && (!('inventory' in request.resource.data) || request.resource.data.inventory == []);
 
       // Account ownership is enforced by Firebase Auth. A student/parent can
       // update only their own profile/progress document. Identity and privilege
@@ -57,9 +58,9 @@ service cloud.firestore {
             'unlockedBadges', 'inventory', 'soundEnabled', 'musicEnabled', 'dailyStudyGoalMinutes',
             'history', 'highScores', 'notifications', 'updatedAt'
           ])
-          // Reward-bearing fields are server-owned. The client may update
-          // preferences/profile fields, but cannot mint XP/coins/gems or rewrite
-          // completion/history/badge state.
+          // Reward-bearing fields and inventory are server-owned. The client may
+          // update preferences/profile fields, but cannot mint rewards or grant items.
+          && request.resource.data.inventory == resource.data.inventory
           && request.resource.data.xp == resource.data.xp
           && request.resource.data.coin == resource.data.coin
           && request.resource.data.gem == resource.data.gem
