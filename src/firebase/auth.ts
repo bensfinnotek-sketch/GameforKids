@@ -257,18 +257,39 @@ export const startTrustedMiniGame = async (gameId: string): Promise<TrustedMiniG
 
 export const answerTrustedMiniGame = async (
   sessionId: string,
-  value: number
+  value: number,
+  expectedQuestionIndex: number
 ): Promise<TrustedMiniGameResult | null> => {
   try {
     if (!auth.currentUser) return null;
     const token = await auth.currentUser.getIdToken();
-    const response = await fetch('/api/mini-game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ action: 'answer', sessionId, value }),
+    // Reuse the same request ID on retry so the server can return the original result.
+    const requestBody = JSON.stringify({
+      action: 'answer',
+      sessionId,
+      value,
+      expectedQuestionIndex,
+      requestId: crypto.randomUUID(),
     });
-    if (!response.ok) return null;
-    return (await response.json()) as TrustedMiniGameResult;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const response = await fetch('/api/mini-game', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: requestBody,
+        });
+        if (response.ok) return (await response.json()) as TrustedMiniGameResult;
+        // A 5xx may happen after the transaction committed; retry with the same request ID.
+        if (response.status < 500 || attempt === 1) return null;
+      } catch (err) {
+        if (attempt === 1) throw err;
+      }
+    }
+    return null;
   } catch (err) {
     console.warn('Trusted mini-game answer warning:', err);
     return null;

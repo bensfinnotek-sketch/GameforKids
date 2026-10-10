@@ -217,8 +217,16 @@ export async function POST(request: Request) {
     }
 
     const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
+    const requestId = typeof body.requestId === 'string' ? body.requestId : '';
+    const expectedQuestionIndex = Number(body.expectedQuestionIndex);
     const value = Number(body.value);
-    if (!/^[A-Za-z0-9_-]{10,100}$/.test(sessionId) || !Number.isInteger(value)) {
+    if (
+      !/^[A-Za-z0-9_-]{10,100}$/.test(sessionId) ||
+      !/^[A-Za-z0-9_-]{10,100}$/.test(requestId) ||
+      !Number.isInteger(expectedQuestionIndex) ||
+      expectedQuestionIndex < 0 ||
+      !Number.isInteger(value)
+    ) {
       return Response.json({ error: 'Invalid mini-game answer' }, { status: 400 });
     }
 
@@ -233,6 +241,12 @@ export async function POST(request: Request) {
       const config = GAME_CONFIG[gameId];
       const ageGroup: AgeGroup = session.ageGroup === '4-5' || session.ageGroup === '9-11' ? session.ageGroup : '6-8';
 
+      const questionIndex = Number(session.questionIndex || 0);
+
+      // A retried request returns its original result instead of consuming another question.
+      if (session.lastRequestId === requestId && session.lastResponse && typeof session.lastResponse === 'object') {
+        return session.lastResponse;
+      }
       if (session.status === 'completed') {
         return {
           completed: true,
@@ -242,8 +256,7 @@ export async function POST(request: Request) {
         };
       }
       if (session.status !== 'active') throw new Error('SESSION_CLOSED');
-
-      const questionIndex = Number(session.questionIndex || 0);
+      if (expectedQuestionIndex !== questionIndex) throw new Error('STALE_ANSWER');
       if (questionIndex >= config.questionCount) throw new Error('SESSION_CLOSED');
 
       const now = Date.now();
@@ -260,13 +273,8 @@ export async function POST(request: Request) {
       const finished = nextIndex >= config.questionCount;
 
       if (!finished) {
-        tx.update(sessionRef, {
-          questionIndex: nextIndex,
-          correctCount: nextCorrect,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
         const nextQuestion = createQuestion(seed, nextIndex, ageGroup, gameId);
-        return {
+        const response = {
           completed: false,
           correct: isCorrect,
           correctCount: nextCorrect,
@@ -275,6 +283,15 @@ export async function POST(request: Request) {
           totalQuestions: config.questionCount,
           secondsRemaining: Math.max(0, Math.ceil((Number(session.expiresAtMs) - now) / 1000)),
         };
+        tx.update(sessionRef, {
+          questionIndex: nextIndex,
+          correctCount: nextCorrect,
+          lastRequestId: requestId,
+          lastAnswerValue: value,
+          lastResponse: response,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+        return response;
       }
 
       const userSnap = await tx.get(userRef);
@@ -296,12 +313,25 @@ export async function POST(request: Request) {
       const date = todayInVietnam();
       progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
 
+      const response = {
+        completed: true,
+        correct: isCorrect,
+        correctCount: nextCorrect,
+        rewardGranted: true,
+        xpEarned: config.rewardXP,
+        coinEarned: config.rewardCoin,
+        gemEarned: config.rewardGem,
+        newLevel,
+      };
       tx.update(sessionRef, {
         questionIndex: nextIndex,
         correctCount: nextCorrect,
         status: 'completed',
         completedAt: FieldValue.serverTimestamp(),
         rewardGranted: true,
+        lastRequestId: requestId,
+        lastAnswerValue: value,
+        lastResponse: response,
         updatedAt: FieldValue.serverTimestamp(),
       });
       tx.update(userRef, {
@@ -316,16 +346,7 @@ export async function POST(request: Request) {
         updatedAt: FieldValue.serverTimestamp(),
       });
 
-      return {
-        completed: true,
-        correct: isCorrect,
-        correctCount: nextCorrect,
-        rewardGranted: true,
-        xpEarned: config.rewardXP,
-        coinEarned: config.rewardCoin,
-        gemEarned: config.rewardGem,
-        newLevel,
-      };
+      return response;
     });
 
     return Response.json({ ok: true, ...result });
@@ -333,6 +354,7 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message === 'SESSION_NOT_FOUND' || message === 'SESSION_INVALID') return Response.json({ error: 'Mini-game session not found' }, { status: 404 });
     if (message === 'SESSION_CLOSED') return Response.json({ error: 'Mini-game session is closed' }, { status: 409 });
+    if (message === 'STALE_ANSWER') return Response.json({ error: 'This answer was already processed or is out of order' }, { status: 409 });
     if (message === 'USER_PROFILE_NOT_FOUND') return Response.json({ error: 'Profile not found' }, { status: 404 });
     console.error('mini-game session error', error);
     return Response.json({ error: 'Unable to process mini-game session' }, { status: 500 });

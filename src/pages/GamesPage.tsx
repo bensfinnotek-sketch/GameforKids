@@ -172,7 +172,7 @@ export const GamesPage: React.FC = () => {
     if (!raceSessionId || !raceActive || raceSubmitting) return;
 
     setRaceSubmitting(true);
-    const result = await answerTrustedMiniGame(raceSessionId, opt);
+    const result = await answerTrustedMiniGame(raceSessionId, opt, raceQuestionNumber - 1);
     setRaceSubmitting(false);
 
     if (!result?.ok) {
@@ -196,6 +196,11 @@ export const GamesPage: React.FC = () => {
       setRaceActive(false);
       setRaceFinished(true);
       setRaceQuestionNumber(total);
+
+      if (result.expired) {
+        setRaceRewardMessage('Hết thời gian. Phiên đua đã hết hạn nên bé chưa nhận XP/Vàng.');
+        return;
+      }
 
       if (result.rewardGranted && !result.alreadyCompleted) {
         setRaceRewardMessage(`Đã được máy chủ xác nhận: +${result.xpEarned || 0} XP • +${result.coinEarned || 0} Vàng.`);
@@ -343,7 +348,7 @@ export const GamesPage: React.FC = () => {
     if (!blitzSessionId || !blitzActive || blitzSubmitting) return;
 
     setBlitzSubmitting(true);
-    const result = await answerTrustedMiniGame(blitzSessionId, val);
+    const result = await answerTrustedMiniGame(blitzSessionId, val, blitzQuestionNumber - 1);
     setBlitzSubmitting(false);
     if (!result?.ok) {
       setBlitzActive(false);
@@ -364,6 +369,11 @@ export const GamesPage: React.FC = () => {
       setBlitzActive(false);
       setBlitzGameOver(true);
       setBlitzQuestionNumber(result.totalQuestions || 10);
+
+      if (result.expired) {
+        setBlitzRewardMessage('Hết thời gian. Phiên chơi đã hết hạn nên bé chưa nhận XP/Vàng.');
+        return;
+      }
 
       if (result.rewardGranted && !result.alreadyCompleted) {
         setBlitzRewardMessage(`Đã được máy chủ xác nhận: +${result.xpEarned || 0} XP • +${result.coinEarned || 0} Vàng.`);
