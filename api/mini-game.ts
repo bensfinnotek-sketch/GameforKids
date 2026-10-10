@@ -225,8 +225,8 @@ export async function POST(request: Request) {
 
     const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
     const requestId = typeof body.requestId === 'string' ? body.requestId : '';
-    const expectedQuestionIndex = Number(body.expectedQuestionIndex);
-    const value = Number(body.value);
+    const expectedQuestionIndex = body.expectedQuestionIndex;
+    const value = body.value;
     if (
       !/^[A-Za-z0-9_-]{10,100}$/.test(sessionId) ||
       !/^[A-Za-z0-9_-]{10,100}$/.test(requestId) ||
