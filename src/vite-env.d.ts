@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 interface ImportMetaEnv {
   readonly [key: string]: string | boolean | undefined;
   readonly VITE_FIREBASE_API_KEY?: string;
