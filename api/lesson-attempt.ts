@@ -33,6 +33,7 @@ export async function POST(request:Request){
     } catch {
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     const lessonId=typeof body.lessonId==='string'?body.lessonId:'';
     const attemptId=typeof body.attemptId==='string'?body.attemptId:'';
     const score=body.score, totalQuestions=body.totalQuestions, timeSpentSeconds=body.timeSpentSeconds;

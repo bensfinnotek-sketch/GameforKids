@@ -177,6 +177,7 @@ export async function POST(request: Request) {
     } catch {
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     const action = typeof body.action === 'string' ? body.action : '';
     const db = getFirestore(adminApp());
     const userRef = db.collection('users').doc(decoded.uid);
