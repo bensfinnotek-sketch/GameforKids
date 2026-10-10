@@ -412,6 +412,7 @@ export interface TrustedExamAttemptResult {
 export const submitExamAttemptToServer = async (
   answers: Record<string, number>,
   timeSpentSeconds: number,
+  attemptId: string,
 ): Promise<TrustedExamAttemptResult | null> => {
   try {
     if (!auth.currentUser) return null;
@@ -422,7 +423,7 @@ export const submitExamAttemptToServer = async (
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ answers, timeSpentSeconds }),
+      body: JSON.stringify({ answers, timeSpentSeconds, attemptId }),
     });
     if (!response.ok) {
       console.warn('Trusted exam result save failed:', response.status);

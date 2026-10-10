@@ -87,8 +87,10 @@ export async function POST(request: Request) {
     if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     const answers = body.answers;
     const timeSpentSeconds = body.timeSpentSeconds;
+    const attemptId = body.attemptId;
 
     if (
+      typeof attemptId !== 'string' || !/^[-A-Za-z0-9_]{8,80}$/.test(attemptId) ||
       !answers || typeof answers !== 'object' || Array.isArray(answers) ||
       !Number.isInteger(timeSpentSeconds) || timeSpentSeconds < 0 || timeSpentSeconds > 720
     ) {
@@ -112,28 +114,43 @@ export async function POST(request: Request) {
       0,
     );
     const db = getFirestore(adminApp());
-    const attemptRef = db.collection('users').doc(decoded.uid).collection('examAttempts').doc();
+    const attemptRef = db.collection('users').doc(decoded.uid).collection('examAttempts').doc(attemptId);
+    const result = await db.runTransaction(async (tx) => {
+      const existing = await tx.get(attemptRef);
+      if (existing.exists) {
+        const data = existing.data() || {};
+        return {
+          attemptId: attemptRef.id,
+          correctCount: Number(data.correctCount || 0),
+          score: Number(data.score || 0),
+          answeredCount: Number(data.answeredCount || 0),
+          totalQuestions: Number(data.totalQuestions || QUESTION_IDS.length),
+          duplicate: true,
+        };
+      }
 
-    await attemptRef.set({
-      examId: 'grade-1-math-practice-v1',
-      uid: decoded.uid,
-      answers: normalizedAnswers,
-      answeredCount: Object.keys(normalizedAnswers).length,
-      correctCount,
-      score: correctCount * 10,
-      totalQuestions: QUESTION_IDS.length,
-      timeSpentSeconds,
-      submittedAt: FieldValue.serverTimestamp(),
+      tx.create(attemptRef, {
+        examId: 'grade-1-math-practice-v1',
+        uid: decoded.uid,
+        answers: normalizedAnswers,
+        answeredCount: Object.keys(normalizedAnswers).length,
+        correctCount,
+        score: correctCount * 10,
+        totalQuestions: QUESTION_IDS.length,
+        timeSpentSeconds,
+        submittedAt: FieldValue.serverTimestamp(),
+      });
+      return {
+        attemptId: attemptRef.id,
+        correctCount,
+        score: correctCount * 10,
+        answeredCount: Object.keys(normalizedAnswers).length,
+        totalQuestions: QUESTION_IDS.length,
+        duplicate: false,
+      };
     });
 
-    return Response.json({
-      ok: true,
-      attemptId: attemptRef.id,
-      correctCount,
-      score: correctCount * 10,
-      answeredCount: Object.keys(normalizedAnswers).length,
-      totalQuestions: QUESTION_IDS.length,
-    });
+    return Response.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message.includes('Firebase ID token')) {
