@@ -53,6 +53,20 @@ export const getLevelInfo = (xp: number) => {
 
 // 30+ LESSONS
 export const INITIAL_LESSONS: Lesson[] = [
+  // 2–3 Tuổi (Bé khám phá đầu đời) — hoạt động ngắn, có người lớn đồng hành
+  {
+    id: 'toddler-1', title: 'Chạm vào màu đỏ', description: 'Nhận biết màu đỏ qua quả táo và đồ vật quen thuộc.', category: 'geometry', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 5, gemReward: 0, durationMinutes: 2, thumbnailEmoji: '🍎', worldId: 'world-1', totalQuestions: 3,
+  },
+  {
+    id: 'toddler-2', title: 'Hình tròn ở đâu nhỉ?', description: 'Tìm hình tròn trong những đồ vật quen thuộc.', category: 'geometry', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 5, gemReward: 0, durationMinutes: 2, thumbnailEmoji: '🔵', worldId: 'world-4', totalQuestions: 3,
+  },
+  {
+    id: 'toddler-3', title: 'Đếm 1, 2, 3 chú cá', description: 'Quan sát và đếm ba chú cá đầy màu sắc.', category: 'basic', ageGroup: '2-3', level: 1, difficulty: 'Dễ',
+    xpReward: 10, coinReward: 5, gemReward: 0, durationMinutes: 2, thumbnailEmoji: '🐟', worldId: 'world-1', totalQuestions: 3,
+  },
+
   // 4-5 Tuổi (Tí hon)
   {
     id: 'lesson-1',
@@ -526,6 +540,21 @@ export const INITIAL_LESSONS: Lesson[] = [
 
 // 50+ QUESTIONS MAPPING
 export const INITIAL_QUESTIONS: Record<string, QuizQuestion[]> = {
+  'toddler-1': [
+    { id: 't1-q1', lessonId: 'toddler-1', type: 'multiple-choice', questionText: 'Quả táo đỏ ở đâu?', hint: 'Nhìn màu của quả táo nhé!', visualType: 'apples', visualData: { count: 1, emoji: '🍎' }, options: [{ id: 'a', text: '🍎', isCorrect: true }, { id: 'b', text: '🍌', isCorrect: false }] },
+    { id: 't1-q2', lessonId: 'toddler-1', type: 'multiple-choice', questionText: 'Đâu là đồ vật màu đỏ?', visualType: 'shapes', visualData: { items: ['🍓', '🍃'] }, options: [{ id: 'a', text: '🍓', isCorrect: true }, { id: 'b', text: '🍃', isCorrect: false }] },
+    { id: 't1-q3', lessonId: 'toddler-1', type: 'multiple-choice', questionText: 'Chọn quả táo đỏ nhé!', options: [{ id: 'a', text: '🍎', isCorrect: true }, { id: 'b', text: '🍇', isCorrect: false }] },
+  ],
+  'toddler-2': [
+    { id: 't2-q1', lessonId: 'toddler-2', type: 'multiple-choice', questionText: 'Hình tròn là hình nào?', visualType: 'shapes', visualData: { items: ['🔵', '🔺'] }, options: [{ id: 'a', text: '🔵', isCorrect: true }, { id: 'b', text: '🔺', isCorrect: false }] },
+    { id: 't2-q2', lessonId: 'toddler-2', type: 'multiple-choice', questionText: 'Quả bóng có hình gì?', options: [{ id: 'a', text: '🔵 Tròn', isCorrect: true }, { id: 'b', text: '⬛ Vuông', isCorrect: false }] },
+    { id: 't2-q3', lessonId: 'toddler-2', type: 'multiple-choice', questionText: 'Chạm vào hình tròn nhé!', options: [{ id: 'a', text: '⚪', isCorrect: true }, { id: 'b', text: '⭐', isCorrect: false }] },
+  ],
+  'toddler-3': [
+    { id: 't3-q1', lessonId: 'toddler-3', type: 'visual-counting', questionText: 'Có mấy chú cá?', visualType: 'fish', visualData: { count: 1, emoji: '🐟' }, options: [{ id: 'a', text: '1', isCorrect: true }, { id: 'b', text: '2', isCorrect: false }] },
+    { id: 't3-q2', lessonId: 'toddler-3', type: 'visual-counting', questionText: 'Hai chú cá đang bơi. Chọn số đúng nhé!', visualType: 'fish', visualData: { count: 2, emoji: '🐟' }, options: [{ id: 'a', text: '1', isCorrect: false }, { id: 'b', text: '2', isCorrect: true }] },
+    { id: 't3-q3', lessonId: 'toddler-3', type: 'visual-counting', questionText: 'Đếm ba chú cá nhỏ!', visualType: 'fish', visualData: { count: 3, emoji: '🐟' }, options: [{ id: 'a', text: '2', isCorrect: false }, { id: 'b', text: '3', isCorrect: true }] },
+  ],
   'lesson-1': [
     {
       id: 'q1-1',

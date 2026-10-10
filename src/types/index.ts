@@ -1,4 +1,4 @@
-export type AgeGroup = '4-5' | '6-8' | '9-11';
+export type AgeGroup = '2-3' | '4-5' | '6-8' | '9-11';
 
 export type SubjectCategory = 
   | 'basic'        // Toán cơ bản & Số học

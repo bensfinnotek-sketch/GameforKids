@@ -20,6 +20,19 @@ export const AgesPage: React.FC = () => {
     description: string;
   }[] = [
     {
+      id: '2-3',
+      title: 'Bé khám phá đầu đời',
+      ageRange: '2–3 tuổi',
+      subtitle: 'Học qua chơi cùng bố mẹ',
+      badgeEmoji: '🐣',
+      topics: ['Nhận biết màu sắc và hình dạng', 'Đếm 1–3 đồ vật quen thuộc', 'Nghe âm thanh và gọi tên con vật', 'Bài ngắn, hình lớn, không áp lực thời gian'],
+      description: 'Các hoạt động ngắn để bé cùng người lớn quan sát, chạm chọn và nghe phản hồi vui nhộn. Phụ huynh nên đồng hành trong mỗi lượt học.',
+      gradient: 'from-rose-400/10 via-amber-300/20 to-yellow-400/10',
+      borderColor: 'border-rose-300',
+      buttonColor: 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/25',
+    },
+
+    {
       id: '4-5',
       title: 'Nhà thám hiểm tí hon',
       ageRange: '4–5 tuổi',

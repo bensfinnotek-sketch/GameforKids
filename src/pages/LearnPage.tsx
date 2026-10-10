@@ -45,6 +45,7 @@ export const LearnPage: React.FC = () => {
 
   // Age group selector options
   const ageOptions: { id: AgeGroup; label: string; sub: string }[] = [
+    { id: '2-3', label: '2–3 tuổi', sub: 'Bé khám phá' },
     { id: '4-5', label: '4–5 tuổi', sub: 'Tí hon' },
     { id: '6-8', label: '6–8 tuổi', sub: 'Nhí' },
     { id: '9-11', label: '9–11 tuổi', sub: 'Tài năng' },
