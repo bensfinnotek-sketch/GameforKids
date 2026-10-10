@@ -20,6 +20,52 @@ function adminApp() {
   });
 }
 
+
+export async function GET(request: Request) {
+  try {
+    const header = request.headers.get('authorization') || '';
+    if (!header.startsWith('Bearer ')) {
+      return Response.json({ error: 'Missing authentication token' }, { status: 401 });
+    }
+
+    const decoded = await getAuth(adminApp()).verifyIdToken(header.slice(7));
+    const url = new URL(request.url);
+    const requestedLimit = Number(url.searchParams.get('limit') || 20);
+    const limit = Number.isInteger(requestedLimit) ? Math.min(50, Math.max(1, requestedLimit)) : 20;
+    const snapshot = await getFirestore(adminApp())
+      .collection('users')
+      .doc(decoded.uid)
+      .collection('examAttempts')
+      .orderBy('submittedAt', 'desc')
+      .limit(limit)
+      .get();
+
+    const attempts = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      const submittedAt = data.submittedAt?.toMillis?.() ?? null;
+      return {
+        id: doc.id,
+        examId: data.examId === 'grade-1-math-practice-v1' ? data.examId : 'unknown',
+        score: Number.isFinite(data.score) ? data.score : 0,
+        correctCount: Number.isFinite(data.correctCount) ? data.correctCount : 0,
+        answeredCount: Number.isFinite(data.answeredCount) ? data.answeredCount : 0,
+        totalQuestions: Number.isFinite(data.totalQuestions) ? data.totalQuestions : 10,
+        timeSpentSeconds: Number.isFinite(data.timeSpentSeconds) ? data.timeSpentSeconds : 0,
+        submittedAt,
+      };
+    });
+
+    return Response.json({ ok: true, attempts });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Firebase ID token') || message.includes('Decoding Firebase ID token')) {
+      return Response.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
+    console.error('exam-attempt history error', error);
+    return Response.json({ error: 'Unable to load exam history' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   if (request.headers.get('content-type')?.split(';')[0] !== 'application/json') {
     return Response.json({ error: 'Content-Type must be application/json' }, { status: 415 });
