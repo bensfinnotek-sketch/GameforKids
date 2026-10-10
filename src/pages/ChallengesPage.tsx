@@ -7,6 +7,19 @@ export const ChallengesPage: React.FC = () => {
   const { dailyChallenges, claimDailyChallenge, user, setActiveTab } = useGame();
 
   const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  const today = new Date();
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const weekDays = daysOfWeek.map((label, index) => {
+    const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return { label, date, dateKey, isToday: dateKey === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}` };
+  });
+  const studiedDateKeys = new Set((user.history || []).map((item) => {
+    const parsed = new Date(item.completedAt);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+  }).filter(Boolean));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -49,13 +62,13 @@ export const ChallengesPage: React.FC = () => {
         </h3>
 
         <div className="grid grid-cols-7 gap-2 sm:gap-4">
-          {daysOfWeek.map((day, idx) => {
-            const isCompleted = idx < user.streak % 7 || idx === 0 || idx === 1 || idx === 2 || idx === 3 || idx === 4 || idx === 5;
-            const isToday = idx === 5; // Saturday/Sunday simulation
+          {weekDays.map(({ label, date, dateKey, isToday }) => {
+            const isCompleted = studiedDateKeys.has(dateKey);
 
             return (
               <div
-                key={day}
+                key={dateKey}
+                aria-label={`${label}, ngày ${date.getDate()}/${date.getMonth() + 1}: ${isCompleted ? 'đã học' : 'chưa học'}${isToday ? ', hôm nay' : ''}`}
                 className={`p-3 sm:p-4 rounded-2xl border-2 flex flex-col items-center justify-center transition-all ${
                   isToday
                     ? 'border-orange-500 bg-orange-50/70 shadow-md ring-2 ring-orange-200'
@@ -64,8 +77,9 @@ export const ChallengesPage: React.FC = () => {
                     : 'border-slate-200 bg-slate-50 opacity-70'
                 }`}
               >
-                <span className="text-xs font-black text-slate-500">{day}</span>
-                <span className="text-2xl sm:text-3xl my-1.5">
+                <span className="text-xs font-black text-slate-500">{label}</span>
+                <span className="text-[10px] font-bold text-slate-400">{date.getDate()}/{date.getMonth() + 1}</span>
+                <span className="text-2xl sm:text-3xl my-1.5" aria-hidden="true">
                   {isCompleted ? '🔥' : '⏳'}
                 </span>
                 <span className={`text-[10px] font-black ${
