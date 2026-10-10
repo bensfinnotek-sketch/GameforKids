@@ -304,10 +304,11 @@ export async function POST(request: Request) {
       const userSnap = await tx.get(userRef);
       if (!userSnap.exists) throw new Error('USER_PROFILE_NOT_FOUND');
       const user = userSnap.data() || {};
-      const claims = user.dailyChallengeDate === todayInVietnam() && user.dailyChallengeClaims && typeof user.dailyChallengeClaims === 'object'
+      const date = todayInVietnam();
+      const claims = user.dailyChallengeDate === date && user.dailyChallengeClaims && typeof user.dailyChallengeClaims === 'object'
         ? { ...user.dailyChallengeClaims }
         : {};
-      const progress = user.dailyChallengeDate === todayInVietnam() && user.dailyChallengeProgress && typeof user.dailyChallengeProgress === 'object'
+      const progress = user.dailyChallengeDate === date && user.dailyChallengeProgress && typeof user.dailyChallengeProgress === 'object'
         ? { ...user.dailyChallengeProgress }
         : {};
 
@@ -317,7 +318,6 @@ export async function POST(request: Request) {
       const newGem = Number(user.gem || 0) + config.rewardGem;
       const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
       highScores[gameId] = Math.max(Number(highScores[gameId] || 0), nextCorrect);
-      const date = todayInVietnam();
       progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
 
       const response = {
