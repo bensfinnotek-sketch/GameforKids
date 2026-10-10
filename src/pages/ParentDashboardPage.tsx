@@ -59,6 +59,29 @@ export const ParentDashboardPage: React.FC = () => {
     ? Math.round(user.history.reduce((acc, h) => acc + h.accuracy, 0) / user.history.length)
     : null;
 
+  const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (6 - index));
+    const dayKey = String(day.getFullYear()) + '-' + String(day.getMonth()) + '-' + String(day.getDate());
+    const dayHistory = user.history.filter((item) => {
+      const match = item.completedAt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (!match) return false;
+      return String(Number(match[3])) + '-' + String(Number(match[2]) - 1) + '-' + String(Number(match[1])) === dayKey;
+    });
+    return {
+      key: dayKey,
+      label: day.toLocaleDateString('vi-VN', { weekday: 'short' }).replace('.', ''),
+      dateLabel: day.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
+      minutes: Math.round(dayHistory.reduce((sum, item) => sum + Math.max(0, item.timeSpentSeconds), 0) / 60),
+      lessons: dayHistory.length,
+    };
+  });
+  const weeklyMinutes = weeklyActivity.reduce((sum, day) => sum + day.minutes, 0);
+  const activeDays = weeklyActivity.filter((day) => day.lessons > 0).length;
+  const weeklyGoalMinutes = Math.max(10, user.dailyStudyGoalMinutes || 20) * 7;
+  const weeklyGoalProgress = Math.min(100, Math.round((weeklyMinutes / weeklyGoalMinutes) * 100));
+  const chartMaxMinutes = Math.max(10, ...weeklyActivity.map((day) => day.minutes));
   const categoryStats = user.history.reduce<Record<string, { total: number; accuracy: number }>>((acc, item) => {
     const current = acc[item.category] || { total: 0, accuracy: 0 };
     current.total += 1;
@@ -209,6 +232,42 @@ export const ParentDashboardPage: React.FC = () => {
 
       </div>
 
+      {/* Weekly learning rhythm */}
+      <section className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-violet-100 shadow-sm mb-8" aria-labelledby="weekly-learning-heading">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+          <div>
+            <h2 id="weekly-learning-heading" className="font-heading text-xl font-black text-slate-800 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-violet-600" /> Nhịp học 7 ngày gần đây
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">Theo dõi thời gian học và số bài hoàn thành mỗi ngày.</p>
+          </div>
+          <div className="rounded-2xl bg-violet-50 px-4 py-3 min-w-36">
+            <p className="text-xs font-bold text-violet-700">Tổng thời gian tuần</p>
+            <p className="text-2xl font-black text-violet-950">{weeklyMinutes} phút</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Ngày có học</p><p className="mt-1 text-xl font-black text-slate-800">{activeDays}<span className="text-sm font-semibold text-slate-500"> / 7 ngày</span></p></div>
+          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">Bài đã hoàn thành</p><p className="mt-1 text-xl font-black text-slate-800">{weeklyActivity.reduce((sum, day) => sum + day.lessons, 0)}<span className="text-sm font-semibold text-slate-500"> bài</span></p></div>
+          <div className="rounded-2xl bg-slate-50 p-4">
+            <div className="flex items-center justify-between gap-2"><p className="text-xs font-bold text-slate-500">Mục tiêu tuần</p><span className="text-xs font-black text-violet-700">{weeklyGoalProgress}%</span></div>
+            <p className="mt-1 text-xl font-black text-slate-800">{weeklyGoalMinutes} phút</p>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-violet-100" role="progressbar" aria-label="Tiến độ mục tiêu học tập tuần" aria-valuemin={0} aria-valuemax={100} aria-valuenow={weeklyGoalProgress}><div className="h-full rounded-full bg-violet-600 transition-all" style={{ width: weeklyGoalProgress + "%" }} /></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-2 sm:gap-3 items-end" aria-label="Biểu đồ số phút học mỗi ngày trong 7 ngày gần đây">
+          {weeklyActivity.map((day) => (
+            <div key={day.key} className="min-w-0 text-center">
+              <p className="text-[10px] sm:text-xs font-bold text-slate-600 mb-2">{day.minutes}p</p>
+              <div className="h-28 sm:h-36 rounded-xl bg-violet-50 flex items-end overflow-hidden">
+                <div className={"w-full rounded-t-lg transition-all " + (day.minutes > 0 ? "bg-gradient-to-t from-violet-600 to-fuchsia-400" : "bg-slate-200")} style={{ height: (day.minutes > 0 ? Math.max(8, (day.minutes / chartMaxMinutes) * 100) : 4) + "%" }} title={day.dateLabel + ": " + day.minutes + " phút, " + day.lessons + " bài"} />
+              </div>
+              <p className="mt-2 text-[10px] sm:text-xs font-bold text-slate-500 capitalize">{day.label}</p><p className="text-[9px] sm:text-[10px] text-slate-400">{day.dateLabel}</p>
+            </div>
+          ))}
+        </div>
+        {weeklyMinutes === 0 && <p className="mt-4 rounded-xl bg-slate-50 p-3 text-center text-sm text-slate-500">Chưa có hoạt động học tập được ghi nhận trong 7 ngày gần đây. Khi bé hoàn thành bài học, biểu đồ sẽ tự cập nhật.</p>}
+      </section>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         
         {/* Left: Strengths & Focus Areas */}
