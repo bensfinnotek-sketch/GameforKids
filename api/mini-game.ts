@@ -274,6 +274,7 @@ export async function POST(request: Request) {
 
       const seed = Number(session.seed);
       const question = createQuestion(seed, questionIndex, ageGroup, gameId);
+      if (!question.options.includes(value)) throw new Error('INVALID_ANSWER_OPTION');
       const isCorrect = value === question.answer;
       const nextCorrect = Number(session.correctCount || 0) + (isCorrect ? 1 : 0);
       const nextIndex = questionIndex + 1;
