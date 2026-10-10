@@ -23,6 +23,12 @@ export const ParentDashboardPage: React.FC = () => {
   const [goalMinutes, setGoalMinutes] = useState(user.dailyStudyGoalMinutes || 20);
   const [savedMsg, setSavedMsg] = useState(false);
 
+  const [historyCategory, setHistoryCategory] = useState('all');
+  const historyCategories = Array.from(new Set(user.history.map((item) => item.category)));
+  const filteredHistory = historyCategory === 'all'
+    ? user.history
+    : user.history.filter((item) => item.category === historyCategory);
+
   const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 0);
   const totalMinutes = Math.round(totalTimeSeconds / 60);
   const avgAccuracy = user.history.length > 0
@@ -265,9 +271,32 @@ export const ParentDashboardPage: React.FC = () => {
             <p className="text-sm text-slate-500 mt-1">Xem lại những bài bé đã hoàn thành gần nhất.</p>
           </div>
           <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
-            {Math.min(user.history.length, 5)} / {user.history.length} hoạt động hiển thị
+            {Math.min(filteredHistory.length, 5)} / {filteredHistory.length} hoạt động phù hợp
           </span>
         </div>
+        {user.history.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="Lọc hoạt động theo môn học">
+            <button
+              type="button"
+              onClick={() => setHistoryCategory('all')}
+              aria-pressed={historyCategory === 'all'}
+              className={`rounded-full px-4 py-2 text-sm font-bold transition ${historyCategory === 'all' ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-sky-50'}`}
+            >
+              Tất cả
+            </button>
+            {historyCategories.map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setHistoryCategory(category)}
+                aria-pressed={historyCategory === category}
+                className={`rounded-full px-4 py-2 text-sm font-bold transition ${historyCategory === category ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-sky-50'}`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
         {user.history.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-sky-100 p-6 text-center">
             <BookOpen className="w-9 h-9 mx-auto text-sky-500" />
@@ -276,7 +305,7 @@ export const ParentDashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {user.history.slice(0, 5).map((item) => (
+            {filteredHistory.slice(0, 5).map((item) => (
               <article key={item.id} className="rounded-2xl border border-slate-100 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="rounded-xl bg-sky-50 p-3 text-sky-700 shrink-0"><BookOpen className="w-5 h-5" /></div>
@@ -297,6 +326,13 @@ export const ParentDashboardPage: React.FC = () => {
                 </div>
               </article>
             ))}
+          </div>
+        )}
+        {user.history.length > 0 && filteredHistory.length === 0 && (
+          <div className="rounded-2xl border-2 border-dashed border-sky-100 p-6 text-center">
+            <BookOpen className="w-8 h-8 mx-auto text-sky-500" />
+            <p className="mt-3 font-bold text-slate-700">Chưa có hoạt động trong chủ đề này</p>
+            <p className="mt-1 text-sm text-slate-500">Hãy chọn môn khác hoặc xem tất cả hoạt động.</p>
           </div>
         )}
       </section>
