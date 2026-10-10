@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore, purchaseTreasureItemOnServer } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, fetchUserProfileFromFirestoreResult, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore, purchaseTreasureItemOnServer } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
