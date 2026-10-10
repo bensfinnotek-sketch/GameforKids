@@ -69,7 +69,7 @@ export const ParentDashboardPage: React.FC = () => {
     const escapeCsvCell = (value: string | number) => {
       let safeValue = String(value);
       // Prevent spreadsheet formula injection from user-generated text fields.
-      if (/^[=+@\\-\\t\\r]/.test(safeValue)) safeValue = `'${safeValue}`;
+      if (/^[=+@\-\t\r]/.test(safeValue)) safeValue = `'${safeValue}`;
       return `"${safeValue.replace(/"/g, '""')}"`;
     };
     const rows = [
@@ -85,7 +85,7 @@ export const ParentDashboardPage: React.FC = () => {
         item.starsEarned
       ])
     ];
-    const csv = '\\uFEFF' + rows.map((row) => row.map(escapeCsvCell).join(',')).join('\\r\\n');
+    const csv = '\uFEFF' + rows.map((row) => row.map(escapeCsvCell).join(',')).join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
