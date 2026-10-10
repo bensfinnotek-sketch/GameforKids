@@ -1,5 +1,8 @@
 export interface LessonReward { title:string; category:string; xpReward:number; coinReward:number; gemReward:number; totalQuestions:number; }
 export const LESSON_REWARDS: Record<string, LessonReward> = {
+  "toddler-1": { "title": "Chạm vào màu đỏ", "category": "geometry", "xpReward": 10, "coinReward": 5, "gemReward": 0, "totalQuestions": 3 },
+  "toddler-2": { "title": "Hình tròn ở đâu nhỉ?", "category": "geometry", "xpReward": 10, "coinReward": 5, "gemReward": 0, "totalQuestions": 3 },
+  "toddler-3": { "title": "Đếm 1, 2, 3 chú cá", "category": "basic", "xpReward": 10, "coinReward": 5, "gemReward": 0, "totalQuestions": 3 },
   "lesson-1": {
     "title": "Đếm quả táo cùng Thám hiểm Mini",
     "category": "basic",
