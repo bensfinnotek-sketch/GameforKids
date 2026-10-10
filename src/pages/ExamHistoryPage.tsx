@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, Clock3, History, RefreshCw, Trophy } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock3, History, RefreshCw, Trophy, TrendingUp, Target, BarChart3 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { fetchExamAttemptHistory } from '../firebase/auth';
 import type { TrustedExamAttemptHistoryItem } from '../firebase/auth';
@@ -44,6 +44,16 @@ export const ExamHistoryPage: React.FC = () => {
 
   useEffect(() => { void loadHistory(); }, [loadHistory]);
 
+  const averageScore = attempts.length
+    ? Math.round(attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length)
+    : 0;
+  const bestScore = attempts.length
+    ? Math.max(...attempts.map((attempt) => attempt.score))
+    : 0;
+  const latestScoreChange = attempts.length > 1
+    ? attempts[0].score - attempts[1].score
+    : null;
+
   return (
     <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
       <button onClick={() => setActiveTab('exam')} className="mb-4 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-white">
@@ -81,29 +91,58 @@ export const ExamHistoryPage: React.FC = () => {
               <button onClick={() => setActiveTab('exam')} className="mt-4 rounded-xl bg-sky-600 px-5 py-3 font-black text-white">Bắt đầu luyện thi</button>
             </div>
           ) : (
-            <div className="space-y-3">
-              {attempts.map((attempt, index) => {
-                const accuracy = attempt.totalQuestions > 0 ? Math.round(attempt.correctCount / attempt.totalQuestions * 100) : 0;
-                return (
-                  <article key={attempt.id} className="rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 sm:p-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"><Trophy className="h-6 w-6" /></div>
-                        <div>
-                          <h2 className="font-black text-slate-800">Lần làm bài #{attempts.length - index}</h2>
-                          <p className="mt-1 text-sm text-slate-500">{formatDate(attempt.submittedAt)}</p>
-                          <p className="mt-1 text-xs font-semibold text-slate-500"><Clock3 className="mr-1 inline h-3.5 w-3.5" /> {formatDuration(attempt.timeSpentSeconds)} · {attempt.answeredCount}/{attempt.totalQuestions} câu đã trả lời</p>
+            <>
+              <section aria-label="Tổng quan tiến bộ" className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <article className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-indigo-700"><BarChart3 className="h-4 w-4" /> Điểm trung bình</div>
+                  <div className="mt-2 text-3xl font-black text-indigo-950">{averageScore}<span className="ml-1 text-base font-bold text-indigo-600">/100</span></div>
+                  <p className="mt-1 text-xs font-medium text-indigo-700">Dựa trên {attempts.length} lượt gần nhất</p>
+                </article>
+                <article className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-amber-700"><Trophy className="h-4 w-4" /> Điểm cao nhất</div>
+                  <div className="mt-2 text-3xl font-black text-amber-950">{bestScore}<span className="ml-1 text-base font-bold text-amber-600">/100</span></div>
+                  <p className="mt-1 text-xs font-medium text-amber-700">Thành tích tốt nhất trong danh sách</p>
+                </article>
+                <article className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-700"><TrendingUp className="h-4 w-4" /> So với lần trước</div>
+                  {latestScoreChange === null ? (
+                    <div className="mt-2 text-lg font-black text-emerald-950">Cần thêm lượt thi</div>
+                  ) : (
+                    <div className="mt-2 text-3xl font-black text-emerald-950">
+                      {latestScoreChange > 0 ? '+' : ''}{latestScoreChange}
+                      <span className="ml-1 text-base font-bold text-emerald-700">điểm</span>
+                    </div>
+                  )}
+                  <p className="mt-1 text-xs font-medium text-emerald-700">
+                    {latestScoreChange === null ? 'Làm thêm bài để xem sự thay đổi' : latestScoreChange > 0 ? 'Điểm tăng so với lượt ngay trước' : latestScoreChange < 0 ? 'Tiếp tục luyện tập để cải thiện nhé' : 'Điểm giữ nguyên so với lượt trước'}
+                  </p>
+                </article>
+              </section>
+              <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-700"><Target className="h-4 w-4 text-sky-600" /> Các lượt làm bài</div>
+              <div className="space-y-3">
+                {attempts.map((attempt, index) => {
+                  const accuracy = attempt.totalQuestions > 0 ? Math.round(attempt.correctCount / attempt.totalQuestions * 100) : 0;
+                  return (
+                    <article key={attempt.id} className="rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 sm:p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"><Trophy className="h-6 w-6" /></div>
+                          <div>
+                            <h2 className="font-black text-slate-800">Lần làm bài #{attempts.length - index}</h2>
+                            <p className="mt-1 text-sm text-slate-500">{formatDate(attempt.submittedAt)}</p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500"><Clock3 className="mr-1 inline h-3.5 w-3.5" /> {formatDuration(attempt.timeSpentSeconds)} · {attempt.answeredCount}/{attempt.totalQuestions} câu đã trả lời</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-5 rounded-xl bg-sky-50 px-4 py-3 sm:min-w-44">
+                          <div><div className="text-xs font-bold text-sky-700">Điểm số</div><div className="text-2xl font-black text-sky-900">{attempt.score}/100</div></div>
+                          <div className="text-right"><div className="text-xs font-bold text-slate-500">Chính xác</div><div className="font-black text-slate-800">{accuracy}%</div></div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between gap-5 rounded-xl bg-sky-50 px-4 py-3 sm:min-w-44">
-                        <div><div className="text-xs font-bold text-sky-700">Điểm số</div><div className="text-2xl font-black text-sky-900">{attempt.score}/100</div></div>
-                        <div className="text-right"><div className="text-xs font-bold text-slate-500">Chính xác</div><div className="font-black text-slate-800">{accuracy}%</div></div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>
