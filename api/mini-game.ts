@@ -152,7 +152,14 @@ function publicQuestion(question: Question) {
 }
 
 function todayInVietnam() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date());
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year + '-' + values.month + '-' + values.day;
 }
 
 export async function POST(request: Request) {
@@ -297,10 +304,11 @@ export async function POST(request: Request) {
       const userSnap = await tx.get(userRef);
       if (!userSnap.exists) throw new Error('USER_PROFILE_NOT_FOUND');
       const user = userSnap.data() || {};
-      const claims = user.dailyChallengeDate === todayInVietnam() && user.dailyChallengeClaims && typeof user.dailyChallengeClaims === 'object'
+      const date = todayInVietnam();
+      const claims = user.dailyChallengeDate === date && user.dailyChallengeClaims && typeof user.dailyChallengeClaims === 'object'
         ? { ...user.dailyChallengeClaims }
         : {};
-      const progress = user.dailyChallengeDate === todayInVietnam() && user.dailyChallengeProgress && typeof user.dailyChallengeProgress === 'object'
+      const progress = user.dailyChallengeDate === date && user.dailyChallengeProgress && typeof user.dailyChallengeProgress === 'object'
         ? { ...user.dailyChallengeProgress }
         : {};
 
@@ -310,7 +318,6 @@ export async function POST(request: Request) {
       const newGem = Number(user.gem || 0) + config.rewardGem;
       const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
       highScores[gameId] = Math.max(Number(highScores[gameId] || 0), nextCorrect);
-      const date = todayInVietnam();
       progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
 
       const response = {
