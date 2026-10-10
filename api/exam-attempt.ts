@@ -84,6 +84,7 @@ export async function POST(request: Request) {
     } catch {
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     const answers = body.answers;
     const timeSpentSeconds = body.timeSpentSeconds;
 
