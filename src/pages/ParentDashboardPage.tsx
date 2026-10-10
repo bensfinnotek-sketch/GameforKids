@@ -319,8 +319,6 @@ export const ParentDashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-
         <section className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-fuchsia-100 shadow-sm" aria-labelledby="practice-recommendations-heading">
           <h3 id="practice-recommendations-heading" className="font-heading text-lg font-black text-slate-800 mb-2 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-fuchsia-600" /> Gợi ý luyện tập tiếp theo
@@ -354,6 +352,7 @@ export const ParentDashboardPage: React.FC = () => {
             </div>
           )}
         </section>
+        </div>
 
         {/* Right: Parental Controls & Screen Time Goal */}
         <div className="lg:col-span-5 space-y-6">
