@@ -24,6 +24,7 @@ export const ParentDashboardPage: React.FC = () => {
   const [savedMsg, setSavedMsg] = useState(false);
 
   const [historyCategory, setHistoryCategory] = useState('all');
+  const [historyLimit, setHistoryLimit] = useState(5);
   const historyCategories = Array.from(new Set(user.history.map((item) => item.category)));
   const filteredHistory = historyCategory === 'all'
     ? user.history
@@ -278,7 +279,7 @@ export const ParentDashboardPage: React.FC = () => {
           <div className="flex flex-wrap gap-2 mb-5" role="group" aria-label="Lọc hoạt động theo môn học">
             <button
               type="button"
-              onClick={() => setHistoryCategory('all')}
+              onClick={() => { setHistoryCategory('all'); setHistoryLimit(5); }}
               aria-pressed={historyCategory === 'all'}
               className={`rounded-full px-4 py-2 text-sm font-bold transition ${historyCategory === 'all' ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-sky-50'}`}
             >
@@ -288,7 +289,7 @@ export const ParentDashboardPage: React.FC = () => {
               <button
                 key={category}
                 type="button"
-                onClick={() => setHistoryCategory(category)}
+                onClick={() => { setHistoryCategory(category); setHistoryLimit(5); }}
                 aria-pressed={historyCategory === category}
                 className={`rounded-full px-4 py-2 text-sm font-bold transition ${historyCategory === category ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-sky-50'}`}
               >
@@ -305,7 +306,7 @@ export const ParentDashboardPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredHistory.slice(0, 5).map((item) => (
+            {filteredHistory.slice(0, historyLimit).map((item) => (
               <article key={item.id} className="rounded-2xl border border-slate-100 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="rounded-xl bg-sky-50 p-3 text-sky-700 shrink-0"><BookOpen className="w-5 h-5" /></div>
@@ -326,6 +327,18 @@ export const ParentDashboardPage: React.FC = () => {
                 </div>
               </article>
             ))}
+          </div>
+        )}
+        {filteredHistory.length > 5 && (
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={() => setHistoryLimit((current) => current >= filteredHistory.length ? 5 : filteredHistory.length)}
+              className="rounded-xl border border-sky-200 bg-white px-5 py-2.5 text-sm font-bold text-sky-700 transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+              aria-expanded={historyLimit >= filteredHistory.length}
+            >
+              {historyLimit >= filteredHistory.length ? 'Thu gọn lịch sử' : `Xem thêm ${filteredHistory.length - Math.min(historyLimit, filteredHistory.length)} hoạt động`}
+            </button>
           </div>
         )}
         {user.history.length > 0 && filteredHistory.length === 0 && (
