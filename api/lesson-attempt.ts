@@ -27,7 +27,12 @@ export async function POST(request:Request){
     const h=request.headers.get('authorization')||'';
     if(!h.startsWith('Bearer '))return Response.json({error:'Missing authentication token'},{status:401});
     const decoded=await getAuth(adminApp()).verifyIdToken(h.slice(7));
-    const body=await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const lessonId=typeof body.lessonId==='string'?body.lessonId:'';
     const attemptId=typeof body.attemptId==='string'?body.attemptId:'';
     const score=body.score, totalQuestions=body.totalQuestions, timeSpentSeconds=body.timeSpentSeconds;
