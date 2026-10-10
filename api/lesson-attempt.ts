@@ -3,6 +3,17 @@ import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { LESSON_REWARDS, getLevelInfo } from './lessonRewards';
 
+function getVietnamDateKey(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return values.year + '-' + values.month + '-' + values.day;
+}
+
 function adminApp(){
   if(getApps().length)return getApps()[0];
   const key=process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g,'\n');
@@ -31,10 +42,10 @@ export async function POST(request:Request){
       const user=userSnap.data()||{}, accuracy=Math.round(score/totalQuestions*100), stars=accuracy>=95?3:accuracy>=80?2:1;
       const xpEarned=lesson.xpReward+(stars===3?20:stars===2?10:0), coinEarned=lesson.coinReward, gemEarned=lesson.gemReward;
       const newXp=Number(user.xp||0)+xpEarned, newLevel=Math.max(Number(user.level||1),getLevelInfo(newXp).level);
-      const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(new Date());
+      const now = new Date();
+      const today = getVietnamDateKey(now);
       const lastActive=typeof user.lastActiveDate==='string'?user.lastActiveDate:'';
-      const yesterday=new Date(`${today}T00:00:00+07:00`); yesterday.setDate(yesterday.getDate()-1);
-      const yesterdayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).format(yesterday);
+      const yesterdayKey = getVietnamDateKey(new Date(now.getTime() - 24 * 60 * 60 * 1000));
       const currentStreak=Number(user.streak||0);
       const nextStreak=lastActive===today?currentStreak:(lastActive===yesterdayKey?currentStreak+1:1);
       const dailyChallengeProgress=user.dailyChallengeDate===today&&user.dailyChallengeProgress&&typeof user.dailyChallengeProgress==='object'?{...user.dailyChallengeProgress}:{}, dailyChallengeClaims=user.dailyChallengeDate===today&&user.dailyChallengeClaims&&typeof user.dailyChallengeClaims==='object'?{...user.dailyChallengeClaims}:{}; dailyChallengeProgress['dc-1']=Number(dailyChallengeProgress['dc-1']||0)+1; dailyChallengeProgress['dc-3']=Math.max(Number(dailyChallengeProgress['dc-3']||0),accuracy===100?1:0); dailyChallengeProgress['dc-4']=Number(dailyChallengeProgress['dc-4']||0)+score; dailyChallengeProgress['dc-5']=Number(dailyChallengeProgress['dc-5']||0)+timeSpentSeconds/60; const completed=Array.isArray(user.completedLessons)?user.completedLessons:[], lessonStars=user.lessonStars&&typeof user.lessonStars==='object'?user.lessonStars:{}, history=Array.isArray(user.history)?user.history:[];
