@@ -25,11 +25,25 @@ export const ParentDashboardPage: React.FC = () => {
   const [savedMsg, setSavedMsg] = useState(false);
 
   const [historyCategory, setHistoryCategory] = useState('all');
+  const [historyPeriod, setHistoryPeriod] = useState<'all' | '7' | '30'>('all');
   const [historyLimit, setHistoryLimit] = useState(5);
   const historyCategories = Array.from(new Set(user.history.map((item) => item.category)));
-  const filteredHistory = historyCategory === 'all'
+  const categoryFilteredHistory = historyCategory === 'all'
     ? user.history
     : user.history.filter((item) => item.category === historyCategory);
+  const filteredHistory = historyPeriod === 'all'
+    ? categoryFilteredHistory
+    : categoryFilteredHistory.filter((item) => {
+        // completedAt is stored as dd/mm/yyyy in the Vietnamese locale.
+        const match = item.completedAt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (!match) return false;
+        const completedDate = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+        if (Number.isNaN(completedDate.getTime())) return false;
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        startDate.setDate(startDate.getDate() - (Number(historyPeriod) - 1));
+        return completedDate >= startDate && completedDate <= new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      });
 
   const totalTimeSeconds = user.history.reduce((acc, h) => acc + h.timeSpentSeconds, 0);
   const totalMinutes = Math.round(totalTimeSeconds / 60);
@@ -94,7 +108,7 @@ export const ParentDashboardPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (
@@ -307,7 +321,7 @@ export const ParentDashboardPage: React.FC = () => {
             <p className="text-sm text-slate-500 mt-1">Xem lại những bài bé đã hoàn thành gần nhất.</p>
           </div>
           <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold text-sky-700">
-            {Math.min(filteredHistory.length, 5)} / {filteredHistory.length} hoạt động phù hợp
+            {Math.min(filteredHistory.length, historyLimit)} / {filteredHistory.length} hoạt động phù hợp
           </span>
         </div>
         {user.history.length > 0 && (
@@ -333,6 +347,23 @@ export const ParentDashboardPage: React.FC = () => {
               </button>
             ))}
             </div>
+            <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Lọc hoạt động theo khoảng thời gian">
+                {([
+                  { value: 'all', label: 'Mọi thời điểm' },
+                  { value: '7', label: '7 ngày qua' },
+                  { value: '30', label: '30 ngày qua' },
+                ] as const).map((period) => (
+                  <button
+                    key={period.value}
+                    type="button"
+                    onClick={() => { setHistoryPeriod(period.value); setHistoryLimit(5); }}
+                    aria-pressed={historyPeriod === period.value}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${historyPeriod === period.value ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50'}`}
+                  >
+                    {period.label}
+                  </button>
+                ))}
+              </div>
             <button
               type="button"
               onClick={handleExportHistory}
