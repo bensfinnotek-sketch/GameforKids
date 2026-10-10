@@ -362,6 +362,7 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message === 'SESSION_NOT_FOUND' || message === 'SESSION_INVALID') return Response.json({ error: 'Mini-game session not found' }, { status: 404 });
     if (message === 'SESSION_CLOSED') return Response.json({ error: 'Mini-game session is closed' }, { status: 409 });
+    if (message === 'INVALID_ANSWER_OPTION') return Response.json({ error: 'Answer must match one of the offered options' }, { status: 400 });
     if (message === 'STALE_ANSWER') return Response.json({ error: 'This answer was already processed or is out of order' }, { status: 409 });
     if (message === 'USER_PROFILE_NOT_FOUND') return Response.json({ error: 'Profile not found' }, { status: 404 });
     console.error('mini-game session error', error);
