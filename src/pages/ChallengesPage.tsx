@@ -3,6 +3,20 @@ import { Target, Flame, Sparkles, CheckCircle2, Gift, Clock, Star } from 'lucide
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
 
+const getStudyDateKey = (value: string): string => {
+  const input = (value || '').trim();
+  const vietnameseDate = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (vietnameseDate) {
+    const [, day, month, year] = vietnameseDate;
+    return year + '-' + String(Number(month)).padStart(2, '0') + '-' + String(Number(day)).padStart(2, '0');
+  }
+  const isoDate = input.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
+  const parsed = new Date(input);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+};
+
 export const ChallengesPage: React.FC = () => {
   const { dailyChallenges, claimDailyChallenge, user, setActiveTab } = useGame();
 
@@ -15,11 +29,9 @@ export const ChallengesPage: React.FC = () => {
     const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     return { label, date, dateKey, isToday: dateKey === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}` };
   });
-  const studiedDateKeys = new Set((user.history || []).map((item) => {
-    const parsed = new Date(item.completedAt);
-    if (Number.isNaN(parsed.getTime())) return '';
-    return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
-  }).filter(Boolean));
+  const studiedDateKeys = new Set((user.history || [])
+    .map((item) => getStudyDateKey(item.completedAt))
+    .filter(Boolean));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
