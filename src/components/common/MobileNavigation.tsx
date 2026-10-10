@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, Map, Gamepad2, Crown, User } from 'lucide-react';
+import { Home, BookOpen, Map, Gamepad2, Crown, User, GraduationCap } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { soundManager } from '../../utils/sound';
 
@@ -9,6 +9,7 @@ export const MobileNavigation: React.FC = () => {
   const navs = [
     { id: 'home', label: 'Trang chủ', icon: Home, emoji: '🏠' },
     { id: 'learn', label: 'Học Toán', icon: BookOpen, emoji: '📚' },
+    { id: 'exam-history', label: 'Lịch sử thi', icon: GraduationCap, emoji: '📊' },
     { id: 'map', label: 'Bản đồ', icon: Map, emoji: '🗺️' },
     { id: 'games', label: 'Trò chơi', icon: Gamepad2, emoji: '🎮' },
     { id: 'pricing', label: 'Gói VIP', icon: Crown, emoji: '👑' },

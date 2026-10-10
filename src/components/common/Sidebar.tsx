@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Crown,
   GraduationCap,
+  History,
   Settings
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
@@ -31,6 +32,7 @@ export const Sidebar: React.FC = () => {
     { id: 'home', label: 'Trang chủ', icon: Home, emoji: '🏠' },
     { id: 'learn', label: 'Học Toán', icon: BookOpen, emoji: '📚' },
     { id: 'exam', label: 'Thi thử Toán', icon: GraduationCap, emoji: '📝' },
+    { id: 'exam-history', label: 'Lịch sử luyện thi', icon: History, emoji: '📊' },
     { id: 'map', label: 'Bản đồ thế giới', icon: Map, emoji: '🗺️' },
     { id: 'games', label: 'Trò chơi', icon: Gamepad2, emoji: '🎮' },
     { id: 'challenges', label: 'Thử thách ngày', icon: Target, emoji: '🎯' },
