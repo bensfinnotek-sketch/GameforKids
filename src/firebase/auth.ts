@@ -145,7 +145,7 @@ export const syncUserProfileToFirestore = async (
   try {
     const userDocRef = doc(db, 'users', uid);
     const {
-      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history, streak, lastActiveDate, dailyChallengeDate, dailyChallengeProgress, dailyChallengeClaims,
+      xp, coin, gem, level, completedLessons, lessonStars, unlockedBadges, history, streak, lastActiveDate, dailyChallengeDate, dailyChallengeProgress, dailyChallengeClaims, inventory,
       ...clientOwnedProfile
     } = profile;
 
@@ -163,6 +163,48 @@ export const syncUserProfileToFirestore = async (
     );
   } catch (err) {
     console.warn('Firestore profile sync warning:', err);
+  }
+};
+
+export interface TrustedTreasurePurchaseResult {
+  ok: boolean;
+  alreadyOwned?: boolean;
+  insufficientFunds?: boolean;
+  currency?: 'coin' | 'gem';
+  required?: number;
+  balance?: number;
+  coin?: number;
+  gem?: number;
+  inventory?: string[];
+}
+
+export const purchaseTreasureItemOnServer = async (itemId: string): Promise<TrustedTreasurePurchaseResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/treasure-purchase', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ itemId }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 409 && data?.error === 'INSUFFICIENT_FUNDS') {
+        return { ok: false, insufficientFunds: true, currency: data.currency, required: data.required, balance: data.balance, coin: data.coin, gem: data.gem, inventory: data.inventory };
+      }
+      if (response.status === 409 && data?.alreadyOwned) {
+        return { ok: true, alreadyOwned: true, coin: data.coin, gem: data.gem, inventory: data.inventory };
+      }
+      console.warn('Trusted treasure purchase failed:', response.status);
+      return null;
+    }
+    return data as TrustedTreasurePurchaseResult;
+  } catch (error) {
+    console.warn('Trusted treasure purchase warning:', error);
+    return null;
   }
 };
 
