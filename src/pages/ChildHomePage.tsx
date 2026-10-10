@@ -42,9 +42,16 @@ export const ChildHomePage: React.FC = () => {
   const currentLessonProgressPercent = completedIds.includes(nextLesson.id) ? 100 : 0;
   const completedToday = dailyChallenges.filter((challenge) => challenge.completed).length;
   const totalToday = dailyChallenges.length;
-  const todayKey = new Date().toLocaleDateString('vi-VN');
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const studySecondsToday = (user.history || []).reduce((total, item) => {
-    const completedDate = (item.completedAt || '').split(' ')[0];
+    const completedAt = item.completedAt || '';
+    // Keep date-only ISO values as-is to avoid UTC parsing shifting the local day.
+    const isoDateOnly = completedAt.match(/^\\d{4}-\\d{2}-\\d{2}/)?.[0];
+    const parsed = isoDateOnly ? null : new Date(completedAt);
+    const completedDate = isoDateOnly || (parsed && !Number.isNaN(parsed.getTime())
+      ? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
+      : '');
     return completedDate === todayKey ? total + Math.max(0, item.timeSpentSeconds || 0) : total;
   }, 0);
   const studyMinutesToday = Math.floor(studySecondsToday / 60);
