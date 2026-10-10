@@ -47,7 +47,7 @@ export const ChildHomePage: React.FC = () => {
   const studySecondsToday = (user.history || []).reduce((total, item) => {
     const completedAt = item.completedAt || '';
     // Keep date-only ISO values as-is to avoid UTC parsing shifting the local day.
-    const isoDateOnly = completedAt.match(/^\\d{4}-\\d{2}-\\d{2}/)?.[0];
+    const isoDateOnly = completedAt.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
     const parsed = isoDateOnly ? null : new Date(completedAt);
     const completedDate = isoDateOnly || (parsed && !Number.isNaN(parsed.getTime())
       ? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
