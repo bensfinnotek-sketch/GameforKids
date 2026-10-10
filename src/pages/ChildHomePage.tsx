@@ -5,6 +5,20 @@ import { getFullLevelDetails } from '../utils/levelUtils';
 import { soundManager } from '../utils/sound';
 import { World, Lesson } from '../types';
 
+const getStudyDateKey = (value: string): string => {
+  const input = (value || '').trim();
+  const vietnameseDate = input.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/);
+  if (vietnameseDate) {
+    const [, day, month, year] = vietnameseDate;
+    return year + '-' + String(Number(month)).padStart(2, '0') + '-' + String(Number(day)).padStart(2, '0');
+  }
+  const isoDate = input.match(/^(\\d{4}-\\d{2}-\\d{2})/);
+  if (isoDate) return isoDate[1];
+  const parsed = new Date(input);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+};
+
 export const ChildHomePage: React.FC = () => {
   const { 
     user, 
@@ -45,14 +59,9 @@ export const ChildHomePage: React.FC = () => {
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const studySecondsToday = (user.history || []).reduce((total, item) => {
-    const completedAt = item.completedAt || '';
-    // Keep date-only ISO values as-is to avoid UTC parsing shifting the local day.
-    const isoDateOnly = completedAt.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
-    const parsed = isoDateOnly ? null : new Date(completedAt);
-    const completedDate = isoDateOnly || (parsed && !Number.isNaN(parsed.getTime())
-      ? `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`
-      : '');
-    return completedDate === todayKey ? total + Math.max(0, item.timeSpentSeconds || 0) : total;
+    return getStudyDateKey(item.completedAt) === todayKey
+      ? total + Math.max(0, item.timeSpentSeconds || 0)
+      : total;
   }, 0);
   const studyMinutesToday = Math.floor(studySecondsToday / 60);
   const dailyGoalMinutes = Math.max(1, user.dailyStudyGoalMinutes || 20);
