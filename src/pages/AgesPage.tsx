@@ -32,17 +32,6 @@ export const AgesPage: React.FC = () => {
       buttonColor: 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/25',
     },
 
-    id: AgeGroup;
-    title: string;
-    ageRange: string;
-    subtitle: string;
-    badgeEmoji: string;
-    topics: string[];
-    gradient: string;
-    borderColor: string;
-    buttonColor: string;
-    description: string;
-  }[] = [
     {
       id: '4-5',
       title: 'Nhà thám hiểm tí hon',
