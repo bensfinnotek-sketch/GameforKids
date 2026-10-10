@@ -36,7 +36,7 @@ export const HomePage: React.FC = () => {
   const levelInfo = getLevelInfo(user.xp);
   const completedLessonCount = user.completedLessons.length;
   const lessonProgress = lessons.length > 0 ? Math.min(100, Math.round((completedLessonCount / lessons.length) * 100)) : 0;
-  const activeChallenges = dailyChallenges.filter((challenge) => !challenge.isCompleted).slice(0, 3);
+  const activeChallenges = dailyChallenges.filter((challenge) => !challenge.completed).slice(0, 3);
 
   const handleContinueLearning = () => {
     soundManager.playCorrect();
@@ -203,7 +203,7 @@ export const HomePage: React.FC = () => {
                       <span className="text-[10px]">{challenge.icon}</span>
                     </div>
                     <span className="flex-1">{challenge.title}</span>
-                    <span className="text-[10px] font-black text-slate-400">{challenge.progress}/{challenge.targetCount}</span>
+                    <span className="text-[10px] font-black text-slate-400">{challenge.currentCount}/{challenge.targetCount}</span>
                   </div>
                 ))}
               </div>
