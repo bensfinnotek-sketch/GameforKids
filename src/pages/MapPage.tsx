@@ -1,306 +1,130 @@
-import React, { useState } from 'react';
-import { 
-  Lock, 
-  Play, 
-  Sparkles, 
-  Star, 
-  X, 
-  Compass, 
-  CheckCircle2, 
-  ArrowRight,
-  ShieldAlert,
-  Coins
-} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { CheckCircle2, Compass, Lock, MapPin, Play, Star, X, Trophy, Sparkles, Clock } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { World, WorldNode } from '../types';
+import { World, Lesson } from '../types';
 import { soundManager } from '../utils/sound';
 
+const islandDecor = ['🌴', '🏰', '🌋', '🐚', '🗿', '🐉'];
+const islandColors = [
+  'from-amber-300 to-orange-500', 'from-emerald-300 to-teal-600',
+  'from-rose-300 to-red-500', 'from-violet-300 to-indigo-500',
+  'from-cyan-300 to-blue-500', 'from-yellow-300 to-amber-500',
+];
+
 export const MapPage: React.FC = () => {
-  const { worlds, user, setActiveCategory, setActiveTab, setActiveLesson, lessons } = useGame();
+  const { worlds, user, setActiveCategory, setActiveTab, setActiveLesson, lessons, activeAgeGroup, setActiveAgeGroup } = useGame();
   const [selectedWorld, setSelectedWorld] = useState<World | null>(null);
-  const [selectedNode, setSelectedNode] = useState<WorldNode | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const ageLessons = useMemo(() => lessons.filter((lesson) => lesson.ageGroup === activeAgeGroup), [lessons, activeAgeGroup]);
+  const completedCount = ageLessons.filter((lesson) => user.completedLessons.includes(lesson.id)).length;
+  const progress = ageLessons.length ? Math.round(completedCount / ageLessons.length * 100) : 0;
 
-  const handleWorldClick = (w: World) => {
+  const openWorld = (world: World) => {
     soundManager.playClick();
-    setSelectedWorld(w);
-    setSelectedNode(null);
+    setSelectedWorld(world);
+    setSelectedLesson(null);
   };
-
-  const handleNodeClick = (node: WorldNode) => {
-    soundManager.playClick();
-    setSelectedNode(node);
-  };
-
-  const handleEnterWorld = (w: World) => {
-    if (!w.isUnlocked && user.xp < w.requiredXp) {
-      soundManager.playWrong();
-      return;
-    }
+  const startLesson = (lesson: Lesson) => {
     soundManager.playCorrect();
-    setActiveCategory(w.category);
+    setActiveLesson(lesson);
     setActiveTab('learn');
     setSelectedWorld(null);
-  };
-
-  const handleStartNodeLesson = (node: WorldNode) => {
-    if (node.isLocked) {
-      soundManager.playWrong();
-      return;
-    }
-    if (node.lessonId) {
-      const targetLesson = lessons.find((l) => l.id === node.lessonId);
-      if (targetLesson) {
-        soundManager.playCorrect();
-        setActiveLesson(targetLesson);
-        setActiveTab('learn');
-        setSelectedWorld(null);
-        setSelectedNode(null);
-      }
-    }
+    setSelectedLesson(null);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none">
-      
-      {/* Top Map Header */}
-      <div className="bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
-        {/* Floating clouds */}
-        <div className="absolute top-4 left-10 text-3xl opacity-60 animate-float-slow pointer-events-none">☁️</div>
-        <div className="absolute top-12 right-20 text-4xl opacity-70 animate-float-slow pointer-events-none" style={{ animationDelay: '1.5s' }}>☁️</div>
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 bg-amber-400 text-slate-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-              <Compass className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '8s' }} />
-              Bản Đồ Hành Trình 6 Vùng Đất
-            </div>
-            <h1 className="font-heading text-3xl sm:text-4xl font-black">
-              Khám Phá Thế Giới Toán Học 🗺️
-            </h1>
-            <p className="text-xs sm:text-sm font-semibold text-sky-100 max-w-xl">
-              Chinh phục các thử thách theo từng hòn đảo để mở khóa kho báu và lâu đài huyền thoại!
-            </p>
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10">
+      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-b from-sky-400 via-sky-500 to-blue-700 p-5 sm:p-8 text-white shadow-2xl">
+        <div className="pointer-events-none absolute inset-0 opacity-35" aria-hidden="true">
+          <div className="absolute -left-10 top-8 h-28 w-72 rounded-full bg-cyan-200 blur-2xl" />
+          <div className="absolute right-0 top-28 h-36 w-56 rounded-full bg-blue-300 blur-2xl" />
+          <div className="absolute left-1/3 bottom-4 h-20 w-72 rounded-full bg-cyan-300 blur-2xl" />
+        </div>
+        <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-amber-300 px-3 py-1 text-xs font-black text-amber-950"><Compass className="h-4 w-4" /> BẢN ĐỒ PHIÊU LƯU CỦA BÉ</span>
+            <h1 className="mt-3 text-3xl font-black sm:text-5xl">Đại Dương Tri Thức 🗺️</h1>
+            <p className="mt-2 max-w-xl text-sm font-semibold text-sky-50 sm:text-base">Mỗi bài học là một chuyến thám hiểm. Học xong, bản đồ sẽ ghi nhận dấu chân của con!</p>
           </div>
-
-          <div className="bg-white/15 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/20 flex items-center gap-4">
-            <span className="text-3xl">⭐</span>
-            <div>
-              <span className="text-[11px] font-bold text-sky-200 block">XP hiện tại</span>
-              <span className="font-heading font-black text-2xl text-yellow-300">
-                {user.xp} XP
-              </span>
-            </div>
+          <div className="grid grid-cols-3 gap-2 sm:min-w-[300px]">
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-3 text-center backdrop-blur"><span className="block text-2xl font-black text-amber-200">{user.xp}</span><span className="text-[10px] font-bold uppercase">XP thật</span></div>
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-3 text-center backdrop-blur"><span className="block text-2xl font-black text-amber-200">{completedCount}</span><span className="text-[10px] font-bold uppercase">Bài đã học</span></div>
+            <div className="rounded-2xl border border-white/20 bg-white/15 p-3 text-center backdrop-blur"><span className="block text-2xl font-black text-amber-200">{progress}%</span><span className="text-[10px] font-bold uppercase">Tiến độ</span></div>
           </div>
         </div>
-      </div>
 
-      {/* Worlds Grid (6 Chapters) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {worlds.map((world) => {
-          const isUnlocked = world.isUnlocked || user.xp >= world.requiredXp;
-          const completedInWorld = world.nodes.filter((n) => user.completedLessons.includes(n.lessonId || '')).length;
-          const totalStars = world.nodes.reduce((acc, n) => acc + (user.lessonStars[n.lessonId || ''] || 0), 0);
-          const maxStars = world.nodes.length * 3;
-
-          return (
-            <div
-              key={world.id}
-              onClick={() => handleWorldClick(world)}
-              className={`group relative rounded-3xl p-6 border-4 transition-all duration-300 cursor-pointer flex flex-col justify-between ${
-                isUnlocked
-                  ? 'bg-white border-sky-100 hover:border-sky-400 shadow-md hover:shadow-2xl hover:-translate-y-1.5'
-                  : 'bg-slate-100/80 border-slate-200 opacity-70 grayscale hover:grayscale-0'
-              }`}
-            >
-              <div>
-                {/* World Icon & Status Badge */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-16 h-16 rounded-3xl bg-gradient-to-tr ${world.bgColor} shadow-md flex items-center justify-center text-3xl text-white group-hover:scale-110 transition-transform`}>
-                    {world.icon}
-                  </div>
-
-                  {isUnlocked ? (
-                    <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Mở khóa
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-black text-slate-500 bg-slate-200 px-3 py-1 rounded-full flex items-center gap-1">
-                      <Lock className="w-3.5 h-3.5" /> Cần {world.requiredXp} XP
-                    </span>
-                  )}
-                </div>
-
-                <div className="text-[11px] font-black uppercase tracking-wider text-sky-600 mb-1">
-                  Chương {world.order}
-                </div>
-                <h3 className="font-heading text-2xl font-black text-slate-800 group-hover:text-sky-600 transition-colors">
-                  {world.name}
-                </h3>
-                <p className="text-xs font-semibold text-slate-500 mt-1 mb-5 line-clamp-2">
-                  {world.description}
-                </p>
-
-                {/* Stars and Level Progress */}
-                <div className="flex items-center justify-between text-xs font-black text-slate-600 bg-slate-50 p-3 rounded-2xl border border-slate-200/80 mb-4">
-                  <span className="flex items-center gap-1 text-amber-600">
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <span>{totalStars} / {maxStars} sao</span>
+        <div className="relative mt-7 overflow-hidden rounded-[1.5rem] border-4 border-cyan-200/80 bg-[#078edb] shadow-inner">
+          <div className="absolute inset-0 opacity-40" aria-hidden="true" style={{ backgroundImage: 'radial-gradient(ellipse at 20% 20%, #67e8f9 0 2%, transparent 2.5%), radial-gradient(ellipse at 75% 60%, #38bdf8 0 2%, transparent 2.5%)', backgroundSize: '100px 75px, 130px 95px' }} />
+          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 430" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M90 320 C170 250 190 160 300 185 S420 315 500 250 S640 90 720 160 S850 300 920 95" fill="none" stroke="#ffffff" strokeWidth="6" strokeDasharray="15 14" strokeLinecap="round" opacity=".95" />
+          </svg>
+          <div className="relative grid min-h-[410px] grid-cols-2 gap-3 p-3 sm:min-h-[430px] sm:grid-cols-3 sm:gap-5 sm:p-6">
+            {worlds.map((world, index) => {
+              const isUnlocked = world.isUnlocked || user.xp >= world.requiredXp;
+              const worldLessons = ageLessons.filter((lesson) => lesson.worldId === world.id);
+              const done = worldLessons.filter((lesson) => user.completedLessons.includes(lesson.id)).length;
+              const stars = worldLessons.reduce((sum, lesson) => sum + (user.lessonStars[lesson.id] || 0), 0);
+              const current = worldLessons.some((lesson) => !user.completedLessons.includes(lesson.id));
+              return (
+                <button key={world.id} type="button" onClick={() => openWorld(world)} className={`group relative flex min-h-[155px] flex-col items-center justify-center rounded-3xl border-2 p-3 text-center transition duration-300 hover:-translate-y-1 hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-yellow-300 ${index % 2 === 0 ? 'sm:translate-y-4' : 'sm:-translate-y-1'} ${isUnlocked ? 'border-white/70 bg-white/15 shadow-lg backdrop-blur-sm' : 'border-white/20 bg-slate-900/20 opacity-80'}`}>
+                  <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-black text-slate-700">{done}/{worldLessons.length} bài</span>
+                  <span className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br ${islandColors[index % islandColors.length]} text-3xl shadow-[0_7px_0_rgba(15,23,42,.2)] ring-4 ring-cyan-100/70 transition group-hover:rotate-3 group-hover:scale-110`}>
+                    {islandDecor[index % islandDecor.length]}
+                    {done > 0 && <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white ring-2 ring-white"><CheckCircle2 className="h-4 w-4" /></span>}
+                    {!isUnlocked && <span className="absolute -bottom-1 -left-2 rounded-full bg-slate-800 p-1 text-white"><Lock className="h-3 w-3" /></span>}
                   </span>
-                  <span>
-                    {completedInWorld} / {world.nodes.length} bài
-                  </span>
-                </div>
-              </div>
+                  <span className="mt-3 text-sm font-black leading-tight text-white drop-shadow sm:text-base">{world.name}</span>
+                  <span className="mt-1 flex items-center gap-1 text-[11px] font-bold text-cyan-50"><Star className="h-3 w-3 fill-amber-300 text-amber-300" /> {stars} sao</span>
+                  <span className="mt-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-sky-900">{isUnlocked ? (current ? 'TIẾP TỤC KHÁM PHÁ' : 'XEM LẠI ĐẢO') : `CẦN ${world.requiredXp} XP`}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="relative flex flex-wrap items-center justify-between gap-2 border-t border-white/20 bg-blue-950/20 px-4 py-3 text-xs font-bold text-white">
+            <span>🧭 Mỗi hòn đảo mở ra những bài học phù hợp độ tuổi</span><span>🏆 Thành tích chỉ tính khi máy chủ lưu thành công</span>
+          </div>
+        </div>
+      </section>
 
-              {/* Action Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEnterWorld(world);
-                }}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-xs transition flex items-center justify-center gap-2 ${
-                  isUnlocked
-                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-md shadow-sky-500/25 group-hover:scale-105 active:scale-95'
-                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                }`}
-              >
-                <span>{isUnlocked ? 'KHÁM PHÁ VÙNG ĐẤT' : 'CHƯA MỞ KHÓA'}</span>
-                {isUnlocked && <ArrowRight className="w-4 h-4" />}
-              </button>
-            </div>
-          );
-        })}
-      </div>
+      <section className="mt-6 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div><h2 className="text-xl font-black text-slate-800">Hành trình học tập</h2><p className="mt-1 text-sm font-medium text-slate-500">Tiến độ tính từ tài khoản đang đăng nhập, không lấy thành tích mẫu.</p></div>
+          <label className="flex items-center gap-2 text-sm font-bold text-slate-600">Độ tuổi
+            <select value={activeAgeGroup} onChange={(event) => setActiveAgeGroup(event.target.value as typeof activeAgeGroup)} className="rounded-xl border-2 border-sky-100 bg-sky-50 px-3 py-2 font-black text-sky-800">
+              <option value="2-3">2–3 tuổi</option><option value="4-5">4–5 tuổi</option><option value="6-8">6–8 tuổi</option><option value="9-11">9–11 tuổi</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-4 h-4 overflow-hidden rounded-full bg-slate-100 p-0.5"><div className="h-full rounded-full bg-gradient-to-r from-amber-400 via-emerald-400 to-sky-500 transition-all duration-700" style={{ width: `${progress}%` }} /></div>
+        <div className="mt-2 flex justify-between text-xs font-black text-slate-500"><span>{completedCount} / {ageLessons.length} bài hoàn thành</span><span>{progress}%</span></div>
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl bg-emerald-50 p-4"><CheckCircle2 className="h-5 w-5 text-emerald-600" /><p className="mt-2 text-sm font-black text-emerald-900">Bài đã hoàn thành</p><p className="text-2xl font-black text-emerald-700">{completedCount}</p></div>
+          <div className="rounded-2xl bg-amber-50 p-4"><Trophy className="h-5 w-5 text-amber-600" /><p className="mt-2 text-sm font-black text-amber-900">Sao đã nhận</p><p className="text-2xl font-black text-amber-700">{ageLessons.reduce((sum, lesson) => sum + (user.lessonStars[lesson.id] || 0), 0)}</p></div>
+          <div className="rounded-2xl bg-sky-50 p-4"><Clock className="h-5 w-5 text-sky-600" /><p className="mt-2 text-sm font-black text-sky-900">Gợi ý cho gia đình</p><p className="mt-1 text-xs font-semibold text-sky-800">{activeAgeGroup === '2-3' ? 'Mỗi lượt 2–3 phút, học cùng người lớn.' : 'Khuyến khích học đều và nghỉ giải lao phù hợp.'}</p></div>
+        </div>
+      </section>
 
-      {/* World Modal Detail Dialog (Popup when clicking a World node) */}
       {selectedWorld && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-sky-300 max-h-[90vh] overflow-y-auto animate-in zoom-in-95">
-            <button
-              onClick={() => setSelectedWorld(null)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
-              aria-label="Đóng popup"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Modal Header */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-tr ${selectedWorld.bgColor} flex items-center justify-center text-3xl text-white shadow-lg`}>
-                {selectedWorld.icon}
-              </div>
-              <div>
-                <span className="text-xs font-black uppercase text-sky-600 tracking-wider">
-                  Chương {selectedWorld.order} • Bản đồ phiêu lưu
-                </span>
-                <h2 className="font-heading text-2xl sm:text-3xl font-black text-slate-800">
-                  {selectedWorld.name}
-                </h2>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                  {selectedWorld.description}
-                </p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={selectedWorld.name}>
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border-4 border-sky-200 bg-white p-5 shadow-2xl sm:p-7">
+            <div className="flex items-start justify-between gap-4"><div><span className="text-xs font-black uppercase tracking-wider text-sky-600">Chặng {selectedWorld.order} • Bản đồ phiêu lưu</span><h2 className="mt-1 text-2xl font-black text-slate-800">{selectedWorld.icon} {selectedWorld.name}</h2><p className="mt-1 text-sm font-medium text-slate-500">{selectedWorld.description}</p></div><button onClick={() => { setSelectedWorld(null); setSelectedLesson(null); }} aria-label="Đóng" className="rounded-xl bg-slate-100 p-2 text-slate-600 hover:bg-slate-200"><X className="h-5 w-5" /></button></div>
+            <div className="mt-5 space-y-3">
+              {ageLessons.filter((lesson) => lesson.worldId === selectedWorld.id).map((lesson, index) => {
+                const done = user.completedLessons.includes(lesson.id);
+                const stars = user.lessonStars[lesson.id] || 0;
+                const locked = !done && index > 0 && !user.completedLessons.includes(ageLessons.filter((item) => item.worldId === selectedWorld.id)[index - 1]?.id || '');
+                return <div key={lesson.id} className={`flex items-center gap-3 rounded-2xl border-2 p-3 sm:p-4 ${done ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-white'}`}>
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-3xl">{lesson.thumbnailEmoji}</span>
+                  <div className="min-w-0 flex-1"><p className="font-black text-slate-800">{lesson.title}</p><p className="mt-1 text-xs font-semibold text-slate-500">{lesson.durationMinutes} phút • {lesson.totalQuestions} hoạt động • {done ? 'Đã hoàn thành' : 'Chưa hoàn thành'}</p><div className="mt-1 flex gap-0.5">{[1,2,3].map((n) => <Star key={n} className={`h-3.5 w-3.5 ${n <= stars ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />)}</div></div>
+                  <button disabled={locked} onClick={() => startLesson(lesson)} className="shrink-0 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:from-slate-300 disabled:to-slate-300">{locked ? '🔒' : done ? 'Ôn lại' : 'Học ngay'}</button>
+                </div>;
+              })}
+              {ageLessons.filter((lesson) => lesson.worldId === selectedWorld.id).length === 0 && <div className="rounded-2xl bg-amber-50 p-5 text-sm font-bold text-amber-900">Chặng này chưa có bài học cho độ tuổi đã chọn. Hãy chọn hòn đảo khác hoặc đổi độ tuổi.</div>}
             </div>
-
-            {/* Nodes inside this world (Interactive Roadmap) */}
-            <div className="space-y-3 mb-6">
-              <h4 className="font-heading font-black text-sm text-slate-700 uppercase tracking-wider">
-                Các thử thách trong vùng đất:
-              </h4>
-
-              <div className="space-y-2.5">
-                {selectedWorld.nodes.map((node, idx) => {
-                  const isDone = user.completedLessons.includes(node.lessonId || '');
-                  const stars = user.lessonStars[node.lessonId || ''] || 0;
-
-                  return (
-                    <div
-                      key={node.id}
-                      onClick={() => handleNodeClick(node)}
-                      className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between cursor-pointer ${
-                        selectedNode?.id === node.id
-                          ? 'border-sky-500 bg-sky-50 shadow-md ring-2 ring-sky-300'
-                          : isDone
-                          ? 'bg-emerald-50/60 border-emerald-300'
-                          : node.isLocked
-                          ? 'bg-slate-50 border-slate-200 opacity-60'
-                          : 'bg-white border-slate-200 hover:border-sky-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl font-heading font-black text-sm flex items-center justify-center shadow-xs ${
-                          isDone
-                            ? 'bg-emerald-500 text-white'
-                            : node.isLocked
-                            ? 'bg-slate-300 text-slate-600'
-                            : 'bg-sky-500 text-white'
-                        }`}>
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <h5 className="font-heading font-black text-sm text-slate-800">
-                            {node.name}
-                          </h5>
-                          <span className="text-[11px] font-bold text-slate-400">
-                            Cấp độ {node.level}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        {/* Stars */}
-                        <div className="flex items-center gap-0.5 text-sm">
-                          {[1, 2, 3].map((s) => (
-                            <Star
-                              key={s}
-                              className={`w-4 h-4 ${
-                                s <= stars
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-slate-300 fill-slate-200'
-                              }`}
-                            />
-                          ))}
-                        </div>
-
-                        {node.isLocked ? (
-                          <Lock className="w-4 h-4 text-slate-400" />
-                        ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStartNodeLesson(node);
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl font-black text-xs text-white bg-sky-500 hover:bg-sky-600 shadow-sm"
-                          >
-                            {isDone ? 'Ôn lại' : 'Học'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={() => handleEnterWorld(selectedWorld)}
-                className="flex-1 py-3.5 px-6 rounded-2xl font-black text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md shadow-sky-500/25 transition text-center flex items-center justify-center gap-2"
-              >
-                <span>VÀO THẾ GIỚI TOÁN HỌC 🚀</span>
-              </button>
-              <button
-                onClick={() => setSelectedWorld(null)}
-                className="py-3 px-5 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition text-xs"
-              >
-                Đóng lại
-              </button>
-            </div>
+            <div className="mt-5 flex items-center gap-2 rounded-2xl bg-sky-50 p-3 text-xs font-semibold text-sky-900"><Sparkles className="h-4 w-4 shrink-0" /> Điểm thưởng chỉ được ghi nhận sau khi máy chủ xác nhận kết quả bài học.</div>
           </div>
         </div>
       )}
-
     </div>
   );
 };
