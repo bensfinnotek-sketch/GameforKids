@@ -155,7 +155,7 @@ export const ExamHistoryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                {filteredAttempts.map((attempt, index) => {
+                {filteredAttempts.map((attempt) => {
                   const accuracy = attempt.totalQuestions > 0 ? Math.round(attempt.correctCount / attempt.totalQuestions * 100) : 0;
                   return (
                     <article key={attempt.id} className="rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 sm:p-5">
@@ -163,7 +163,7 @@ export const ExamHistoryPage: React.FC = () => {
                         <div className="flex items-start gap-3">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"><Trophy className="h-6 w-6" /></div>
                           <div>
-                            <h2 className="font-black text-slate-800">Lần làm bài #{attempts.length - index}</h2>
+                            <h2 className="font-black text-slate-800">Lần làm bài #{attempts.length - attempts.findIndex((item) => item.id === attempt.id)}</h2>
                             <p className="mt-1 text-sm text-slate-500">{formatDate(attempt.submittedAt)}</p>
                             <p className="mt-1 text-xs font-semibold text-slate-500"><Clock3 className="mr-1 inline h-3.5 w-3.5" /> {formatDuration(attempt.timeSpentSeconds)} · {attempt.answeredCount}/{attempt.totalQuestions} câu đã trả lời</p>
                           </div>
