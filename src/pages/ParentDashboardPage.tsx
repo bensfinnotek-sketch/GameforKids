@@ -20,6 +20,20 @@ import {
 import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
 
+const getStudyDateKey = (value: string): string => {
+  const input = (value || '').trim();
+  const vietnameseDate = input.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (vietnameseDate) {
+    const [, day, month, year] = vietnameseDate;
+    return year + '-' + String(Number(month)).padStart(2, '0') + '-' + String(Number(day)).padStart(2, '0');
+  }
+  const isoDate = input.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
+  const parsed = new Date(input);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.getFullYear() + '-' + String(parsed.getMonth() + 1).padStart(2, '0') + '-' + String(parsed.getDate()).padStart(2, '0');
+};
+
 export const ParentDashboardPage: React.FC = () => {
   const { user, updateDailyGoal, setActiveTab, switchRole } = useGame();
   const [goalMinutes, setGoalMinutes] = useState(user.dailyStudyGoalMinutes || 20);
@@ -36,15 +50,14 @@ export const ParentDashboardPage: React.FC = () => {
   const dateFilteredHistory = historyPeriod === 'all'
     ? categoryFilteredHistory
     : categoryFilteredHistory.filter((item) => {
-        // completedAt is stored as dd/mm/yyyy in the Vietnamese locale.
-        const match = item.completedAt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (!match) return false;
-        const completedDate = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
-        if (Number.isNaN(completedDate.getTime())) return false;
+        const completedDateKey = getStudyDateKey(item.completedAt);
+        if (!completedDateKey) return false;
         const today = new Date();
+        const todayKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         startDate.setDate(startDate.getDate() - (Number(historyPeriod) - 1));
-        return completedDate >= startDate && completedDate <= new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const startDateKey = startDate.getFullYear() + '-' + String(startDate.getMonth() + 1).padStart(2, '0') + '-' + String(startDate.getDate()).padStart(2, '0');
+        return completedDateKey >= startDateKey && completedDateKey <= todayKey;
       });
   const normalizedHistorySearch = historySearch.trim().toLocaleLowerCase('vi');
   const filteredHistory = normalizedHistorySearch
@@ -63,12 +76,8 @@ export const ParentDashboardPage: React.FC = () => {
     const day = new Date();
     day.setHours(0, 0, 0, 0);
     day.setDate(day.getDate() - (6 - index));
-    const dayKey = String(day.getFullYear()) + '-' + String(day.getMonth()) + '-' + String(day.getDate());
-    const dayHistory = user.history.filter((item) => {
-      const match = item.completedAt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if (!match) return false;
-      return String(Number(match[3])) + '-' + String(Number(match[2]) - 1) + '-' + String(Number(match[1])) === dayKey;
-    });
+    const dayKey = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+    const dayHistory = user.history.filter((item) => getStudyDateKey(item.completedAt) === dayKey);
     return {
       key: dayKey,
       label: day.toLocaleDateString('vi-VN', { weekday: 'short' }).replace('.', ''),
