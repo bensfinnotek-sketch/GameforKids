@@ -431,20 +431,34 @@ export const claimDailyChallengeOnServer = async (
   }
 };
 
-export const fetchUserProfileFromFirestore = async (
+export type UserProfileFetchResult =
+  | { status: 'found'; profile: Partial<UserProfile> }
+  | { status: 'missing' }
+  | { status: 'error' };
+
+// Keep "missing" distinct from a failed read so hydration never replaces a
+// saved profile with defaults when Firestore is temporarily unavailable.
+export const fetchUserProfileFromFirestoreResult = async (
   uid: string
-): Promise<Partial<UserProfile> | null> => {
+): Promise<UserProfileFetchResult> => {
   try {
     const userDocRef = doc(db, 'users', uid);
     const snap = await getDoc(userDocRef);
     if (snap.exists()) {
-      return snap.data() as Partial<UserProfile>;
+      return { status: 'found', profile: snap.data() as Partial<UserProfile> };
     }
-    return null;
+    return { status: 'missing' };
   } catch (err) {
     console.warn('Firestore profile fetch warning:', err);
-    return null;
+    return { status: 'error' };
   }
+};
+
+export const fetchUserProfileFromFirestore = async (
+  uid: string
+): Promise<Partial<UserProfile> | null> => {
+  const result = await fetchUserProfileFromFirestoreResult(uid);
+  return result.status === 'found' ? result.profile : null;
 };
 
 

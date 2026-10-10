@@ -1,4 +1,4 @@
-import { fetchUserProfileFromFirestore, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore, purchaseTreasureItemOnServer } from '../firebase/auth';
+import { fetchUserProfileFromFirestore, fetchUserProfileFromFirestoreResult, fetchDailyChallengesFromServer, claimDailyChallengeOnServer, logOutUser, submitLessonAttemptToFirestore, syncUserProfileToFirestore, purchaseTreasureItemOnServer } from '../firebase/auth';
 import { onAuthStateChanged as firebaseOnAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -157,6 +157,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [profileHydrated, setProfileHydrated] = useState(false);
   const [user, setUser] = useState<UserProfile>(() => createEmptyUserProfile());
 
   const navigateTo = useCallback((tabOrRoute: string) => {
@@ -199,6 +200,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (!firebaseUser) {
         setIsAuthenticated(false);
+        setProfileHydrated(false);
         setAuthReady(true);
         return;
       }
@@ -208,6 +210,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         firebaseUser.email?.split('@')[0] ||
         'Bé Thám Hiểm';
 
+      // Do not sync the placeholder profile while the saved Firestore profile
+      // is loading. Otherwise default values can overwrite saved preferences.
+      setProfileHydrated(false);
       // Unlock the app immediately after Firebase confirms the session. The
       // Firestore profile is hydrated in the background so a slow network does
       // not make the whole application feel stuck on the auth gate.
@@ -220,8 +225,12 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAuthReady(true);
 
       void (async () => {
-        const existingProfile = await fetchUserProfileFromFirestore(firebaseUser.uid);
-        if (!mounted) return;
+        const profileResult = await fetchUserProfileFromFirestoreResult(firebaseUser.uid);
+        if (!mounted || auth.currentUser?.uid !== firebaseUser.uid) return;
+        // A failed read is not the same as a first-time account. Keep syncing
+        // disabled until a later auth/profile refresh can read the saved data.
+        if (profileResult.status === 'error') return;
+        const existingProfile = profileResult.status === 'found' ? profileResult.profile : null;
 
         const isRealProfile = existingProfile?.dataVersion === 2;
         const mergedProfile: UserProfile = {
@@ -244,6 +253,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!isRealProfile) {
           await syncUserProfileToFirestore(firebaseUser.uid, mergedProfile);
         }
+        if (mounted && auth.currentUser?.uid === firebaseUser.uid) setProfileHydrated(true);
       })().catch((error) => {
         console.warn('Background profile hydration warning:', error);
       });
@@ -258,7 +268,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Firestore is the source of truth for account/progress data.
   // localStorage remains only a best-effort UI cache for faster rendering.
   useEffect(() => {
-    if (!isAuthenticated || !auth.currentUser || !authReady) return;
+    if (!isAuthenticated || !auth.currentUser || !authReady || !profileHydrated) return;
 
     const timer = window.setTimeout(() => {
       syncUserProfileToFirestore(auth.currentUser!.uid, user).catch((error) => {
@@ -267,7 +277,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [user, isAuthenticated, authReady]);
+  }, [user, isAuthenticated, authReady, profileHydrated]);
 
   // Sync sound manager with user preference
   useEffect(() => {
