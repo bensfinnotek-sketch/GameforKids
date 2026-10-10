@@ -364,7 +364,6 @@ export const ParentDashboardPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-            </div>
             <button
               type="button"
               onClick={handleExportHistory}
