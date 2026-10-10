@@ -35,7 +35,7 @@ export const ParentDashboardPage: React.FC = () => {
     ? categoryFilteredHistory
     : categoryFilteredHistory.filter((item) => {
         // completedAt is stored as dd/mm/yyyy in the Vietnamese locale.
-        const match = item.completedAt.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})/);
+        const match = item.completedAt.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         if (!match) return false;
         const completedDate = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
         if (Number.isNaN(completedDate.getTime())) return false;
@@ -346,7 +346,8 @@ export const ParentDashboardPage: React.FC = () => {
                 {category}
               </button>
             ))}
-              <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Lọc hoạt động theo khoảng thời gian">
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Lọc hoạt động theo khoảng thời gian">
                 {([
                   { value: 'all', label: 'Mọi thời điểm' },
                   { value: '7', label: '7 ngày qua' },
