@@ -205,6 +205,10 @@ export interface UserProfile {
   gem: number;
   streak: number;
   lastActiveDate: string;
+  /** Server-maintained daily challenge state for the current Vietnam-local day. */
+  dailyChallengeDate?: string;
+  dailyChallengeProgress?: Record<string, number>;
+  dailyChallengeClaims?: Record<string, boolean>;
   selectedAgeGroup: AgeGroup;
   completedLessons: string[]; // lesson ids
   lessonStars: Record<string, number>; // lessonId -> 1..3 stars
