@@ -30,7 +30,7 @@ export async function POST(request:Request){
     const body=await request.json();
     const lessonId=typeof body.lessonId==='string'?body.lessonId:'';
     const attemptId=typeof body.attemptId==='string'?body.attemptId:'';
-    const score=Number(body.score), totalQuestions=Number(body.totalQuestions), timeSpentSeconds=Number(body.timeSpentSeconds);
+    const score=body.score, totalQuestions=body.totalQuestions, timeSpentSeconds=body.timeSpentSeconds;
     const lesson=LESSON_REWARDS[lessonId];
     if(!lesson||!/^[-A-Za-z0-9_]{8,80}$/.test(attemptId))return Response.json({error:'Invalid lesson attempt'},{status:400});
     if(!Number.isInteger(score)||!Number.isInteger(totalQuestions)||!Number.isInteger(timeSpentSeconds)||totalQuestions!==lesson.totalQuestions||score<0||score>totalQuestions||timeSpentSeconds<0||timeSpentSeconds>86400)return Response.json({error:'Invalid lesson result'},{status:400});
