@@ -23,6 +23,8 @@ export const ExamHistoryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [scoreFilter, setScoreFilter] = useState<'all' | 'high' | 'needs-practice'>('all');
+
   const loadHistory = useCallback(async () => {
     if (!authReady) return;
     if (!isAuthenticated) {
@@ -53,6 +55,12 @@ export const ExamHistoryPage: React.FC = () => {
   const latestScoreChange = attempts.length > 1
     ? attempts[0].score - attempts[1].score
     : null;
+
+  const filteredAttempts = attempts.filter((attempt) => {
+    if (scoreFilter === 'high') return attempt.score >= 80;
+    if (scoreFilter === 'needs-practice') return attempt.score < 80;
+    return true;
+  });
 
   return (
     <main className="mx-auto max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
@@ -118,9 +126,36 @@ export const ExamHistoryPage: React.FC = () => {
                   </p>
                 </article>
               </section>
-              <div className="mb-3 flex items-center gap-2 text-sm font-black text-slate-700"><Target className="h-4 w-4 text-sky-600" /> Các lượt làm bài</div>
-              <div className="space-y-3">
-                {attempts.map((attempt, index) => {
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-sm font-black text-slate-700"><Target className="h-4 w-4 text-sky-600" /> Các lượt làm bài</div>
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Lọc lượt thi theo điểm số">
+                  {([
+                    { value: 'all', label: 'Tất cả' },
+                    { value: 'high', label: 'Từ 80 điểm' },
+                    { value: 'needs-practice', label: 'Dưới 80 điểm' },
+                  ] as const).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setScoreFilter(option.value)}
+                      aria-pressed={scoreFilter === option.value}
+                      className={`rounded-full px-3 py-2 text-xs font-bold transition ${scoreFilter === option.value ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-sky-50'}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="mb-3 text-xs font-semibold text-slate-500">Đang hiển thị {filteredAttempts.length}/{attempts.length} lượt thi.</p>
+              {filteredAttempts.length === 0 ? (
+                <div className="rounded-2xl border-2 border-dashed border-sky-100 p-6 text-center">
+                  <Target className="mx-auto h-8 w-8 text-sky-500" />
+                  <p className="mt-3 font-bold text-slate-700">Chưa có lượt thi phù hợp</p>
+                  <p className="mt-1 text-sm text-slate-500">Thử bộ lọc khác để xem các kết quả còn lại.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                {filteredAttempts.map((attempt, index) => {
                   const accuracy = attempt.totalQuestions > 0 ? Math.round(attempt.correctCount / attempt.totalQuestions * 100) : 0;
                   return (
                     <article key={attempt.id} className="rounded-2xl border border-slate-100 p-4 transition hover:border-sky-200 sm:p-5">
@@ -141,7 +176,8 @@ export const ExamHistoryPage: React.FC = () => {
                     </article>
                   );
                 })}
-              </div>
+                </div>
+              )}
             </>
           )}
         </div>
