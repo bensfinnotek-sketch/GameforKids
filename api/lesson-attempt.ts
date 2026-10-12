@@ -40,7 +40,22 @@ export async function POST(request:Request){
     const totalQuestions=body.totalQuestions, sessionId=typeof body.sessionId==='string'?body.sessionId:'', answers=body.answers;
     const lesson=LESSON_REWARDS[lessonId];
     if(!lesson||!/^[-A-Za-z0-9_]{8,80}$/.test(attemptId)||!/^[-A-Za-z0-9_]{10,100}$/.test(sessionId))return Response.json({error:'Invalid lesson attempt'},{status:400});
-    if(!Number.isInteger(score)||!Number.isInteger(totalQuestions)||totalQuestions!==lesson.totalQuestions||score<0||score>totalQuestions)return Response.json({error:'Invalid lesson result'},{status:400});
+    if(!Number.isInteger(totalQuestions)||totalQuestions!==lesson.totalQuestions||!Array.isArray(answers)||answers.length!==totalQuestions||answers.some((answer:unknown)=>typeof answer!=='string'||answer.length>200))return Response.json({error:'Invalid lesson answers'},{status:400});
+    const questions=INITIAL_QUESTIONS[lessonId]||[
+      {options:[{id:'o1',text:'Đáp án chính xác (Thử thách 1)',isCorrect:true},{id:'o2',text:'Lựa chọn số 2',isCorrect:false},{id:'o3',text:'Lựa chọn số 3',isCorrect:false},{id:'o4',text:'Lựa chọn số 4',isCorrect:false}]},
+      {options:[{id:'o1',text:'Hình vuông lớn hoặc Hình chữ nhật dài',isCorrect:true},{id:'o2',text:'Hình tròn',isCorrect:false},{id:'o3',text:'Hình tam giác đều',isCorrect:false},{id:'o4',text:'Hình ngôi sao 5 cánh',isCorrect:false}]},
+      {options:[{id:'o1',text:'+'+lesson.xpReward+' XP siêu giá trị!',isCorrect:true},{id:'o2',text:'+0 XP',isCorrect:false},{id:'o3',text:'+5 XP',isCorrect:false},{id:'o4',text:'+1 XP',isCorrect:false}]}
+    ];
+    if(questions.length!==totalQuestions)return Response.json({error:'Lesson question bank mismatch'},{status:409});
+    const score=questions.reduce((sum: number, question: any, index: number)=>{
+      const answer=answers[index];
+      if(question.type==='fill-number'){
+        const expected=String(question.correctFillValue??question.options.find((option:any)=>option.isCorrect)?.text??'');
+        return sum+(answer.trim()===expected.trim()?1:0);
+      }
+      const correctOption=question.options.find((option:any)=>option.isCorrect);
+      return sum+(correctOption&&answer===correctOption.id?1:0);
+    },0);
     const db=getFirestore(adminApp()), userRef=db.collection('users').doc(decoded.uid), attemptRef=userRef.collection('lessonAttempts').doc(attemptId), sessionRef=userRef.collection('lessonSessions').doc(sessionId);
     const result=await db.runTransaction(async tx=>{
       const userSnap=await tx.get(userRef), attemptSnap=await tx.get(attemptRef);
