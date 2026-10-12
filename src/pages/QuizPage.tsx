@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -18,6 +18,7 @@ import { getQuestionsForLesson } from '../data/mockData';
 import { useGame } from '../context/GameContext';
 import { MascotMini } from '../components/common/MascotMini';
 import { soundManager } from '../utils/sound';
+import { startTrustedLessonSession } from '../firebase/auth';
 
 interface QuizPageProps {
   lesson: Lesson;
@@ -41,6 +42,16 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   const [completionResult, setCompletionResult] = useState<{ duplicate?: boolean; xpEarned?: number; coinEarned?: number; gemEarned?: number; stars?: number } | null>(null);
   const [saveError, setSaveError] = useState(false);
   const [startTime] = useState<number>(Date.now());
+  const [lessonSessionId, setLessonSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLessonSessionId(null);
+    startTrustedLessonSession(lesson.id).then((session) => {
+      if (!cancelled && session?.ok && session.sessionId) setLessonSessionId(session.sessionId);
+    });
+    return () => { cancelled = true; };
+  }, [lesson.id]);
   const [streakInQuiz, setStreakInQuiz] = useState(0);
 
   const currentQ = questions[currentIndex];
@@ -104,7 +115,12 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
       setFinalScore(actualScore);
       setFinalElapsedSeconds(elapsedSeconds);
       setSaveError(false);
-      const result = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds);
+      const sessionId = lessonSessionId || (await startTrustedLessonSession(lesson.id))?.sessionId;
+      if (!sessionId) {
+        setSaveError(true);
+        return;
+      }
+      const result = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds, sessionId);
       if (result.ok) {
         setCompletionResult(result);
         setStarsEarned(result.stars || 0);

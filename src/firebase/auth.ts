@@ -208,6 +208,28 @@ export const purchaseTreasureItemOnServer = async (itemId: string): Promise<Trus
   }
 };
 
+export interface TrustedLessonSessionResult {
+  ok: boolean;
+  sessionId?: string;
+}
+
+export const startTrustedLessonSession = async (lessonId: string): Promise<TrustedLessonSessionResult | null> => {
+  try {
+    if (!auth.currentUser) return null;
+    const token = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/lesson-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ lessonId }),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as TrustedLessonSessionResult;
+  } catch (err) {
+    console.warn('Trusted lesson session start warning:', err);
+    return null;
+  }
+};
+
 export interface TrustedLessonRewardResult {
   ok: boolean;
   duplicate?: boolean;
@@ -218,6 +240,7 @@ export interface TrustedLessonRewardResult {
   accuracy?: number;
   newLevel?: number;
   streak?: number;
+  timeSpentSeconds?: number;
 }
 
 // Keep a pending ID when the server outcome is uncertain. If the user retries
@@ -232,6 +255,7 @@ export const submitLessonAttemptToFirestore = async (
     score: number;
     totalQuestions: number;
     timeSpentSeconds: number;
+    sessionId: string;
   }
 ): Promise<TrustedLessonRewardResult | null> => {
   if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
