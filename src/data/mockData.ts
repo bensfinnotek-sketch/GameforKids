@@ -789,53 +789,165 @@ export const INITIAL_QUESTIONS: Record<string, QuizQuestion[]> = {
   ],
 };
 
+
+type LessonQuestionSeed = {
+  questionText: string;
+  correct: string;
+  distractors: [string, string, string];
+  hint: string;
+};
+
+// Complete the lessons that do not have hand-authored question sets above.
+// Keeping these in the same source makes client rendering and server scoring agree.
+const ADDITIONAL_LESSON_QUESTIONS: Record<string, LessonQuestionSeed[]> = {
+  'lesson-2': [
+    { questionText: 'Khối nào có 6 mặt đều là hình vuông?', correct: 'Khối lập phương', distractors: ['Khối cầu', 'Khối trụ', 'Khối nón'], hint: 'Hãy nghĩ đến con xúc xắc nhé.' },
+    { questionText: 'Vật nào có dạng hình cầu?', correct: 'Quả bóng', distractors: ['Hộp quà', 'Lon nước', 'Quyển sách'], hint: 'Hình cầu lăn được theo mọi hướng.' },
+    { questionText: 'Hình nào có 3 cạnh?', correct: 'Hình tam giác', distractors: ['Hình vuông', 'Hình tròn', 'Hình chữ nhật'], hint: 'Đếm số cạnh của từng hình.' },
+  ],
+  'lesson-3': [
+    { questionText: 'Số nào lớn hơn?', correct: '9', distractors: ['4', '6', '2'], hint: 'So sánh giá trị các số.' },
+    { questionText: 'Chiếc bút dài 15 cm, chiếc thước dài 20 cm. Vật nào dài hơn?', correct: 'Chiếc thước', distractors: ['Chiếc bút', 'Hai vật bằng nhau', 'Không thể so sánh'], hint: '20 cm lớn hơn 15 cm.' },
+    { questionText: 'Sắp xếp từ bé đến lớn: 3, 8, 5.', correct: '3, 5, 8', distractors: ['8, 5, 3', '5, 3, 8', '3, 8, 5'], hint: 'Bắt đầu từ số nhỏ nhất.' },
+  ],
+  'lesson-4': [
+    { questionText: 'Có 3 quả táo, thêm 4 quả. Có tất cả bao nhiêu quả?', correct: '7', distractors: ['6', '8', '9'], hint: 'Tính 3 + 4.' },
+    { questionText: '5 + 2 bằng bao nhiêu?', correct: '7', distractors: ['6', '8', '9'], hint: 'Đếm thêm 2 bước từ số 5.' },
+    { questionText: 'Mini có 6 bông hoa và tặng bạn 3 bông nữa. Mini cần thêm bao nhiêu bông để có 10 bông?', correct: '4', distractors: ['1', '3', '5'], hint: 'Trước hết tính 10 - 6.' },
+  ],
+  'lesson-4b': [
+    { questionText: 'Có 4 chú vịt trên hồ, thêm 3 chú bơi đến. Có bao nhiêu chú vịt?', correct: '7 chú vịt', distractors: ['6 chú vịt', '8 chú vịt', '9 chú vịt'], hint: 'Tính 4 + 3.' },
+    { questionText: '8 chú vịt, 2 chú lên bờ. Còn mấy chú dưới hồ?', correct: '6 chú vịt', distractors: ['5 chú vịt', '7 chú vịt', '10 chú vịt'], hint: 'Tính 8 - 2.' },
+    { questionText: 'Số nào đứng ngay sau số 11?', correct: '12', distractors: ['10', '13', '9'], hint: 'Đếm tiếp một số sau 11.' },
+  ],
+  'lesson-4c': [
+    { questionText: 'Màu nào thường đứng giữa màu vàng và màu lam trong cầu vồng?', correct: 'Lục', distractors: ['Đỏ', 'Tím', 'Cam'], hint: 'Cầu vồng có bảy màu quen thuộc.' },
+    { questionText: 'Hình nào có bốn cạnh bằng nhau và bốn góc vuông?', correct: 'Hình vuông', distractors: ['Hình tròn', 'Hình tam giác', 'Hình bầu dục'], hint: 'Mỗi cạnh của hình này dài bằng nhau.' },
+    { questionText: 'Màu đỏ pha với màu vàng thường tạo thành màu gì?', correct: 'Cam', distractors: ['Xanh lá', 'Tím', 'Xanh dương'], hint: 'Hãy nghĩ đến màu vỏ quả cam.' },
+  ],
+  'lesson-7': [
+    { questionText: '2 × 4 bằng bao nhiêu?', correct: '8', distractors: ['6', '10', '12'], hint: 'Cộng 2 bốn lần.' },
+    { questionText: '5 × 3 bằng bao nhiêu?', correct: '15', distractors: ['10', '8', '20'], hint: 'Ba nhóm, mỗi nhóm có 5.' },
+    { questionText: 'Có 4 chiếc đĩa, mỗi đĩa có 2 chiếc bánh. Có tất cả bao nhiêu chiếc bánh?', correct: '8', distractors: ['6', '4', '10'], hint: 'Tính 4 × 2.' },
+  ],
+  'lesson-8': [
+    { questionText: 'Tìm số tiếp theo: 2, 4, 6, 8, ...', correct: '10', distractors: ['9', '11', '12'], hint: 'Mỗi lần tăng thêm 2.' },
+    { questionText: 'Tìm số tiếp theo: 5, 10, 15, ...', correct: '20', distractors: ['16', '18', '25'], hint: 'Mỗi lần tăng thêm 5.' },
+    { questionText: 'Chuỗi hình lặp lại: 🔴 🔵 🔴 🔵 ... Hình tiếp theo là gì?', correct: '🔴', distractors: ['🔺', '🟩', '⭐'], hint: 'Hai hình thay phiên nhau.' },
+  ],
+  'lesson-9': [
+    { questionText: 'Đơn vị nào phù hợp để đo chiều dài cây bút?', correct: 'Xăng-ti-mét (cm)', distractors: ['Ki-lô-mét (km)', 'Lít (l)', 'Ki-lô-gam (kg)'], hint: 'Cây bút là vật nhỏ.' },
+    { questionText: 'Một túi gạo nặng 3 kg, túi đường nặng 1 kg. Túi nào nặng hơn?', correct: 'Túi gạo', distractors: ['Túi đường', 'Hai túi bằng nhau', 'Không thể biết'], hint: 'So sánh 3 kg và 1 kg.' },
+    { questionText: '1 mét bằng bao nhiêu xăng-ti-mét?', correct: '100 cm', distractors: ['10 cm', '50 cm', '1.000 cm'], hint: 'Một mét gồm một trăm xăng-ti-mét.' },
+  ],
+  'lesson-10': [
+    { questionText: 'What is six plus three?', correct: 'Nine', distractors: ['Seven', 'Eight', 'Ten'], hint: 'Count three more after six.' },
+    { questionText: 'Which number is “twelve”?', correct: '12', distractors: ['2', '20', '10'], hint: 'Twelve comes after eleven.' },
+    { questionText: 'What is ten minus four?', correct: 'Six', distractors: ['Four', 'Five', 'Seven'], hint: 'Start at ten and count back four.' },
+  ],
+  'lesson-11': [
+    { questionText: 'Trên xe buýt có 12 người, 5 người xuống xe. Trên xe còn mấy người?', correct: '7 người', distractors: ['6 người', '8 người', '17 người'], hint: 'Tính 12 - 5.' },
+    { questionText: 'Có 4 trạm, mỗi trạm có 3 bạn lên xe. Có bao nhiêu bạn lên xe?', correct: '12 bạn', distractors: ['7 bạn', '9 bạn', '16 bạn'], hint: 'Tính 4 × 3.' },
+    { questionText: 'Xe buýt có 18 chỗ, đã có 11 chỗ có người ngồi. Còn mấy chỗ trống?', correct: '7 chỗ', distractors: ['6 chỗ', '8 chỗ', '9 chỗ'], hint: 'Tính 18 - 11.' },
+  ],
+  'lesson-11b': [
+    { questionText: '12 chiếc kẹo chia đều cho 3 bạn. Mỗi bạn được mấy chiếc?', correct: '4 chiếc', distractors: ['3 chiếc', '5 chiếc', '6 chiếc'], hint: 'Tính 12 ÷ 3.' },
+    { questionText: '20 quả nho chia đều vào 5 đĩa. Mỗi đĩa có mấy quả?', correct: '4 quả', distractors: ['2 quả', '3 quả', '5 quả'], hint: 'Tính 20 ÷ 5.' },
+    { questionText: '18 chia cho 2 bằng bao nhiêu?', correct: '9', distractors: ['8', '6', '10'], hint: 'Tìm số mà nhân 2 được 18.' },
+  ],
+  'lesson-11c': [
+    { questionText: 'Kim phút chỉ số 12, kim giờ chỉ số 3. Đồng hồ chỉ mấy giờ?', correct: '3 giờ', distractors: ['12 giờ', '6 giờ', '9 giờ'], hint: 'Kim phút ở số 12 nghĩa là đúng giờ.' },
+    { questionText: 'Một giờ có bao nhiêu phút?', correct: '60 phút', distractors: ['30 phút', '100 phút', '24 phút'], hint: 'Một giờ gồm sáu chục phút.' },
+    { questionText: 'Bây giờ là 2 giờ. Sau 3 giờ nữa là mấy giờ?', correct: '5 giờ', distractors: ['4 giờ', '6 giờ', '7 giờ'], hint: 'Cộng 3 vào 2.' },
+  ],
+  'lesson-11d': [
+    { questionText: 'Tìm số còn thiếu: 2, 4, 6, __, 10.', correct: '8', distractors: ['7', '9', '12'], hint: 'Dãy số tăng thêm 2.' },
+    { questionText: 'Nếu tất cả mèo đều có bốn chân, một con mèo có bao nhiêu chân?', correct: '4', distractors: ['2', '3', '5'], hint: 'Đếm chân của một con mèo.' },
+    { questionText: 'An cao hơn Bình. Bình cao hơn Chi. Ai thấp nhất?', correct: 'Chi', distractors: ['An', 'Bình', 'Cả ba bằng nhau'], hint: 'Xếp chiều cao từ cao xuống thấp.' },
+  ],
+  'lesson-12': [
+    { questionText: '24 × 3 bằng bao nhiêu?', correct: '72', distractors: ['62', '64', '82'], hint: 'Tính 20 × 3 rồi cộng 4 × 3.' },
+    { questionText: '144 ÷ 12 bằng bao nhiêu?', correct: '12', distractors: ['10', '11', '14'], hint: '12 nhân số nào bằng 144?' },
+    { questionText: '35 × 4 bằng bao nhiêu?', correct: '140', distractors: ['120', '130', '150'], hint: 'Tính 30 × 4 + 5 × 4.' },
+  ],
+  'lesson-14': [
+    { questionText: 'Hình chữ nhật dài 5 cm, rộng 3 cm. Chu vi là bao nhiêu?', correct: '16 cm', distractors: ['8 cm', '15 cm', '10 cm'], hint: 'Chu vi = 2 × (dài + rộng).' },
+    { questionText: 'Hình vuông có cạnh 4 cm. Diện tích là bao nhiêu?', correct: '16 cm²', distractors: ['8 cm²', '12 cm²', '20 cm²'], hint: 'Diện tích hình vuông = cạnh × cạnh.' },
+    { questionText: 'Hình chữ nhật dài 6 cm, rộng 2 cm. Diện tích là bao nhiêu?', correct: '12 cm²', distractors: ['8 cm²', '16 cm²', '14 cm²'], hint: 'Diện tích = dài × rộng.' },
+  ],
+  'lesson-15': [
+    { questionText: 'Lan nói: “2 + 2 = 4”. Lời nói của Lan là đúng hay sai?', correct: 'Đúng', distractors: ['Sai', 'Không thể xác định', 'Vừa đúng vừa sai'], hint: 'Tính phép cộng để kiểm tra.' },
+    { questionText: 'Nếu hôm nay không phải thứ Hai và ngày mai là thứ Hai, hôm nay là thứ mấy?', correct: 'Chủ nhật', distractors: ['Thứ Ba', 'Thứ Sáu', 'Thứ Hai'], hint: 'Ngày trước thứ Hai là Chủ nhật.' },
+    { questionText: 'Ba hộp có nhãn Táo, Cam và Cả hai; tất cả nhãn đều sai. Hộp ghi “Cả hai” chứa gì?', correct: 'Chỉ táo hoặc chỉ cam', distractors: ['Chắc chắn cả hai', 'Chắc chắn rỗng', 'Không thể có quả nào'], hint: 'Vì nhãn sai nên hộp này không thể chứa cả hai loại.' },
+  ],
+  'lesson-16': [
+    { questionText: 'What is one half of 10?', correct: '5', distractors: ['2', '10', '20'], hint: 'Split ten into two equal groups.' },
+    { questionText: 'A cake has 8 equal slices. You eat 3. What fraction did you eat?', correct: '3/8', distractors: ['5/8', '3/5', '8/3'], hint: 'Slices eaten over total slices.' },
+    { questionText: 'What is one quarter of 20?', correct: '5', distractors: ['4', '10', '15'], hint: 'Divide 20 into four equal groups.' },
+  ],
+  'lesson-18': [
+    { questionText: 'Một khối lập phương có bao nhiêu mặt?', correct: '6 mặt', distractors: ['4 mặt', '8 mặt', '12 mặt'], hint: 'Đếm các mặt trước, sau, trên, dưới và hai bên.' },
+    { questionText: 'Một khối lập phương có bao nhiêu đỉnh?', correct: '8 đỉnh', distractors: ['6 đỉnh', '10 đỉnh', '12 đỉnh'], hint: 'Đỉnh là nơi các cạnh gặp nhau.' },
+    { questionText: 'Một khối hộp chữ nhật có bao nhiêu cạnh?', correct: '12 cạnh', distractors: ['6 cạnh', '8 cạnh', '10 cạnh'], hint: 'Khối hộp có 4 cạnh trên, 4 cạnh dưới và 4 cạnh đứng.' },
+  ],
+  'lesson-19': [
+    { questionText: 'Một túi có 3 viên bi đỏ và 1 viên bi xanh. Rút ngẫu nhiên một viên, màu nào dễ lấy hơn?', correct: 'Đỏ', distractors: ['Xanh', 'Hai màu như nhau', 'Không thể rút được'], hint: 'Có nhiều viên đỏ hơn viên xanh.' },
+    { questionText: 'Một đồng xu cân đối được tung lên. Có bao nhiêu kết quả có thể xảy ra?', correct: '2', distractors: ['1', '3', '4'], hint: 'Mặt sấp hoặc mặt ngửa.' },
+    { questionText: 'Hộp có 5 thẻ đánh số 1 đến 5. Có chắc chắn rút được số 6 không?', correct: 'Không', distractors: ['Có', 'Chỉ khi rút hai lần', 'Luôn luôn'], hint: 'Trong hộp không có thẻ số 6.' },
+  ],
+  'lesson-20': [
+    { questionText: 'Có gà và chó, tổng cộng 4 con và 10 chân. Có mấy con chó?', correct: '1 con chó', distractors: ['2 con chó', '3 con chó', '4 con chó'], hint: 'Thử 1 chó và 3 gà: tổng 4 + 6 = 10 chân.' },
+    { questionText: 'Có 2 con gà và 2 con chó. Tổng cộng có bao nhiêu chân?', correct: '12 chân', distractors: ['8 chân', '10 chân', '16 chân'], hint: 'Gà có 2 chân, chó có 4 chân.' },
+    { questionText: 'Có 5 con vật gồm gà và chó, tổng 14 chân. Có mấy con chó?', correct: '2 con chó', distractors: ['1 con chó', '3 con chó', '4 con chó'], hint: 'Nếu cả 5 là gà thì có 10 chân; mỗi chó thêm 2 chân.' },
+  ],
+  'lesson-21': [
+    { questionText: 'Phân số 2/4 rút gọn thành phân số nào?', correct: '1/2', distractors: ['1/4', '2/3', '4/2'], hint: 'Chia cả tử và mẫu cho 2.' },
+    { questionText: 'Phân số nào lớn hơn?', correct: '3/4', distractors: ['1/4', '2/4', '1/2'], hint: 'Các phân số có cùng mẫu số thì so sánh tử số.' },
+    { questionText: 'Quy đồng mẫu số của 1/2 và 1/3, mẫu số chung nhỏ nhất là bao nhiêu?', correct: '6', distractors: ['3', '5', '9'], hint: '6 chia hết cho cả 2 và 3.' },
+  ],
+  'lesson-22': [
+    { questionText: 'Hình thang có hai đáy 6 cm và 4 cm, chiều cao 3 cm. Diện tích là bao nhiêu?', correct: '15 cm²', distractors: ['30 cm²', '10 cm²', '18 cm²'], hint: 'Diện tích = (đáy lớn + đáy bé) × chiều cao ÷ 2.' },
+    { questionText: 'Một hình thang có hai đáy song song được gọi là gì?', correct: 'Hai đáy', distractors: ['Hai đường chéo', 'Hai đường tròn', 'Hai bán kính'], hint: 'Hai cạnh song song là hai đáy.' },
+    { questionText: 'Hai đáy hình thang dài 8 cm và 2 cm, chiều cao 4 cm. Diện tích bằng bao nhiêu?', correct: '20 cm²', distractors: ['10 cm²', '24 cm²', '40 cm²'], hint: 'Tính (8 + 2) × 4 ÷ 2.' },
+  ],
+  'lesson-23': [
+    { questionText: 'Hai xe đi ngược chiều nhau với vận tốc 40 km/h và 50 km/h. Sau 2 giờ, khoảng cách giữa chúng giảm được bao nhiêu nếu ban đầu cách nhau đủ xa?', correct: '180 km', distractors: ['20 km', '90 km', '200 km'], hint: 'Vận tốc tiến lại gần là 40 + 50 km/h; nhân 2 giờ.' },
+    { questionText: 'Một xe đi 60 km trong 2 giờ. Vận tốc trung bình là bao nhiêu?', correct: '30 km/h', distractors: ['20 km/h', '60 km/h', '120 km/h'], hint: 'Vận tốc = quãng đường ÷ thời gian.' },
+    { questionText: 'Hai người cách nhau 100 km, đi về phía nhau với tổng vận tốc 25 km/h. Sau bao lâu gặp nhau?', correct: '4 giờ', distractors: ['2 giờ', '3 giờ', '5 giờ'], hint: 'Thời gian = 100 ÷ 25.' },
+  ],
+  'lesson-24': [
+    { questionText: 'Nhiệt độ là -3°C rồi tăng thêm 5°C. Nhiệt độ mới là bao nhiêu?', correct: '2°C', distractors: ['-8°C', '-2°C', '8°C'], hint: 'Tính -3 + 5.' },
+    { questionText: 'Số nào nhỏ hơn: -2 hay -7?', correct: '-7', distractors: ['-2', '0', '2'], hint: 'Trên trục số, số ở bên trái nhỏ hơn.' },
+    { questionText: 'Tính: -4 + (-3) = ?', correct: '-7', distractors: ['-1', '7', '1'], hint: 'Cộng hai số âm, cộng độ lớn rồi giữ dấu âm.' },
+  ],
+};
+
 export const getQuestionsForLesson = (lesson: Lesson): QuizQuestion[] => {
   if (INITIAL_QUESTIONS[lesson.id]) {
     return INITIAL_QUESTIONS[lesson.id];
   }
-  return [
-    {
-      id: `${lesson.id}-q1`,
+  const seeds = ADDITIONAL_LESSON_QUESTIONS[lesson.id];
+  if (!seeds) return [];
+  const lessonOffset = Math.max(0, INITIAL_LESSONS.findIndex((item) => item.id === lesson.id));
+  return seeds.map((seed, questionIndex) => {
+    const correctIndex = (lessonOffset + questionIndex * 3) % 4;
+    const optionTexts = [seed.correct, ...seed.distractors];
+    const rotatedOptions = optionTexts.map((_, optionIndex) => optionTexts[(optionIndex - correctIndex + 4) % 4]);
+    return {
+      id: `${lesson.id}-q${questionIndex + 1}`,
       lessonId: lesson.id,
-      questionText: `Khám phá bài học "${lesson.title}": Hãy chọn phép toán đúng để giúp Mini tiếp tục hành trình!`,
-      hint: 'Đọc kỹ câu hỏi và các lựa chọn bên dưới nhé!',
+      type: 'multiple-choice',
+      questionText: seed.questionText,
+      hint: seed.hint,
       visualType: 'formula',
-      visualData: { expression: `Mini đang chờ bạn ✨ (${lesson.title})` },
-      options: [
-        { id: 'o1', text: 'Đáp án chính xác (Thử thách 1)', isCorrect: true, explanation: 'Giỏi quá! Tư duy toán học của bạn rất nhạy bén!' },
-        { id: 'o2', text: 'Lựa chọn số 2', isCorrect: false },
-        { id: 'o3', text: 'Lựa chọn số 3', isCorrect: false },
-        { id: 'o4', text: 'Lựa chọn số 4', isCorrect: false },
-      ],
-    },
-    {
-      id: `${lesson.id}-q2`,
-      lessonId: lesson.id,
-      questionText: 'Khi ghép 4 miếng ghép hình vuông bằng nhau lại, ta có thể tạo thành hình gì lớn hơn?',
-      hint: 'Hãy tưởng tượng xếp 4 viên gạch cạnh nhau.',
-      visualType: 'shapes',
-      visualData: { emoji: '🟦', shape: 'square' },
-      options: [
-        { id: 'o1', text: 'Hình vuông lớn hoặc Hình chữ nhật dài', isCorrect: true, explanation: 'Chính xác! 4 hình vuông có thể tạo hình vuông 2x2 hoặc hình chữ nhật 1x4!' },
-        { id: 'o2', text: 'Hình tròn', isCorrect: false },
-        { id: 'o3', text: 'Hình tam giác đều', isCorrect: false },
-        { id: 'o4', text: 'Hình ngôi sao 5 cánh', isCorrect: false },
-      ],
-    },
-    {
-      id: `${lesson.id}-q3`,
-      lessonId: lesson.id,
-      questionText: `Sau khi hoàn thành thử thách này, bạn sẽ nhận được bao nhiêu điểm XP?`,
-      visualType: 'numbers',
-      visualData: { count: lesson.xpReward, expression: `+${lesson.xpReward} XP` },
-      options: [
-        { id: 'o1', text: `+${lesson.xpReward} XP siêu giá trị!`, isCorrect: true, explanation: `Hoan hô! Nhận ngay +${lesson.xpReward} XP về túi thám hiểm!` },
-        { id: 'o2', text: '+0 XP', isCorrect: false },
-        { id: 'o3', text: '+5 XP', isCorrect: false },
-        { id: 'o4', text: '+1 XP', isCorrect: false },
-      ],
-    },
-  ];
+      visualData: { expression: '🧠' },
+      options: rotatedOptions.map((text, optionIndex) => ({
+        id: `${lesson.id}-q${questionIndex + 1}-o${optionIndex + 1}`,
+        text,
+        isCorrect: optionIndex === correctIndex,
+      })),
+    };
+  });
 };
 
 // 15+ BADGES
