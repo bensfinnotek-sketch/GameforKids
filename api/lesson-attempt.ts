@@ -2,7 +2,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { LESSON_REWARDS, getLevelInfo } from './lessonRewards';
-import { INITIAL_QUESTIONS } from '../src/data/mockData';
+import { INITIAL_LESSONS, getQuestionsForLesson } from '../src/data/mockData';
 
 function getVietnamDateKey(date: Date): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -41,11 +41,9 @@ export async function POST(request:Request){
     const lesson=LESSON_REWARDS[lessonId];
     if(!lesson||!/^[-A-Za-z0-9_]{8,80}$/.test(attemptId)||!/^[-A-Za-z0-9_]{10,100}$/.test(sessionId))return Response.json({error:'Invalid lesson attempt'},{status:400});
     if(!Number.isInteger(totalQuestions)||totalQuestions!==lesson.totalQuestions||!Array.isArray(answers)||answers.length!==totalQuestions||answers.some((answer:unknown)=>typeof answer!=='string'||answer.length>200))return Response.json({error:'Invalid lesson answers'},{status:400});
-    const questions=INITIAL_QUESTIONS[lessonId]||[
-      {options:[{id:'o1',text:'Đáp án chính xác (Thử thách 1)',isCorrect:true},{id:'o2',text:'Lựa chọn số 2',isCorrect:false},{id:'o3',text:'Lựa chọn số 3',isCorrect:false},{id:'o4',text:'Lựa chọn số 4',isCorrect:false}]},
-      {options:[{id:'o1',text:'Hình vuông lớn hoặc Hình chữ nhật dài',isCorrect:true},{id:'o2',text:'Hình tròn',isCorrect:false},{id:'o3',text:'Hình tam giác đều',isCorrect:false},{id:'o4',text:'Hình ngôi sao 5 cánh',isCorrect:false}]},
-      {options:[{id:'o1',text:'+'+lesson.xpReward+' XP siêu giá trị!',isCorrect:true},{id:'o2',text:'+0 XP',isCorrect:false},{id:'o3',text:'+5 XP',isCorrect:false},{id:'o4',text:'+1 XP',isCorrect:false}]}
-    ];
+    const lessonDefinition=INITIAL_LESSONS.find((item)=>item.id===lessonId);
+    if(!lessonDefinition)return Response.json({error:'Lesson definition not found'},{status:409});
+    const questions=getQuestionsForLesson(lessonDefinition);
     if(questions.length!==totalQuestions)return Response.json({error:'Lesson question bank mismatch'},{status:409});
     const score=questions.reduce((sum: number, question: any, index: number)=>{
       const answer=answers[index];
