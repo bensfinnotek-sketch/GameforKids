@@ -86,6 +86,10 @@ export async function GET(request: Request) {
     const today = todayInVietnam();
     return Response.json({ ok: true, date: today, challenges: buildChallenges(snap.data() || {}, today) });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Firebase ID token') || message.includes('Decoding Firebase ID token')) {
+      return Response.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
     console.error('daily-challenge GET error', error);
     return Response.json({ error: 'Unable to load daily challenges' }, { status: 500 });
   }
@@ -164,6 +168,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     if (message === 'USER_PROFILE_NOT_FOUND') return Response.json({ error: 'Profile not found' }, { status: 404 });
+    if (message.includes('Firebase ID token') || message.includes('Decoding Firebase ID token')) {
+      return Response.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
     console.error('daily-challenge POST error', error);
     return Response.json({ error: 'Unable to claim daily challenge' }, { status: 500 });
   }
