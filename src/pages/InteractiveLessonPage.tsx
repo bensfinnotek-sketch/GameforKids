@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -20,6 +20,7 @@ import { useGame } from '../context/GameContext';
 import { soundManager } from '../utils/sound';
 import { Lesson, QuizQuestion } from '../types';
 import { getQuestionsForLesson } from '../data/mockData';
+import { startTrustedLessonSession } from '../firebase/auth';
 
 interface InteractiveLessonPageProps {
   lessonId?: string;
@@ -53,6 +54,16 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
   const [showHint, setShowHint] = useState(false);
   const [earnedStars, setEarnedStars] = useState(0);
   const [startTime] = useState<number>(Date.now());
+  const [lessonSessionId, setLessonSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLessonSessionId(null);
+    startTrustedLessonSession(lesson.id).then((session) => {
+      if (!cancelled && session?.ok && session.sessionId) setLessonSessionId(session.sessionId);
+    });
+    return () => { cancelled = true; };
+  }, [lesson.id]);
   const [saveError, setSaveError] = useState(false);
   const [completionResult, setCompletionResult] = useState<{ duplicate?: boolean; xpEarned?: number; coinEarned?: number; gemEarned?: number; stars?: number } | null>(null);
 
@@ -129,7 +140,13 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
     const finalScore = Math.min(questions.length, score);
     const elapsedSeconds = Math.max(0, Math.round((Date.now() - startTime) / 1000));
     setSaveError(false);
-    const result = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds);
+    const sessionId = lessonSessionId || (await startTrustedLessonSession(lesson.id))?.sessionId;
+    if (!sessionId) {
+      setSaveError(true);
+      setFeedback({ isCorrect: false, message: 'Chưa tạo được phiên học an toàn. Hãy tải lại bài học rồi thử lại nhé.' });
+      return;
+    }
+    const result = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds, sessionId);
     if (!result.ok) {
       setSaveError(true);
       setFeedback({ isCorrect: false, message: 'Kết quả chưa được lưu. Hãy nhấn Tiếp tục để thử lưu lại; tiến độ chưa được cộng.' });
