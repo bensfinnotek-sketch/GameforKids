@@ -25,6 +25,12 @@ service cloud.firestore {
       allow read: if isSelf(userId) || isTeacher();
 
       allow create: if isSelf(userId)
+        && request.resource.data.keys().hasOnly([
+          'dataVersion', 'id', 'name', 'role', 'avatarEmoji', 'avatarImage',
+          'equippedHat', 'equippedBackpack', 'equippedSkin', 'selectedAgeGroup',
+          'soundEnabled', 'musicEnabled', 'dailyStudyGoalMinutes',
+          'highScores', 'notifications', 'inventory', 'updatedAt'
+        ])
         && request.resource.data.id == userId
         && request.resource.data.role in ['student', 'parent']
         && (!('inventory' in request.resource.data) || request.resource.data.inventory == []);
