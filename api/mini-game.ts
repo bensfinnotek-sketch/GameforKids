@@ -1,6 +1,7 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { randomBytes } from 'node:crypto';
 import { getLevelInfo } from './lessonRewards';
 
 const GAME_CONFIG = {
@@ -197,7 +198,8 @@ export async function POST(request: Request) {
           : '6-8';
       const config = GAME_CONFIG[gameId];
       const sessionRef = userRef.collection('miniGameSessions').doc();
-      const seed = hashSeed(sessionRef.id);
+      // Keep the question seed independent from the public session ID so clients cannot predict answers.
+      const seed = randomBytes(4).readUInt32BE(0);
       const firstQuestion = createQuestion(seed, 0, selectedAgeGroup, gameId);
       const now = Date.now();
 
