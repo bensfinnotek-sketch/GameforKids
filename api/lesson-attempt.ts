@@ -65,7 +65,7 @@ export async function POST(request:Request){
       if(session.status!=='active'||session.lessonId!==lessonId||!Number.isFinite(session.startedAtMs)||!Number.isFinite(session.expiresAtMs)||nowMs>session.expiresAtMs)throw new Error('LESSON_SESSION_INVALID');
       const timeSpentSeconds=Math.min(600,Math.max(0,Math.floor((nowMs-session.startedAtMs)/1000)));
       const user=userSnap.data()||{}, accuracy=Math.round(score/totalQuestions*100), stars=accuracy>=95?3:accuracy>=80?2:1;
-      const xpEarned=lesson.xpReward+(stars===3?20:stars===2?10:0), coinEarned=lesson.coinReward, gemEarned=lesson.gemReward;
+      const xpEarned=isFirstLessonCompletion?lesson.xpReward+(stars===3?20:stars===2?10:0):0, coinEarned=isFirstLessonCompletion?lesson.coinReward:0, gemEarned=isFirstLessonCompletion?lesson.gemReward:0;
       const newXp=Number(user.xp||0)+xpEarned, newLevel=Math.max(Number(user.level||1),getLevelInfo(newXp).level);
       const now = new Date();
       const today = getVietnamDateKey(now);
