@@ -241,6 +241,8 @@ export interface TrustedLessonRewardResult {
   newLevel?: number;
   streak?: number;
   timeSpentSeconds?: number;
+  score?: number;
+  totalQuestions?: number;
 }
 
 // Keep a pending ID when the server outcome is uncertain. If the user retries
@@ -256,6 +258,7 @@ export const submitLessonAttemptToFirestore = async (
     totalQuestions: number;
     timeSpentSeconds: number;
     sessionId: string;
+    answers: string[];
   }
 ): Promise<TrustedLessonRewardResult | null> => {
   if (!auth.currentUser || auth.currentUser.uid !== uid) return null;
