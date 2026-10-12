@@ -43,7 +43,7 @@ export async function POST(request:Request){
     const db=getFirestore(adminApp()), userRef=db.collection('users').doc(decoded.uid), attemptRef=userRef.collection('lessonAttempts').doc(attemptId), sessionRef=userRef.collection('lessonSessions').doc(sessionId);
     const result=await db.runTransaction(async tx=>{
       const userSnap=await tx.get(userRef), attemptSnap=await tx.get(attemptRef);
-      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:0,coinEarned:0,gemEarned:0,stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1),streak:Number(userSnap.data()?.streak||0)};}
+      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:0,coinEarned:0,gemEarned:0,stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1),streak:Number(userSnap.data()?.streak||0),timeSpentSeconds:Number(data.timeSpentSeconds||0)};}
       if(!userSnap.exists)throw new Error('USER_PROFILE_NOT_FOUND');
       const sessionSnap=await tx.get(sessionRef);
       if(!sessionSnap.exists)throw new Error('LESSON_SESSION_NOT_FOUND');
