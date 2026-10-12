@@ -366,6 +366,9 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('Firebase ID token') || message.includes('Decoding Firebase ID token')) {
+      return Response.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
     if (message === 'SESSION_NOT_FOUND' || message === 'SESSION_INVALID') return Response.json({ error: 'Mini-game session not found' }, { status: 404 });
     if (message === 'SESSION_CLOSED') return Response.json({ error: 'Mini-game session is closed' }, { status: 409 });
     if (message === 'INVALID_ANSWER_OPTION') return Response.json({ error: 'Answer must match one of the offered options' }, { status: 400 });
