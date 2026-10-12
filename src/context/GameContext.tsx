@@ -67,7 +67,7 @@ interface GameContextType {
   addXP: (amount: number, reason?: string) => void;
   addCoins: (amount: number) => void;
   addGems: (amount: number) => void;
-  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number) => Promise<LessonCompletionResult>;
+  completeLesson: (lessonId: string, score: number, totalQuestions: number, timeSpentSeconds: number, sessionId: string) => Promise<LessonCompletionResult>;
   claimDailyChallenge: (challengeId: string) => void;
   purchaseItem: (item: TreasureItem) => Promise<{ success: boolean; message: string }>;
   equipItem: (item: TreasureItem) => void;
@@ -414,7 +414,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     lessonId: string,
     score: number,
     totalQuestions: number,
-    timeSpentSeconds: number
+    timeSpentSeconds: number,
+    sessionId: string
   ) => {
     const lesson = lessons.find((l) => l.id === lessonId);
     if (!lesson) return { ok: false };
@@ -428,6 +429,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       score > totalQuestions ||
       timeSpentSeconds < 0 ||
       timeSpentSeconds > 86400 ||
+      !/^[A-Za-z0-9_-]{10,100}$/.test(sessionId) ||
       totalQuestions !== lesson.totalQuestions ||
       !auth.currentUser
     ) {
@@ -441,6 +443,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       score,
       totalQuestions,
       timeSpentSeconds,
+      sessionId,
     });
 
     if (!reward?.ok || reward.xpEarned == null || reward.coinEarned == null || reward.gemEarned == null) {
@@ -499,7 +502,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         xpEarned: xpBonus,
         accuracy,
         starsEarned: stars,
-        timeSpentSeconds,
+        timeSpentSeconds: reward.timeSpentSeconds ?? timeSpentSeconds,
       };
 
       const newBadges = [...prev.unlockedBadges];
