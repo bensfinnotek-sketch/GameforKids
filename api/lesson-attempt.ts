@@ -65,6 +65,7 @@ export async function POST(request:Request){
   }catch(error){
     const message=error instanceof Error?error.message:'Unknown error';
     if(message==='USER_PROFILE_NOT_FOUND')return Response.json({error:'Profile not found'},{status:404});
+    if(message.includes('Firebase ID token')||message.includes('Decoding Firebase ID token'))return Response.json({error:'Invalid authentication token'},{status:401});
     console.error('lesson-attempt reward error',error);
     return Response.json({error:'Unable to process lesson attempt'},{status:500});
   }
