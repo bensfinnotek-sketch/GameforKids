@@ -482,6 +482,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         gemEarned: 0,
         stars: latestProfile?.lessonStars?.[lessonId] || 0,
         accuracy: latestProfile?.history?.find((item) => item.lessonId === lessonId)?.accuracy,
+        score: latestProfile?.history?.find((item) => item.lessonId === lessonId)?.score,
+        totalQuestions: latestProfile?.history?.find((item) => item.lessonId === lessonId)?.totalQuestions,
       };
     }
 
@@ -489,7 +491,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const coinBonus = reward.coinEarned;
     const gemBonus = reward.gemEarned;
     const stars = reward.stars || 1;
-    const accuracy = reward.accuracy ?? Math.round((score / totalQuestions) * 100);
+    const verifiedScore = reward.score ?? score;
+    const verifiedTotalQuestions = reward.totalQuestions ?? totalQuestions;
+    const accuracy = reward.accuracy ?? Math.round((verifiedScore / verifiedTotalQuestions) * 100);
 
     setUser((prev) => {
       const newCompleted = prev.completedLessons.includes(lessonId)
@@ -502,8 +506,8 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         lessonTitle: lesson.title,
         category: lesson.category,
         completedAt: new Date().toLocaleDateString('vi-VN') + ' ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        score,
-        totalQuestions,
+        score: verifiedScore,
+        totalQuestions: verifiedTotalQuestions,
         xpEarned: xpBonus,
         accuracy,
         starsEarned: stars,
@@ -557,7 +561,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     triggerConfetti();
-    return { ok: true, xpEarned: xpBonus, coinEarned: coinBonus, gemEarned: gemBonus, stars, accuracy };
+    return { ok: true, xpEarned: xpBonus, coinEarned: coinBonus, gemEarned: gemBonus, stars, accuracy, score: verifiedScore, totalQuestions: verifiedTotalQuestions };
   }, [lessons, submitLessonAttemptToFirestore, showReward, addNotification, triggerConfetti]);
 
   const claimDailyChallenge = useCallback(async (challengeId: string) => {
