@@ -51,6 +51,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
   const [fillValue, setFillValue] = useState<string>('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [score, setScore] = useState(0);
+  const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, string>>({});
   const [showHint, setShowHint] = useState(false);
   const [earnedStars, setEarnedStars] = useState(0);
   const [startTime] = useState<number>(Date.now());
@@ -109,6 +110,8 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
       isCorrect = selected?.isCorrect ?? false;
     }
 
+    setSubmittedAnswers((prev) => ({ ...prev, [quizIndex]: currentQ.type === 'fill-number' ? fillValue.trim() : (selectedOptionId || '') }));
+
     if (isCorrect) {
       soundManager.playCorrect();
       setScore((prev) => prev + 1);
@@ -146,7 +149,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
       setFeedback({ isCorrect: false, message: 'Chưa tạo được phiên học an toàn. Hãy tải lại bài học rồi thử lại nhé.' });
       return;
     }
-    const result = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds, sessionId);
+    const result = await completeLesson(lesson.id, finalScore, questions.length, elapsedSeconds, sessionId, questions.map((_, index) => submittedAnswers[index] || ''));
     if (!result.ok) {
       setSaveError(true);
       setFeedback({ isCorrect: false, message: 'Kết quả chưa được lưu. Hãy nhấn Tiếp tục để thử lưu lại; tiến độ chưa được cộng.' });
@@ -157,6 +160,7 @@ export const InteractiveLessonPage: React.FC<InteractiveLessonPageProps> = ({ le
     triggerConfetti();
     setCompletionResult(result);
     setEarnedStars(result.stars || 0);
+    if (typeof result.score === 'number') setScore(result.score);
     setFeedback(null);
     setCurrentStage('completed');
   };
