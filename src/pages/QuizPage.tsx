@@ -35,6 +35,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [score, setScore] = useState(0);
+  const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, string>>({});
   const [isFinished, setIsFinished] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [finalElapsedSeconds, setFinalElapsedSeconds] = useState(0);
@@ -78,6 +79,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
     const chosenOption = currentQ.options.find((o) => o.id === selectedOptionId);
     const correct = chosenOption?.isCorrect ?? false;
 
+    setSubmittedAnswers((prev) => ({ ...prev, [currentIndex]: selectedOptionId }));
     setIsAnswerSubmitted(true);
     setIsCorrect(correct);
 
@@ -120,10 +122,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
         setSaveError(true);
         return;
       }
-      const result = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds, sessionId);
+      const result = await completeLesson(lesson.id, actualScore, questions.length, elapsedSeconds, sessionId, questions.map((_, index) => submittedAnswers[index] || ''));
       if (result.ok) {
         setCompletionResult(result);
         setStarsEarned(result.stars || 0);
+        if (typeof result.score === 'number') setFinalScore(result.score);
         setIsFinished(true);
       } else {
         setSaveError(true);
