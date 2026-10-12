@@ -2,6 +2,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { LESSON_REWARDS, getLevelInfo } from './lessonRewards';
+import { INITIAL_QUESTIONS } from '../src/data/mockData';
 
 function getVietnamDateKey(date: Date): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -36,14 +37,14 @@ export async function POST(request:Request){
     if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     const lessonId=typeof body.lessonId==='string'?body.lessonId:'';
     const attemptId=typeof body.attemptId==='string'?body.attemptId:'';
-    const score=body.score, totalQuestions=body.totalQuestions, sessionId=typeof body.sessionId==='string'?body.sessionId:'';
+    const totalQuestions=body.totalQuestions, sessionId=typeof body.sessionId==='string'?body.sessionId:'', answers=body.answers;
     const lesson=LESSON_REWARDS[lessonId];
     if(!lesson||!/^[-A-Za-z0-9_]{8,80}$/.test(attemptId)||!/^[-A-Za-z0-9_]{10,100}$/.test(sessionId))return Response.json({error:'Invalid lesson attempt'},{status:400});
     if(!Number.isInteger(score)||!Number.isInteger(totalQuestions)||totalQuestions!==lesson.totalQuestions||score<0||score>totalQuestions)return Response.json({error:'Invalid lesson result'},{status:400});
     const db=getFirestore(adminApp()), userRef=db.collection('users').doc(decoded.uid), attemptRef=userRef.collection('lessonAttempts').doc(attemptId), sessionRef=userRef.collection('lessonSessions').doc(sessionId);
     const result=await db.runTransaction(async tx=>{
       const userSnap=await tx.get(userRef), attemptSnap=await tx.get(attemptRef);
-      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:0,coinEarned:0,gemEarned:0,stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1),streak:Number(userSnap.data()?.streak||0),timeSpentSeconds:Number(data.timeSpentSeconds||0)};}
+      if(attemptSnap.exists){const data=attemptSnap.data()||{};return {duplicate:true,xpEarned:0,coinEarned:0,gemEarned:0,stars:Number(data.starsEarned||1),accuracy:Number(data.accuracy||0),newLevel:Number(userSnap.data()?.level||1),streak:Number(userSnap.data()?.streak||0),timeSpentSeconds:Number(data.timeSpentSeconds||0),score:Number(data.score||0),totalQuestions:Number(data.totalQuestions||0)};}
       if(!userSnap.exists)throw new Error('USER_PROFILE_NOT_FOUND');
       const sessionSnap=await tx.get(sessionRef);
       if(!sessionSnap.exists)throw new Error('LESSON_SESSION_NOT_FOUND');
@@ -62,10 +63,10 @@ export async function POST(request:Request){
       const dailyChallengeProgress=user.dailyChallengeDate===today&&user.dailyChallengeProgress&&typeof user.dailyChallengeProgress==='object'?{...user.dailyChallengeProgress}:{}, dailyChallengeClaims=user.dailyChallengeDate===today&&user.dailyChallengeClaims&&typeof user.dailyChallengeClaims==='object'?{...user.dailyChallengeClaims}:{}; const dailyChallengeStudyLessons=user.dailyChallengeDate===today&&user.dailyChallengeStudyLessons&&typeof user.dailyChallengeStudyLessons==='object'?{...user.dailyChallengeStudyLessons}:{}; const isFirstLessonCompletion = !Array.isArray(user.completedLessons) || !user.completedLessons.includes(lessonId); if (dailyChallengeStudyLessons[lessonId] !== true) { dailyChallengeProgress['dc-1']=Number(dailyChallengeProgress['dc-1']||0)+1; } dailyChallengeProgress['dc-3']=Math.max(Number(dailyChallengeProgress['dc-3']||0),accuracy===100?1:0); dailyChallengeProgress['dc-4']=Number(dailyChallengeProgress['dc-4']||0)+score; if (dailyChallengeStudyLessons[lessonId] !== true) { dailyChallengeProgress['dc-5']=Number(dailyChallengeProgress['dc-5']||0)+Math.min(timeSpentSeconds,600)/60; dailyChallengeStudyLessons[lessonId]=true; } const completed=Array.isArray(user.completedLessons)?user.completedLessons:[], lessonStars=user.lessonStars&&typeof user.lessonStars==='object'?user.lessonStars:{}, history=Array.isArray(user.history)?user.history:[];
       const nextCompleted=completed.includes(lessonId)?completed:[...completed,lessonId];
       const nextHistory=[...history,{id:attemptId,lessonId,lessonTitle:lesson.title,category:lesson.category,completedAt:new Date().toISOString(),score,totalQuestions,xpEarned,accuracy,starsEarned:stars,timeSpentSeconds}];
-      tx.set(attemptRef,{uid:decoded.uid,lessonId,sessionId,score,totalQuestions,timeSpentSeconds,accuracy,starsEarned:stars,xpEarned,coinEarned,gemEarned,submittedAt:FieldValue.serverTimestamp()});
+      tx.set(attemptRef,{uid:decoded.uid,lessonId,sessionId,score,totalQuestions,answers,timeSpentSeconds,accuracy,starsEarned:stars,xpEarned,coinEarned,gemEarned,submittedAt:FieldValue.serverTimestamp()});
       tx.update(sessionRef,{status:'completed',completedAt:FieldValue.serverTimestamp(),creditedSeconds:timeSpentSeconds});
       tx.update(userRef,{xp:newXp,level:newLevel,coin:Number(user.coin||0)+coinEarned,gem:Number(user.gem||0)+gemEarned,streak:nextStreak,lastActiveDate:today,completedLessons:nextCompleted,lessonStars:{...lessonStars,[lessonId]:Math.max(Number(lessonStars[lessonId]||0),stars)},history:nextHistory,dailyChallengeDate:today,dailyChallengeProgress,dailyChallengeClaims,dailyChallengeStudyLessons,updatedAt:FieldValue.serverTimestamp()});
-      return {duplicate:false,xpEarned,coinEarned,gemEarned,stars,accuracy,newLevel,streak:nextStreak,timeSpentSeconds};
+      return {duplicate:false,xpEarned,coinEarned,gemEarned,stars,accuracy,score,totalQuestions,newLevel,streak:nextStreak,timeSpentSeconds};
     });
     return Response.json({ok:true,...result});
   }catch(error){
