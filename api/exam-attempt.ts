@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     return Response.json({ ok: true, ...result });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    if (message.includes('Firebase ID token')) {
+    if (message.includes('Firebase ID token') || message.includes('Decoding Firebase ID token')) {
       return Response.json({ error: 'Invalid authentication token' }, { status: 401 });
     }
     console.error('exam-attempt persistence error', error);
