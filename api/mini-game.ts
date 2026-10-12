@@ -267,7 +267,10 @@ export async function POST(request: Request) {
           completed: true,
           alreadyCompleted: true,
           correctCount: Number(session.correctCount || 0),
-          rewardGranted: true,
+          rewardGranted: session.rewardGranted === true,
+          xpEarned: 0,
+          coinEarned: 0,
+          gemEarned: 0,
         };
       }
       if (session.status !== 'active') throw new Error('SESSION_CLOSED');
@@ -320,23 +323,34 @@ export async function POST(request: Request) {
       const progress = user.dailyChallengeDate === date && user.dailyChallengeProgress && typeof user.dailyChallengeProgress === 'object'
         ? { ...user.dailyChallengeProgress }
         : {};
+      const gameRewardClaims = user.miniGameRewardDate === date && user.miniGameRewardClaims && typeof user.miniGameRewardClaims === 'object'
+        ? { ...user.miniGameRewardClaims }
+        : {};
+      // Let children replay for practice, but grant each mini-game's completion reward
+      // only once per Vietnam-local day. The transaction makes concurrent finishes safe.
+      const canEarnReward = gameRewardClaims[gameId] !== true;
+      if (canEarnReward) gameRewardClaims[gameId] = true;
 
-      const newXp = Number(user.xp || 0) + config.rewardXP;
+      const rewardXP = canEarnReward ? config.rewardXP : 0;
+      const rewardCoin = canEarnReward ? config.rewardCoin : 0;
+      const rewardGem = canEarnReward ? config.rewardGem : 0;
+      const newXp = Number(user.xp || 0) + rewardXP;
       const newLevel = Math.max(Number(user.level || 1), getLevelInfo(newXp).level);
-      const newCoin = Number(user.coin || 0) + config.rewardCoin;
-      const newGem = Number(user.gem || 0) + config.rewardGem;
+      const newCoin = Number(user.coin || 0) + rewardCoin;
+      const newGem = Number(user.gem || 0) + rewardGem;
       const highScores = user.highScores && typeof user.highScores === 'object' ? { ...user.highScores } : {};
       highScores[gameId] = Math.max(Number(highScores[gameId] || 0), nextCorrect);
-      progress['dc-2'] = Number(progress['dc-2'] || 0) + 1;
+      // The daily challenge is for completing one game, not for farming repeated sessions.
+      progress['dc-2'] = Math.min(1, Number(progress['dc-2'] || 0) + 1);
 
       const response = {
         completed: true,
         correct: isCorrect,
         correctCount: nextCorrect,
-        rewardGranted: true,
-        xpEarned: config.rewardXP,
-        coinEarned: config.rewardCoin,
-        gemEarned: config.rewardGem,
+        rewardGranted: canEarnReward,
+        xpEarned: rewardXP,
+        coinEarned: rewardCoin,
+        gemEarned: rewardGem,
         newLevel,
       };
       tx.update(sessionRef, {
@@ -344,7 +358,7 @@ export async function POST(request: Request) {
         correctCount: nextCorrect,
         status: 'completed',
         completedAt: FieldValue.serverTimestamp(),
-        rewardGranted: true,
+        rewardGranted: canEarnReward,
         lastRequestId: requestId,
         lastAnswerValue: value,
         lastResponse: response,
@@ -358,10 +372,11 @@ export async function POST(request: Request) {
         dailyChallengeDate: date,
         dailyChallengeProgress: progress,
         dailyChallengeClaims: claims,
+        miniGameRewardDate: date,
+        miniGameRewardClaims: gameRewardClaims,
         highScores,
         updatedAt: FieldValue.serverTimestamp(),
       });
-
       return response;
     });
 
