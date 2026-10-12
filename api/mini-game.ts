@@ -267,7 +267,10 @@ export async function POST(request: Request) {
           completed: true,
           alreadyCompleted: true,
           correctCount: Number(session.correctCount || 0),
-          rewardGranted: true,
+          rewardGranted: session.rewardGranted === true,
+          xpEarned: 0,
+          coinEarned: 0,
+          gemEarned: 0,
         };
       }
       if (session.status !== 'active') throw new Error('SESSION_CLOSED');
