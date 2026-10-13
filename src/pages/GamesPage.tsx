@@ -910,11 +910,11 @@ export const GamesPage: React.FC = () => {
         </div>
       ) : (
         /* Games Grid List */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MINI_GAMES.map((game) => (
+        <div className="game-catalog grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {MINI_GAMES.map((game, index) => (
             <div
               key={game.id}
-              className="bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group"
+              className={`game-catalog-card game-catalog-card-${index % 6} bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group`}
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
