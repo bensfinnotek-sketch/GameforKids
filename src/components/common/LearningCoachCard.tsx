@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Brain, CheckCircle2, Lightbulb, RotateCcw, Sparkles } from 'lucide-react';
 import { AgeGroup } from '../../types';
 
@@ -63,6 +63,17 @@ export const LearningCoachCard: React.FC<LearningCoachCardProps> = ({ ageGroup }
   const [showHint, setShowHint] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [completed, setCompleted] = useState<number[]>([]);
+
+  // A new age group is a new practice session; never carry answers across age groups.
+  useEffect(() => {
+    setActiveIndex(0);
+    setAnswer('');
+    setFeedback(null);
+    setShowHint(false);
+    setShowSolution(false);
+    setCompleted([]);
+  }, [ageGroup]);
+
   const card = cards[activeIndex];
 
   const checkAnswer = (choice: string) => {
