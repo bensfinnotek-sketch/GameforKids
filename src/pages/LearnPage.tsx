@@ -79,17 +79,17 @@ export const LearnPage: React.FC = () => {
   const completedCount = filteredLessons.filter((l) => user.completedLessons.includes(l.id)).length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none space-y-8">
+    <div className="learn-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none space-y-8">
       
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="learn-banner bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 bg-amber-400 text-slate-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               Lộ trình tương tác
             </div>
-            <h1 className="font-heading text-3xl sm:text-4xl font-black">
+            <h1 className="learn-banner-title font-heading text-3xl sm:text-4xl font-black">
               Con đường Toán học của bạn 🎒
             </h1>
             <p className="text-xs sm:text-sm font-semibold text-sky-100 max-w-xl">
@@ -121,7 +121,7 @@ export const LearnPage: React.FC = () => {
       </div>
 
       {/* ROADMAP NODES PATHWAY (Phần 11 Current Path) */}
-      <section aria-label="Lộ trình học tập" className="bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm">
+      <section aria-label="Lộ trình học tập" className="learn-roadmap bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-heading font-black text-base text-slate-800 flex items-center gap-2">
             <span>🗺️ Hành Trình Chặng Hiện Tại</span>
@@ -142,7 +142,7 @@ export const LearnPage: React.FC = () => {
               <React.Fragment key={l.id}>
                 <div
                   onClick={() => !isLocked && handleStartLesson(l)}
-                  className={`flex flex-col items-center flex-shrink-0 cursor-pointer p-3 rounded-2xl border-2 transition-all ${
+                  className={`roadmap-node flex flex-col items-center flex-shrink-0 cursor-pointer p-3 rounded-2xl border-2 transition-all ${
                     isCurrent
                       ? 'border-sky-500 bg-sky-50 shadow-md ring-2 ring-sky-300 scale-105'
                       : isCompleted
@@ -190,7 +190,7 @@ export const LearnPage: React.FC = () => {
       </section>
 
       {/* SUBJECT FILTER TABS */}
-      <section aria-label="Bộ lọc chủ đề">
+      <section aria-label="Bộ lọc chủ đề" className="learn-filters">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {subjectTabs.map((tab) => {
             const isActive = activeCategory === tab.id;
@@ -217,7 +217,7 @@ export const LearnPage: React.FC = () => {
       </section>
 
       {/* LESSON CARDS GRID */}
-      <section aria-label="Danh sách bài học">
+      <section aria-label="Danh sách bài học" className="learn-lesson-section">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-slate-400">
             Tìm thấy <strong className="text-slate-800 font-black">{filteredLessons.length}</strong> bài học ({activeAgeGroup} tuổi)
@@ -240,14 +240,14 @@ export const LearnPage: React.FC = () => {
             return (
               <div
                 key={lesson.id}
-                className={`bg-white rounded-3xl p-5 border-2 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between ${
+                className={`lesson-card bg-white rounded-3xl p-5 border-2 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between ${
                   isCompleted ? 'border-emerald-200 bg-emerald-50/15' : 'border-sky-100'
                 }`}
               >
                 <div>
                   {/* Top Bar: Icon, Stars, Difficulty */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shadow-xs">
+                    <div className="lesson-card-icon w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-2xl shadow-xs">
                       {lesson.thumbnailEmoji}
                     </div>
 
@@ -298,7 +298,7 @@ export const LearnPage: React.FC = () => {
 
                   <button
                     onClick={() => handleStartLesson(lesson)}
-                    className={`w-full py-3 px-4 rounded-2xl font-black text-xs transition flex items-center justify-center gap-2 ${
+                    className={`lesson-start-button w-full py-3 px-4 rounded-2xl font-black text-xs transition flex items-center justify-center gap-2 ${
                       isCompleted
                         ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/25 hover:scale-[1.02] active:scale-95'

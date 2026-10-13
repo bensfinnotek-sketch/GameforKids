@@ -227,3 +227,107 @@
   .home-stat-card::after { transition: none !important; }
   .home-stat-card:hover { transform: none; }
 }
+
+
+/* Learning path: bright, tactile cards and a clear visual hierarchy */
+.learn-page {
+  --learn-blue: #0284c7;
+}
+.learn-banner {
+  isolation: isolate;
+  background-image:
+    radial-gradient(circle at 90% 18%, rgba(255,255,255,.24) 0 4.5rem, transparent 4.6rem),
+    radial-gradient(circle at 83% 100%, rgba(125,211,252,.3) 0 8rem, transparent 8.1rem),
+    linear-gradient(115deg, #0ea5e9 0%, #0284c7 52%, #4338ca 100%);
+  box-shadow: 0 18px 42px rgba(2,132,199,.18);
+}
+.learn-banner::after {
+  content: "✦";
+  position: absolute;
+  right: 2.5rem;
+  top: -1.4rem;
+  color: rgba(255,255,255,.13);
+  font-size: clamp(7rem, 14vw, 12rem);
+  line-height: 1;
+  transform: rotate(12deg);
+  pointer-events: none;
+}
+.learn-banner-title {
+  letter-spacing: -.035em;
+  text-wrap: balance;
+  text-shadow: 0 2px 0 rgba(15,23,42,.08);
+}
+.learn-roadmap {
+  background-image: linear-gradient(135deg, rgba(240,249,255,.9), #fff 48%, rgba(236,253,245,.45));
+  box-shadow: 0 12px 30px rgba(15,23,42,.035);
+}
+.roadmap-node {
+  position: relative;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.roadmap-node:not([aria-disabled="true"]):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(14,165,233,.12);
+}
+.learn-filters button {
+  min-height: 2.75rem;
+}
+.learn-lesson-section input {
+  min-height: 2.75rem;
+  box-shadow: 0 2px 5px rgba(15,23,42,.025);
+}
+.learn-lesson-section input:focus-visible {
+  outline: 3px solid rgba(14,165,233,.22);
+  outline-offset: 2px;
+}
+.lesson-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-image: linear-gradient(145deg, #fff 0%, #fff 72%, rgba(240,249,255,.72) 100%);
+  box-shadow: 0 6px 18px rgba(15,23,42,.035);
+}
+.lesson-card::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 7rem;
+  height: 7rem;
+  top: -4.7rem;
+  right: -3.5rem;
+  border-radius: 50%;
+  background: #bae6fd;
+  opacity: .3;
+  transition: transform .3s ease;
+}
+.lesson-card:hover::before { transform: scale(1.55); }
+.lesson-card-icon {
+  box-shadow: 0 5px 12px rgba(14,165,233,.08);
+  transition: transform .22s ease;
+}
+.lesson-card:hover .lesson-card-icon { transform: rotate(-5deg) scale(1.06); }
+.lesson-start-button {
+  min-height: 2.9rem;
+  letter-spacing: .015em;
+}
+.lesson-start-button:focus-visible,
+.learn-filters button:focus-visible,
+.roadmap-node:focus-visible {
+  outline: 3px solid rgba(2,132,199,.45);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .learn-page { padding-top: 1.25rem; padding-bottom: 2rem; }
+  .learn-banner { border-radius: 1.5rem; }
+  .learn-roadmap { padding: 1rem; }
+  .learn-lesson-section > div:first-child {
+    align-items: stretch;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .learn-lesson-section input { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .roadmap-node, .lesson-card::before, .lesson-card-icon { transition: none !important; }
+  .roadmap-node:hover, .lesson-card:hover .lesson-card-icon { transform: none; }
+}
