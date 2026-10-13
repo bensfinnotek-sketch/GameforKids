@@ -130,6 +130,7 @@ export const LearningCoachCard: React.FC<LearningCoachCardProps> = ({ ageGroup }
             <button
               key={choice}
               type="button"
+              disabled={feedback === 'correct'}
               className={`coach-choice ${answer === choice ? 'coach-choice-selected' : ''} ${feedback === 'correct' && answer === choice ? 'coach-choice-correct' : ''}`}
               onClick={() => checkAnswer(choice)}
               aria-pressed={answer === choice}
