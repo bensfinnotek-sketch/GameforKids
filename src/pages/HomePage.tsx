@@ -63,7 +63,7 @@ export const HomePage: React.FC = () => {
             {/* Card 1: Streak */}
             <div 
               onClick={() => setActiveTab('challenges')}
-              className="bg-white rounded-3xl p-5 border-2 border-rose-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
+              className="home-stat-card home-stat-streak bg-white rounded-3xl p-5 border-2 border-rose-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                 🔥
@@ -81,7 +81,7 @@ export const HomePage: React.FC = () => {
             {/* Card 2: XP */}
             <div 
               onClick={() => setActiveTab('achievements')}
-              className="bg-white rounded-3xl p-5 border-2 border-amber-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
+              className="home-stat-card home-stat-xp bg-white rounded-3xl p-5 border-2 border-amber-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                 ⭐
@@ -99,7 +99,7 @@ export const HomePage: React.FC = () => {
             {/* Card 3: Badges */}
             <div 
               onClick={() => setActiveTab('achievements')}
-              className="bg-white rounded-3xl p-5 border-2 border-purple-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
+              className="home-stat-card home-stat-badges bg-white rounded-3xl p-5 border-2 border-purple-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                 🏆
@@ -117,7 +117,7 @@ export const HomePage: React.FC = () => {
             {/* Card 4: Gems */}
             <div 
               onClick={() => setActiveTab('treasure')}
-              className="bg-white rounded-3xl p-5 border-2 border-sky-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
+              className="home-stat-card home-stat-gems bg-white rounded-3xl p-5 border-2 border-sky-100 shadow-sm hover:shadow-md transition cursor-pointer flex items-center gap-4 group"
             >
               <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                 💎
@@ -138,7 +138,7 @@ export const HomePage: React.FC = () => {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Card Lớn: TIẾP TỤC HÀNH TRÌNH */}
-          <div className="lg:col-span-7 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
+          <div className="home-continue-card lg:col-span-7 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden flex flex-col justify-between">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-1.5 bg-amber-400 text-slate-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5" />

@@ -70,3 +70,160 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+
+/* Friendly, polished adventure-home art direction */
+.home-hero {
+  isolation: isolate;
+  background-image:
+    radial-gradient(ellipse at 78% 18%, rgba(255,255,255,.34), transparent 28%),
+    linear-gradient(180deg, #38bdf8 0%, #7dd3fc 44%, #f4f8fd 100%);
+}
+.home-hero::before,
+.home-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 9999px;
+}
+.home-hero::before {
+  width: 34rem;
+  height: 34rem;
+  right: -12rem;
+  top: -19rem;
+  border: 1px solid rgba(255,255,255,.32);
+  box-shadow: 0 0 0 2.5rem rgba(255,255,255,.06), 0 0 0 5rem rgba(255,255,255,.04);
+}
+.home-hero::after {
+  width: 22rem;
+  height: 22rem;
+  left: -12rem;
+  bottom: -15rem;
+  background: rgba(255,255,255,.18);
+  filter: blur(2px);
+}
+.hero-sun {
+  position: absolute;
+  top: 4.5rem;
+  right: 13%;
+  width: clamp(4rem, 9vw, 7.5rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: linear-gradient(135deg, #fff7ad, #fbbf24);
+  box-shadow: 0 0 0 1rem rgba(255, 237, 148, .13), 0 0 3rem rgba(251, 191, 36, .26);
+  opacity: .9;
+}
+.hero-orb {
+  position: absolute;
+  border: 2px solid rgba(255,255,255,.55);
+  border-radius: 1.4rem;
+  transform: rotate(18deg);
+  pointer-events: none;
+}
+.hero-orb-one {
+  width: 2.5rem;
+  height: 2.5rem;
+  left: 4%;
+  top: 42%;
+  background: rgba(255,255,255,.15);
+}
+.hero-orb-two {
+  width: 1.4rem;
+  height: 1.4rem;
+  right: 7%;
+  bottom: 22%;
+  border-radius: .5rem;
+  background: rgba(255,255,255,.28);
+}
+.hero-copy {
+  animation: heroRiseIn .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.hero-artwork {
+  animation: heroRiseIn .8s .08s cubic-bezier(.2,.75,.25,1) both;
+}
+.hero-island-card {
+  transform: translateZ(0);
+  box-shadow: 0 28px 70px rgba(14, 116, 144, .24), 0 8px 18px rgba(15, 23, 42, .12);
+}
+.hero-island-image {
+  filter: saturate(1.06) contrast(1.02);
+}
+.hero-mascot-stamp {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, .2);
+}
+@keyframes heroRiseIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 640px) {
+  .hero-sun { top: 2.2rem; right: 7%; opacity: .55; }
+  .hero-orb-one { left: -1rem; top: 36%; }
+  .hero-orb-two { right: 3%; bottom: 12%; }
+  .hero-island-card { border-radius: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy,
+  .hero-artwork,
+  .animate-float-slow,
+  .animate-pulse-glow {
+    animation: none !important;
+  }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+.home-stat-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 6.25rem;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, .035);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.home-stat-card::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 5.5rem;
+  height: 5.5rem;
+  right: -2.4rem;
+  bottom: -3.2rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .045;
+  transition: transform .25s ease;
+}
+.home-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .09);
+}
+.home-stat-card:hover::after { transform: scale(1.5); }
+.home-stat-card:focus-visible,
+.home-hero button:focus-visible {
+  outline: 3px solid #0f172a;
+  outline-offset: 3px;
+}
+.home-continue-card {
+  box-shadow: 0 18px 36px rgba(2, 132, 199, .18);
+}
+.home-continue-card::after {
+  content: "✦";
+  position: absolute;
+  right: 1.25rem;
+  top: .25rem;
+  color: rgba(255,255,255,.13);
+  font-size: clamp(5rem, 10vw, 9rem);
+  line-height: 1;
+  pointer-events: none;
+  transform: rotate(12deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-stat-card,
+  .home-stat-card::after { transition: none !important; }
+  .home-stat-card:hover { transform: none; }
+}

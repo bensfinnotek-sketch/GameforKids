@@ -1,4 +1,6 @@
 import React from 'react';
+import islandImage from '../../assets/images/mini_math_island_1791350375195.jpg';
+import mascotImage from '../../assets/images/mini_mascot_avatar_1791350392100.jpg';
 import { Sparkles, Play, ArrowRight, Star, Trophy, ShieldCheck, Flame } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { soundManager } from '../../utils/sound';
@@ -17,8 +19,11 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-sky-400 via-sky-300 to-[#f4f8fd] pt-6 pb-14 sm:pb-20 select-none">
+    <section className="home-hero relative overflow-hidden bg-gradient-to-b from-sky-500 via-cyan-300 to-[#f4f8fd] pt-8 pb-16 sm:pt-12 sm:pb-24 select-none">
       {/* Decorative floating cartoon clouds & stars */}
+      <div className="hero-sun" aria-hidden="true" />
+      <div className="hero-orb hero-orb-one" aria-hidden="true" />
+      <div className="hero-orb hero-orb-two" aria-hidden="true" />
       <div className="absolute top-6 left-10 text-white/70 text-4xl animate-float-slow pointer-events-none">☁️</div>
       <div className="absolute top-20 right-16 text-white/80 text-5xl animate-float-slow pointer-events-none" style={{ animationDelay: '1.5s' }}>☁️</div>
       <div className="absolute bottom-20 left-1/4 text-white/50 text-3xl animate-float-slow pointer-events-none" style={{ animationDelay: '2.5s' }}>☁️</div>
@@ -32,7 +37,7 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Text Column */}
-          <div className="lg:col-span-7 text-center lg:text-left space-y-5">
+          <div className="lg:col-span-7 text-center lg:text-left space-y-5 hero-copy">
             
             {/* Top Pill Tag: Personalization Greeting */}
             <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border-2 border-amber-300 shadow-sm">
@@ -43,7 +48,7 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
             </div>
 
             {/* Main Headline */}
-            <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-md">
+            <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.06] drop-shadow-md hero-title">
               CHINH PHỤC <br />
               <span className="text-yellow-300 underline decoration-wavy decoration-amber-400">
                 THẾ GIỚI TOÁN HỌC!
@@ -94,14 +99,14 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
 
           {/* Right Visual Mascot & Island Column */}
           <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
-            <div className="relative w-full max-w-md sm:max-w-lg">
+            <div className="relative w-full max-w-md sm:max-w-lg hero-artwork">
               
               {/* Island Illustration Card */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-tr from-sky-300 via-amber-200 to-emerald-200 group">
+              <div className="hero-island-card relative rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-tr from-sky-300 via-amber-200 to-emerald-200 group">
                 <img
-                  src="/src/assets/images/mini_math_island_1791350375195.jpg"
+                  src={islandImage}
                   alt="Đảo Toán Học Math Adventure Kids với Thám Hiểm Mini"
-                  className="w-full h-72 sm:h-80 md:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-72 sm:h-80 md:h-96 object-cover object-center group-hover:scale-105 transition-transform duration-700 hero-island-image"
                 />
 
                 {/* Gradient overlay for text contrast */}
@@ -129,9 +134,9 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
 
               {/* Floating Mini Mascot Stamp on Corner */}
               <div className="absolute -bottom-6 -left-6 hidden sm:block">
-                <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-xl border-2 border-amber-300 rotate-[-6deg] hover:rotate-0 transition-transform">
+                <div className="hero-mascot-stamp w-20 h-20 rounded-2xl bg-white p-1 shadow-xl border-2 border-amber-300 rotate-[-6deg] hover:rotate-0 transition-transform">
                   <img
-                    src="/src/assets/images/mini_mascot_avatar_1791350392100.jpg"
+                    src={mascotImage}
                     alt="Mini Mascot Avatar"
                     className="w-full h-full object-cover rounded-xl"
                   />
