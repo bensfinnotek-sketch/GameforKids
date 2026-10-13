@@ -244,7 +244,7 @@ export const LearnPage: React.FC = () => {
       </section>
 
       {/* DAILY MINI PRACTICE */}
-      <LearningCoachCard />
+      <LearningCoachCard key={activeAgeGroup} ageGroup={activeAgeGroup} />
 
       {/* SUBJECT FILTER TABS */}
       <section aria-label="Bộ lọc chủ đề" className="learn-filters">
