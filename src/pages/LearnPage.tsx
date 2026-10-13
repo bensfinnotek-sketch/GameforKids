@@ -10,7 +10,9 @@ import {
   Star,
   Clock,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Target,
+  ListChecks
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { Lesson, SubjectCategory, AgeGroup } from '../types';
@@ -77,6 +79,17 @@ export const LearnPage: React.FC = () => {
   }
 
   const completedCount = filteredLessons.filter((l) => user.completedLessons.includes(l.id)).length;
+  const progressPercent = filteredLessons.length
+    ? Math.round((completedCount / filteredLessons.length) * 100)
+    : 0;
+  const categoryLabel = subjectTabs.find((tab) => tab.id === activeCategory)?.label || 'Tất cả chủ đề';
+  const learningFocus: Record<AgeGroup, string> = {
+    '2-3': 'Nhận biết màu sắc, hình dạng và đếm cùng người lớn.',
+    '4-5': 'Đếm đồ vật, nhận biết hình và làm quen phép cộng đơn giản.',
+    '6-8': 'Luyện cộng trừ, bảng nhân, đo lường và quy luật.',
+    '9-11': 'Phát triển phân số, hình học, suy luận và bài toán nhiều bước.',
+  };
+  const nextLesson = filteredLessons.find((lesson) => !user.completedLessons.includes(lesson.id));
 
   return (
     <div className="learn-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none space-y-8">
@@ -189,6 +202,46 @@ export const LearnPage: React.FC = () => {
         </div>
       </section>
 
+      {/* LEARNING GOALS & PROGRESS */}
+      <section aria-label="Mục tiêu học tập" className="learning-goals-panel">
+        <div className="learning-goals-copy">
+          <div className="learning-goals-icon"><Target className="w-5 h-5" /></div>
+          <div className="min-w-0">
+            <p className="learning-eyebrow">MỤC TIÊU CHẶNG HỌC</p>
+            <h2 className="font-heading font-black text-lg sm:text-xl text-slate-800">
+              Hôm nay mình khám phá gì?
+            </h2>
+            <p className="text-sm font-semibold text-slate-500 mt-1">{learningFocus[activeAgeGroup]}</p>
+            <div className="learning-focus-tags">
+              <span>{categoryLabel}</span>
+              <span>{activeAgeGroup} tuổi</span>
+              <span><ListChecks className="w-3.5 h-3.5" /> {filteredLessons.length} bài trong chặng</span>
+            </div>
+          </div>
+        </div>
+        <div className="learning-progress-card">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-black text-slate-500">TIẾN ĐỘ CHẶNG NÀY</span>
+            <strong className="text-lg font-black text-sky-700">{progressPercent}%</strong>
+          </div>
+          <div className="learning-progress-track" role="progressbar" aria-label="Tiến độ học tập" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
+            <div className="learning-progress-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p className="text-xs font-semibold text-slate-500 mt-2">
+            {completedCount}/{filteredLessons.length} bài đã hoàn thành
+          </p>
+          {nextLesson ? (
+            <button className="learning-next-link" onClick={() => handleStartLesson(nextLesson)}>
+              Bài tiếp theo: {nextLesson.title} <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : filteredLessons.length > 0 ? (
+            <p className="learning-finished-note">🎉 Tuyệt vời! Bé đã hoàn thành chặng này.</p>
+          ) : (
+            <p className="learning-finished-note">Thử đổi chủ đề hoặc từ khóa để tìm bài học nhé.</p>
+          )}
+        </div>
+      </section>
+
       {/* SUBJECT FILTER TABS */}
       <section aria-label="Bộ lọc chủ đề" className="learn-filters">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -279,9 +332,13 @@ export const LearnPage: React.FC = () => {
                   <h3 className="font-heading font-black text-lg text-slate-800 leading-snug">
                     {lesson.title}
                   </h3>
-                  <p className="text-xs font-semibold text-slate-500 mt-1 mb-4 line-clamp-2 leading-relaxed">
+                  <p className="text-xs font-semibold text-slate-500 mt-1 mb-3 line-clamp-2 leading-relaxed">
                     {lesson.description}
                   </p>
+                  <div className="lesson-outcome">
+                    <span className="lesson-outcome-dot" />
+                    <span>Kỹ năng: {lesson.category === 'basic' ? 'Số học & phép tính' : lesson.category === 'thinking' ? 'Tư duy quy luật' : lesson.category === 'geometry' ? 'Hình học & quan sát' : lesson.category === 'logic' ? 'Suy luận logic' : lesson.category === 'english-math' ? 'Từ vựng toán tiếng Anh' : 'Giải toán thử thách'}</span>
+                  </div>
                 </div>
 
                 {/* Footer details & Action */}
@@ -292,7 +349,7 @@ export const LearnPage: React.FC = () => {
                     </span>
                     <span className="text-slate-400 flex items-center gap-1 font-bold text-[11px]">
                       <Clock className="w-3.5 h-3.5" />
-                      {lesson.durationMinutes} phút
+                      {lesson.durationMinutes} phút · {lesson.totalQuestions} câu
                     </span>
                   </div>
 
