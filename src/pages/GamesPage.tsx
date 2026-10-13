@@ -437,10 +437,10 @@ export const GamesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none">
+    <div className="games-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 select-none">
       
       {/* Banner */}
-      <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+      <div className="games-banner bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 bg-white text-slate-900 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
@@ -467,7 +467,7 @@ export const GamesPage: React.FC = () => {
 
       {/* If a game is active: Render the playable screen */}
       {selectedGame ? (
-        <div className="max-w-3xl mx-auto">
+        <div className="game-detail-shell max-w-3xl mx-auto">
           {/* Back button */}
           <button
             onClick={() => {
@@ -910,15 +910,15 @@ export const GamesPage: React.FC = () => {
         </div>
       ) : (
         /* Games Grid List */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MINI_GAMES.map((game) => (
+        <div className="game-catalog grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {MINI_GAMES.map((game, index) => (
             <div
               key={game.id}
-              className="bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group"
+              className={`game-catalog-card game-catalog-card-${index % 6} bg-white rounded-3xl p-6 border-2 border-sky-100 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group`}
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                  <div className="game-catalog-icon w-16 h-16 rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                     {game.previewEmoji}
                   </div>
                   <div className="flex flex-col items-end">
@@ -949,7 +949,7 @@ export const GamesPage: React.FC = () => {
                     soundManager.playClick();
                     setSelectedGame(game);
                   }}
-                  className="w-full py-3.5 px-4 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95"
+                  className="game-launch-button w-full py-3.5 px-4 rounded-2xl font-black text-sm text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-md shadow-amber-500/25 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95"
                 >
                   <Play className="w-4 h-4 fill-current" />
                   <span>CHƠI NGAY</span>
