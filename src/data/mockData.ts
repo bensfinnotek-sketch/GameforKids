@@ -801,14 +801,14 @@ type LessonQuestionSeed = {
 // Keeping these in the same source makes client rendering and server scoring agree.
 const ADDITIONAL_LESSON_QUESTIONS: Record<string, LessonQuestionSeed[]> = {
   'lesson-2': [
-    { questionText: 'Khối nào có 6 mặt đều là hình vuông?', correct: 'Khối lập phương', distractors: ['Khối cầu', 'Khối trụ', 'Khối nón'], hint: 'Hãy nghĩ đến con xúc xắc nhé.' },
-    { questionText: 'Vật nào có dạng hình cầu?', correct: 'Quả bóng', distractors: ['Hộp quà', 'Lon nước', 'Quyển sách'], hint: 'Hình cầu lăn được theo mọi hướng.' },
-    { questionText: 'Hình nào có 3 cạnh?', correct: 'Hình tam giác', distractors: ['Hình vuông', 'Hình tròn', 'Hình chữ nhật'], hint: 'Đếm số cạnh của từng hình.' },
+    { questionText: 'Mặt trước của chiếc đồng hồ tròn giống hình nào?', correct: 'Hình tròn', distractors: ['Hình tam giác', 'Hình vuông', 'Hình chữ nhật'], hint: 'Hình tròn không có cạnh và không có góc.' },
+    { questionText: 'Hình nào có đúng 3 cạnh?', correct: 'Hình tam giác', distractors: ['Hình vuông', 'Hình tròn', 'Hình chữ nhật'], hint: 'Đếm các cạnh thẳng bao quanh hình.' },
+    { questionText: 'Hình vuông có bao nhiêu cạnh bằng nhau?', correct: '4 cạnh', distractors: ['2 cạnh', '3 cạnh', 'Không có cạnh nào'], hint: 'Bốn cạnh của hình vuông có cùng độ dài.' },
   ],
   'lesson-3': [
-    { questionText: 'Số nào lớn hơn?', correct: '9', distractors: ['4', '6', '2'], hint: 'So sánh giá trị các số.' },
-    { questionText: 'Chiếc bút dài 15 cm, chiếc thước dài 20 cm. Vật nào dài hơn?', correct: 'Chiếc thước', distractors: ['Chiếc bút', 'Hai vật bằng nhau', 'Không thể so sánh'], hint: '20 cm lớn hơn 15 cm.' },
-    { questionText: 'Sắp xếp từ bé đến lớn: 3, 8, 5.', correct: '3, 5, 8', distractors: ['8, 5, 3', '5, 3, 8', '3, 8, 5'], hint: 'Bắt đầu từ số nhỏ nhất.' },
+    { questionText: 'Bạn thỏ có 9 củ cà rốt, bạn sóc có 6 củ. Ai có nhiều củ cà rốt hơn?', correct: 'Bạn thỏ', distractors: ['Bạn sóc', 'Hai bạn có số củ bằng nhau', 'Không thể biết'], hint: 'So sánh 9 với 6: số nào lớn hơn?' },
+    { questionText: 'Dây ruy-băng xanh dài 15 cm, dây đỏ dài 20 cm. Dây nào dài hơn?', correct: 'Dây đỏ', distractors: ['Dây xanh', 'Hai dây dài bằng nhau', 'Không thể so sánh'], hint: '20 cm lớn hơn 15 cm.' },
+    { questionText: 'Xếp các số 3, 8, 5 từ bé đến lớn.', correct: '3, 5, 8', distractors: ['8, 5, 3', '5, 3, 8', '3, 8, 5'], hint: 'Tìm số nhỏ nhất trước, rồi đến số ở giữa.' },
   ],
   'lesson-4': [
     { questionText: 'Có 3 quả táo, thêm 4 quả. Có tất cả bao nhiêu quả?', correct: '7', distractors: ['6', '8', '9'], hint: 'Tính 3 + 4.' },
@@ -821,9 +821,9 @@ const ADDITIONAL_LESSON_QUESTIONS: Record<string, LessonQuestionSeed[]> = {
     { questionText: 'Số nào đứng ngay sau số 11?', correct: '12', distractors: ['10', '13', '9'], hint: 'Đếm tiếp một số sau 11.' },
   ],
   'lesson-4c': [
-    { questionText: 'Màu nào thường đứng giữa màu vàng và màu lam trong cầu vồng?', correct: 'Lục', distractors: ['Đỏ', 'Tím', 'Cam'], hint: 'Cầu vồng có bảy màu quen thuộc.' },
-    { questionText: 'Hình nào có bốn cạnh bằng nhau và bốn góc vuông?', correct: 'Hình vuông', distractors: ['Hình tròn', 'Hình tam giác', 'Hình bầu dục'], hint: 'Mỗi cạnh của hình này dài bằng nhau.' },
-    { questionText: 'Màu đỏ pha với màu vàng thường tạo thành màu gì?', correct: 'Cam', distractors: ['Xanh lá', 'Tím', 'Xanh dương'], hint: 'Hãy nghĩ đến màu vỏ quả cam.' },
+    { questionText: 'Trong cầu vồng, màu nào nằm giữa vàng và lam?', correct: 'Lục (xanh lá)', distractors: ['Đỏ', 'Tím', 'Cam'], hint: 'Thứ tự quen thuộc: vàng, lục, lam.' },
+    { questionText: 'Hình nào có 4 cạnh bằng nhau và 4 góc vuông?', correct: 'Hình vuông', distractors: ['Hình tròn', 'Hình tam giác', 'Hình bầu dục'], hint: 'Cả bốn cạnh đều dài bằng nhau.' },
+    { questionText: 'Khi pha màu đỏ với màu vàng, ta thường được màu gì?', correct: 'Cam', distractors: ['Xanh lá', 'Tím', 'Xanh dương'], hint: 'Hãy nghĩ đến màu của quả cam chín.' },
   ],
   'lesson-7': [
     { questionText: '2 × 4 bằng bao nhiêu?', correct: '8', distractors: ['6', '10', '12'], hint: 'Cộng 2 bốn lần.' },
