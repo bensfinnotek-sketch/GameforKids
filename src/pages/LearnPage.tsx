@@ -18,6 +18,7 @@ import { useGame } from '../context/GameContext';
 import { Lesson, SubjectCategory, AgeGroup } from '../types';
 import { QuizPage } from './QuizPage';
 import { soundManager } from '../utils/sound';
+import { LearningCoachCard } from '../components/common/LearningCoachCard';
 
 export const LearnPage: React.FC = () => {
   const { 
@@ -241,6 +242,9 @@ export const LearnPage: React.FC = () => {
           )}
         </div>
       </section>
+
+      {/* DAILY MINI PRACTICE */}
+      <LearningCoachCard key={activeAgeGroup} ageGroup={activeAgeGroup} />
 
       {/* SUBJECT FILTER TABS */}
       <section aria-label="Bộ lọc chủ đề" className="learn-filters">
