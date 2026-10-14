@@ -137,17 +137,24 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
   // If Finished Modal Screen (Phần 12 & Phần 44)
   if (isFinished) {
     const accuracy = Math.round((finalScore / questions.length) * 100);
+    const sameAgeLessons = lessons.filter((l) => l.ageGroup === lesson.ageGroup);
+    const currentPosition = sameAgeLessons.findIndex((l) => l.id === lesson.id);
+    const orderedCandidates = [
+      ...sameAgeLessons.slice(Math.max(0, currentPosition + 1)),
+      ...sameAgeLessons.slice(0, Math.max(0, currentPosition)),
+    ];
+    // Only offer a lesson whose prerequisite is already present in the
+    // account's confirmed completion list. Never unlock by UI navigation alone.
+    const nextLesson = orderedCandidates.find((candidate) =>
+      candidate.id !== lesson.id &&
+      !user.completedLessons.includes(candidate.id) &&
+      (!candidate.requiredLessonId || user.completedLessons.includes(candidate.requiredLessonId))
+    );
 
     const handleNextLesson = () => {
       soundManager.playClick();
-      const sameAgeLessons = lessons.filter((l) => l.ageGroup === lesson.ageGroup);
-      const currentPosition = sameAgeLessons.findIndex((l) => l.id === lesson.id);
-      const nextL = [
-        ...sameAgeLessons.slice(currentPosition + 1),
-        ...sameAgeLessons.slice(0, Math.max(0, currentPosition)),
-      ].find((l) => !user.completedLessons.includes(l.id) && l.id !== lesson.id);
-      if (nextL) {
-        setActiveLesson(nextL);
+      if (nextLesson) {
+        setActiveLesson(nextLesson);
       } else {
         onBack();
       }
@@ -233,7 +240,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ lesson, onBack }) => {
               onClick={handleNextLesson}
               className="w-full py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-md shadow-sky-500/25 transition flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95"
             >
-              <span>HỌC BÀI TIẾP ➔</span>
+              <span>{nextLesson ? `HỌC BÀI TIẾP: ${nextLesson.title} ➔` : 'ĐÃ HOÀN THÀNH LỘ TRÌNH 🎉'}</span>
             </button>
           </div>
         </div>
