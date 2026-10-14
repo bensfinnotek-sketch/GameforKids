@@ -14,8 +14,8 @@ export const UserStatsWidget: React.FC = () => {
         {/* Main Stats Card */}
         <div className="bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           {/* Background decorations */}
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-1/3 -mb-20 w-48 h-48 rounded-full bg-amber-400/20 blur-xl pointer-events-none"></div>
+          <div aria-hidden="true" className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
+          <div aria-hidden="true" className="absolute bottom-0 left-1/3 -mb-20 w-48 h-48 rounded-full bg-amber-400/20 blur-xl pointer-events-none"></div>
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             
@@ -41,9 +41,9 @@ export const UserStatsWidget: React.FC = () => {
 
               {/* XP Progress Bar */}
               <div className="space-y-1 pt-1">
-                <div className="w-full bg-black/20 rounded-full h-3.5 p-0.5 shadow-inner">
+                <div className="w-full bg-black/20 rounded-full h-3.5 p-0.5 shadow-inner" role="progressbar" aria-label="Tiến độ XP lên cấp tiếp theo" aria-valuemin={0} aria-valuemax={100} aria-valuenow={levelInfo.progressPercent} aria-valuetext={`${levelInfo.progressPercent}% hoàn thành`}>
                   <div
-                    className="bg-gradient-to-r from-amber-300 to-yellow-400 h-full rounded-full transition-all duration-500 shadow-sm"
+                    className="bg-gradient-to-r from-amber-300 to-yellow-400 h-full rounded-full transition-all duration-500 shadow-sm motion-reduce:transition-none"
                     style={{ width: `${levelInfo.progressPercent}%` }}
                   ></div>
                 </div>
