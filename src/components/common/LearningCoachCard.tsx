@@ -122,15 +122,15 @@ export const LearningCoachCard: React.FC<LearningCoachCardProps> = ({ ageGroup }
           <div className="coach-progress-fill" style={{ width: `${(completed.length / cards.length) * 100}%` }} />
         </div>
         <h3>{card.title}</h3>
-        <p className="coach-prompt">{card.prompt}</p>
+        <p id="coach-prompt" className="coach-prompt">{card.prompt}</p>
 
-        <div className="coach-choice-list" role="group" aria-label="Chọn đáp án">
+        <div className="coach-choice-list" role="group" aria-label="Chọn đáp án" aria-describedby="coach-prompt">
           {card.choices.map((choice) => (
             <button
               key={choice}
               type="button"
               disabled={feedback === 'correct'}
-              className={`coach-choice ${answer === choice ? 'coach-choice-selected' : ''} ${feedback === 'correct' && answer === choice ? 'coach-choice-correct' : ''}`}
+              className={`coach-choice min-h-14 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none ${ageGroup === '2-3' ? 'min-h-16 text-base' : ''} ${answer === choice ? 'coach-choice-selected' : ''} ${feedback === 'correct' && answer === choice ? 'coach-choice-correct' : ''}`}
               onClick={() => checkAnswer(choice)}
               aria-pressed={answer === choice}
             >
@@ -151,7 +151,7 @@ export const LearningCoachCard: React.FC<LearningCoachCardProps> = ({ ageGroup }
           </div>
         )}
         {showHint && !showSolution && feedback !== 'correct' && (
-          <div className="coach-feedback coach-hint"><Lightbulb size={17} /><span>{card.hint}</span></div>
+          <div className="coach-feedback coach-hint" role="status"><Lightbulb size={17} /><span>{card.hint}</span></div>
         )}
         {showSolution && (
           <div className="coach-feedback coach-answer" role="status">
@@ -160,12 +160,12 @@ export const LearningCoachCard: React.FC<LearningCoachCardProps> = ({ ageGroup }
         )}
 
         <div className="coach-actions">
-          <button type="button" className="coach-button coach-button-quiet" onClick={() => { setShowHint(true); setShowSolution(false); }}><Lightbulb size={16} /> Gợi ý</button>
-          <button type="button" className="coach-button coach-button-quiet" onClick={() => { setShowSolution(true); setShowHint(false); }}>Xem lời giải</button>
+          <button type="button" className="coach-button coach-button-quiet min-h-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none" onClick={() => { setShowHint(true); setShowSolution(false); }}><Lightbulb size={16} /> Gợi ý</button>
+          <button type="button" className="coach-button coach-button-quiet min-h-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none" onClick={() => { setShowSolution(true); setShowHint(false); }}>Xem lời giải</button>
           {completed.length === cards.length ? (
-            <button type="button" className="coach-button coach-button-next" onClick={resetPractice}><RotateCcw size={16} /> Luyện lại từ đầu</button>
+            <button type="button" className="coach-button coach-button-next min-h-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none" onClick={resetPractice}><RotateCcw size={16} /> Luyện lại từ đầu</button>
           ) : (
-            <button type="button" className="coach-button coach-button-next" onClick={changeCard}><RotateCcw size={16} /> Câu tiếp theo</button>
+            <button type="button" className="coach-button coach-button-next min-h-12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none" onClick={changeCard}><RotateCcw size={16} /> Câu tiếp theo</button>
           )}
         </div>
       </div>
