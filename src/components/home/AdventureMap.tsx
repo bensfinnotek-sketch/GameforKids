@@ -121,12 +121,12 @@ export const AdventureMap: React.FC = () => {
           <div className="absolute inset-0 opacity-15 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#0284c7 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
           
           {/* Decorative Sea Creatures */}
-          <div className="absolute top-12 left-1/4 text-3xl opacity-50 pointer-events-none" style={{ animationDuration: '4s' }}>🐬</div>
-          <div className="absolute bottom-16 right-1/4 text-4xl opacity-50 pointer-events-none" style={{ animationDuration: '5s' }}>⛵</div>
-          <div className="absolute top-20 right-12 text-2xl opacity-60 pointer-events-none">⭐</div>
+          <div className="absolute top-12 left-1/4 text-3xl opacity-50 pointer-events-none" aria-hidden="true" style={{ animationDuration: '4s' }}>🐬</div>
+          <div className="absolute bottom-16 right-1/4 text-4xl opacity-50 pointer-events-none" aria-hidden="true" style={{ animationDuration: '5s' }}>⛵</div>
+          <div className="absolute top-20 right-12 text-2xl opacity-60 pointer-events-none" aria-hidden="true">⭐</div>
 
           {/* Connected SVG Pathways */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+          <svg aria-hidden="true" focusable="false" className="absolute inset-0 w-full h-full pointer-events-none z-0">
             <path
               d="M 12% 70% Q 25% 45%, 35% 35% T 58% 65% T 78% 30% T 92% 65%"
               fill="none"
@@ -158,7 +158,7 @@ export const AdventureMap: React.FC = () => {
                   onClick={() => handleZoneClick(zone)}
                   aria-pressed={isSelected}
                   aria-label={`${zone.name}, ${isUnlocked ? 'đã mở khóa' : `đang khóa, cần hoàn thành ${zone.requiredCompleted} bài`}`}
-                  className={`relative flex flex-col items-center cursor-pointer transition-all duration-300 group bg-transparent border-0 p-0 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 rounded-2xl ${
+                  className={`relative flex flex-col items-center cursor-pointer transition-all duration-300 motion-reduce:transition-none motion-reduce:hover:transform-none group bg-transparent border-0 p-0 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 rounded-2xl ${
                     isSelected ? '-translate-y-1' : 'hover:-translate-y-0.5'
                   }`}
                 >
@@ -172,7 +172,7 @@ export const AdventureMap: React.FC = () => {
 
                   {/* Main Zone Node Circle */}
                   <div
-                    className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center p-2 shadow-md border-4 transition-colors duration-200 ${
+                    className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center p-2 shadow-md border-4 transition-colors duration-200 motion-reduce:transition-none ${
                       isUnlocked
                         ? `${isSelected ? 'border-amber-400 ring-4 ring-amber-200' : 'border-white'} ${zone.color} text-slate-800`
                         : 'border-slate-200 bg-slate-100 text-slate-500'
@@ -242,7 +242,7 @@ export const AdventureMap: React.FC = () => {
             <button
               onClick={() => handleEnterZone(currentZoneData)}
               disabled={!currentZoneData.unlocked}
-              className={`w-full sm:w-auto min-h-14 px-6 py-3 rounded-2xl font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 flex-shrink-0 ${
+              className={`w-full sm:w-auto min-h-14 px-6 py-3 rounded-2xl font-bold text-sm shadow-sm transition motion-reduce:transition-none flex items-center justify-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-700 focus-visible:ring-offset-2 ${
                 currentZoneData.unlocked
                   ? 'bg-amber-300 hover:bg-amber-200 text-amber-950 shadow-amber-900/10 active:scale-[0.99]'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
