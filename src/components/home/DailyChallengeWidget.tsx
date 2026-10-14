@@ -18,7 +18,7 @@ export const DailyChallengeWidget: React.FC = () => {
               Nhiệm Vụ Hôm Nay
             </h3>
             <p className="text-xs font-bold text-slate-400">
-              Hoàn thành để nhận thêm Vàng và Ngọc quý!
+              Hoàn thành để nhận thêm XP và Ngọc quý!
             </p>
           </div>
         </div>
