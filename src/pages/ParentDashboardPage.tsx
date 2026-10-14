@@ -102,7 +102,7 @@ export const ParentDashboardPage: React.FC = () => {
     .map(([category, stats]) => ({ category, accuracy: Math.round(stats.accuracy / stats.total), total: stats.total }))
     .sort((a, b) => b.accuracy - a.accuracy);
   const strongestCategory = rankedCategories[0];
-  const focusCategory = rankedCategories.length > 1 ? rankedCategories[rankedCategories.length - 1] : null;
+  const focusCategory = rankedCategories.filter((item) => item.accuracy < 80).sort((a, b) => a.accuracy - b.accuracy)[0] || null;
   // Offer lightweight practice ideas from saved accuracy data; these are guidance, not a diagnosis.
   const practiceRecommendations = rankedCategories
     .filter((item) => item.accuracy < 80)
