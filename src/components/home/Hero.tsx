@@ -24,14 +24,14 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
       <div className="hero-sun" aria-hidden="true" />
       <div className="hero-orb hero-orb-one" aria-hidden="true" />
       <div className="hero-orb hero-orb-two" aria-hidden="true" />
-      <div className="absolute top-6 left-10 text-white/70 text-4xl animate-float-slow pointer-events-none">☁️</div>
-      <div className="absolute top-20 right-16 text-white/80 text-5xl animate-float-slow pointer-events-none" style={{ animationDelay: '1.5s' }}>☁️</div>
-      <div className="absolute bottom-20 left-1/4 text-white/50 text-3xl animate-float-slow pointer-events-none" style={{ animationDelay: '2.5s' }}>☁️</div>
+      <div className="absolute top-6 left-10 text-white/70 text-4xl animate-float-slow motion-reduce:animate-none pointer-events-none" aria-hidden="true">☁️</div>
+      <div className="absolute top-20 right-16 text-white/80 text-5xl animate-float-slow motion-reduce:animate-none pointer-events-none" aria-hidden="true" style={{ animationDelay: '1.5s' }}>☁️</div>
+      <div className="absolute bottom-20 left-1/4 text-white/50 text-3xl animate-float-slow motion-reduce:animate-none pointer-events-none" aria-hidden="true" style={{ animationDelay: '2.5s' }}>☁️</div>
       
       {/* Sparkle stars */}
-      <div className="absolute top-12 left-1/3 text-amber-200 text-2xl pointer-events-none">✨</div>
-      <div className="absolute top-36 right-1/4 text-yellow-300 text-3xl animate-pulse pointer-events-none" style={{ animationDelay: '1s' }}>⭐</div>
-      <div className="absolute top-24 right-10 text-amber-200 text-xl animate-pulse pointer-events-none">✨</div>
+      <div className="absolute top-12 left-1/3 text-amber-200 text-2xl pointer-events-none" aria-hidden="true">✨</div>
+      <div className="absolute top-36 right-1/4 text-yellow-300 text-3xl animate-pulse motion-reduce:animate-none pointer-events-none" aria-hidden="true" style={{ animationDelay: '1s' }}>⭐</div>
+      <div className="absolute top-24 right-10 text-amber-200 text-xl animate-pulse motion-reduce:animate-none pointer-events-none" aria-hidden="true">✨</div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -65,15 +65,15 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
               <button
                 onClick={handleStartAdventure}
-                className="w-full sm:w-auto min-h-14 px-7 py-4 rounded-2xl font-black text-base sm:text-lg text-amber-950 bg-amber-300 hover:bg-amber-200 shadow-md shadow-amber-900/10 hover:shadow-lg active:scale-[0.99] transition duration-200 border-2 border-white flex items-center justify-center gap-2.5 group"
+                className="w-full sm:w-auto min-h-14 px-7 py-4 rounded-2xl font-black text-base sm:text-lg text-amber-950 bg-amber-300 hover:bg-amber-200 shadow-md shadow-amber-900/10 hover:shadow-lg active:scale-[0.99] transition duration-200 motion-reduce:transition-none motion-reduce:transform-none border-2 border-white flex items-center justify-center gap-2.5 group focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-700 focus-visible:ring-offset-2"
               >
                 <span>🚀 BẮT ĐẦU PHIÊU LƯU</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform motion-reduce:transition-none motion-reduce:transform-none" />
               </button>
 
               <button
                 onClick={handlePlayTrial}
-                className="w-full sm:w-auto px-7 py-4 rounded-2xl font-black text-base text-sky-900 bg-white/95 hover:bg-white border-2 border-sky-200/80 shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2 hover:scale-105"
+                className="w-full sm:w-auto min-h-14 px-7 py-4 rounded-2xl font-black text-base text-sky-900 bg-white/95 hover:bg-white border-2 border-sky-200/80 shadow-md hover:shadow-lg transition duration-200 motion-reduce:transition-none motion-reduce:transform-none flex items-center justify-center gap-2 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-700 focus-visible:ring-offset-2"
               >
                 <span>🎮 CHƠI THỬ</span>
               </button>
@@ -134,7 +134,7 @@ export const Hero: React.FC<{ onExploreMap: () => void }> = ({ onExploreMap }) =
 
               {/* Floating Mini Mascot Stamp on Corner */}
               <div className="absolute -bottom-6 -left-6 hidden sm:block">
-                <div className="hero-mascot-stamp w-20 h-20 rounded-2xl bg-white p-1 shadow-xl border-2 border-amber-300 rotate-[-6deg] hover:rotate-0 transition-transform">
+                <div className="hero-mascot-stamp w-20 h-20 rounded-2xl bg-white p-1 shadow-xl border-2 border-amber-300 rotate-[-6deg] hover:rotate-0 transition-transform motion-reduce:transition-none motion-reduce:transform-none">
                   <img
                     src={mascotImage}
                     alt="Mini Mascot Avatar"
