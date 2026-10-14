@@ -98,9 +98,11 @@ export const UserStatsWidget: React.FC = () => {
               </div>
 
               {/* Metric 4: Badges */}
-              <div 
+              <button
+                type="button"
                 onClick={() => setActiveTab('achievements')}
-                className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/20 transition"
+                aria-label={`Xem bảng thành tích, ${user.unlockedBadges.length} huy hiệu đã mở khóa`}
+                className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/20 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600"
               >
                 <div className="w-9 h-9 rounded-xl bg-purple-400/30 flex items-center justify-center text-xl mb-1">
                   🏅
@@ -111,7 +113,7 @@ export const UserStatsWidget: React.FC = () => {
                 <span className="text-[11px] font-bold text-sky-100 mt-0.5 underline">
                   Xem bảng vàng
                 </span>
-              </div>
+              </button>
 
             </div>
 
