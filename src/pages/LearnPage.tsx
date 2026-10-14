@@ -154,9 +154,14 @@ export const LearnPage: React.FC = () => {
 
             return (
               <React.Fragment key={l.id}>
-                <div
+                <button
+                  type="button"
                   onClick={() => !isLocked && handleStartLesson(l)}
-                  className={`roadmap-node flex flex-col items-center flex-shrink-0 cursor-pointer p-3 rounded-2xl border-2 transition-all ${
+                  disabled={isLocked}
+                  aria-disabled={isLocked}
+                  aria-current={isCurrent ? 'step' : undefined}
+                  aria-label={`${l.title}: ${isCompleted ? 'đã hoàn thành' : isCurrent ? 'bài tiếp theo, có thể mở' : 'chưa mở khóa'}`}
+                  className={`roadmap-node appearance-none text-left flex flex-col items-center flex-shrink-0 p-3 rounded-2xl border-2 transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 motion-reduce:transition-none ${
                     isCurrent
                       ? 'border-sky-500 bg-sky-50 shadow-md ring-2 ring-sky-300 scale-105'
                       : isCompleted
@@ -192,7 +197,7 @@ export const LearnPage: React.FC = () => {
                       />
                     ))}
                   </div>
-                </div>
+                </button>
 
                 {idx < 4 && idx < filteredLessons.length - 1 && (
                   <div className="w-8 h-1 bg-slate-200 rounded-full flex-shrink-0"></div>
