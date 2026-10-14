@@ -131,7 +131,10 @@ export const AgeSelector: React.FC = () => {
                 <div>
                   {/* Top Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-14 h-14 rounded-2xl bg-white shadow-md flex items-center justify-center text-3xl border-2 border-white">
+                    <div
+                      aria-hidden="true"
+                      className={`rounded-2xl bg-white shadow-md flex items-center justify-center border-2 border-white ${card.id === '2-3' ? 'w-16 h-16 text-4xl' : 'w-14 h-14 text-3xl'}`}
+                    >
                       {card.badgeEmoji}
                     </div>
                     <span className="font-black text-sm text-slate-700 bg-white/90 px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
@@ -161,10 +164,11 @@ export const AgeSelector: React.FC = () => {
                 <button
                   onClick={() => handleSelectAge(card.id)}
                   aria-pressed={isSelected}
-                  className={`w-full min-h-14 py-4 px-5 rounded-2xl font-black text-white text-base shadow-sm transition-colors duration-200 motion-reduce:transition-none flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${card.buttonColor} active:scale-[0.99]`}
+                  aria-label={card.id === '2-3' ? 'Chơi cùng Mini, dành cho bé 2 đến 3 tuổi' : `Khám phá lộ trình ${card.ageRange}`}
+                  className={`w-full py-4 px-5 rounded-2xl font-black text-white shadow-sm transition-colors duration-200 motion-reduce:transition-none flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${card.buttonColor} active:scale-[0.99] ${card.id === '2-3' ? 'min-h-16 text-lg rounded-3xl' : 'min-h-14 text-base'}`}
                 >
-                  <span>KHÁM PHÁ</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>{card.id === '2-3' ? 'CHƠI CÙNG MINI' : 'KHÁM PHÁ'}</span>
+                  <ArrowRight aria-hidden="true" className="w-5 h-5" />
                 </button>
               </div>
             );
