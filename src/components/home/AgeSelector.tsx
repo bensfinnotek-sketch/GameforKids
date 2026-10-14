@@ -19,6 +19,22 @@ export const AgeSelector: React.FC = () => {
     buttonColor: string;
   }[] = [
     {
+      id: '2-3',
+      title: 'Bé khám phá đầu đời',
+      ageRange: '2–3 tuổi',
+      subtitle: 'Chơi cùng Mini qua những hoạt động ngắn, dễ hiểu và gần gũi',
+      badgeEmoji: '🐳',
+      topics: [
+        'Nhận biết màu sắc và đồ vật quen thuộc',
+        'Tìm hình tròn qua trò chơi chạm chọn',
+        'Đếm 1, 2, 3 chú cá đáng yêu',
+        'Mỗi lần chơi một bước nhỏ, không áp lực',
+      ],
+      gradient: 'from-teal-300/15 via-sky-200/25 to-cyan-300/15',
+      borderColor: 'border-teal-300',
+      buttonColor: 'bg-teal-600 hover:bg-teal-700 shadow-teal-500/20',
+    },
+    {
       id: '4-5',
       title: 'Nhà thám hiểm tí hon',
       ageRange: '4–5 tuổi',
@@ -92,17 +108,17 @@ export const AgeSelector: React.FC = () => {
           </p>
         </div>
 
-        {/* 3 Age Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        {/* Age cards: toddler-friendly first, then school-age paths */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-6">
           {ageCards.map((card) => {
             const isSelected = activeAgeGroup === card.id;
 
             return (
               <div
                 key={card.id}
-                className={`relative rounded-3xl p-6 sm:p-7 bg-gradient-to-b ${card.gradient} border-4 ${
+                className={`relative rounded-3xl p-6 sm:p-7 min-h-full bg-gradient-to-b ${card.gradient} border-4 ${
                   isSelected ? 'border-sky-500 ring-4 ring-sky-200' : card.borderColor
-                } shadow-lg hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between`}
+                } shadow-md sm:hover:shadow-lg sm:hover:-translate-y-1 transition-all duration-200 motion-reduce:transition-none motion-reduce:hover:transform-none flex flex-col justify-between`}
               >
                 {/* Active selection ribbon */}
                 {isSelected && (
@@ -144,7 +160,8 @@ export const AgeSelector: React.FC = () => {
                 {/* CTA Button */}
                 <button
                   onClick={() => handleSelectAge(card.id)}
-                  className={`w-full py-3.5 px-5 rounded-2xl font-black text-white text-sm shadow-md transition-all flex items-center justify-center gap-2 ${card.buttonColor} hover:scale-[1.02] active:scale-95`}
+                  aria-pressed={isSelected}
+                  className={`w-full min-h-14 py-4 px-5 rounded-2xl font-black text-white text-base shadow-sm transition-colors duration-200 motion-reduce:transition-none flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${card.buttonColor} active:scale-[0.99]`}
                 >
                   <span>KHÁM PHÁ</span>
                   <ArrowRight className="w-4 h-4" />
