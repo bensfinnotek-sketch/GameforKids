@@ -152,10 +152,13 @@ export const AdventureMap: React.FC = () => {
               const isUnlocked = zone.unlocked;
 
               return (
-                <div
+                <button
+                  type="button"
                   key={zone.id}
                   onClick={() => handleZoneClick(zone)}
-                  className={`relative flex flex-col items-center cursor-pointer transition-all duration-300 group ${
+                  aria-pressed={isSelected}
+                  aria-label={`${zone.name}, ${isUnlocked ? 'đã mở khóa' : `đang khóa, cần hoàn thành ${zone.requiredCompleted} bài`}`}
+                  className={`relative flex flex-col items-center cursor-pointer transition-all duration-300 group bg-transparent border-0 p-0 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 rounded-2xl ${
                     isSelected ? 'scale-110 -translate-y-2' : 'hover:scale-105'
                   }`}
                 >
@@ -204,7 +207,7 @@ export const AdventureMap: React.FC = () => {
                       </span>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
