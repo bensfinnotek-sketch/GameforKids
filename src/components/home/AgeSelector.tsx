@@ -108,7 +108,7 @@ export const AgeSelector: React.FC = () => {
           </p>
         </div>
 
-        {/* 3 Age Cards Grid */}
+        {/* Age cards: toddler-friendly first, then school-age paths */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-6">
           {ageCards.map((card) => {
             const isSelected = activeAgeGroup === card.id;
@@ -160,6 +160,7 @@ export const AgeSelector: React.FC = () => {
                 {/* CTA Button */}
                 <button
                   onClick={() => handleSelectAge(card.id)}
+                  aria-pressed={isSelected}
                   className={`w-full min-h-14 py-4 px-5 rounded-2xl font-black text-white text-base shadow-sm transition-colors duration-200 motion-reduce:transition-none flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500 focus-visible:ring-offset-2 ${card.buttonColor} active:scale-[0.99]`}
                 >
                   <span>KHÁM PHÁ</span>
