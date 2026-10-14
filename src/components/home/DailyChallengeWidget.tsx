@@ -18,7 +18,7 @@ export const DailyChallengeWidget: React.FC = () => {
               Nhiệm Vụ Hôm Nay
             </h3>
             <p className="text-xs font-bold text-slate-400">
-              Hoàn thành để nhận thêm XP và Ngọc quý!
+              Hoàn thành để nhận XP, Vàng và Ngọc quý!
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ export const DailyChallengeWidget: React.FC = () => {
                       Tiến độ: {c.currentCount}/{c.targetCount}
                     </span>
                     <span className="text-[11px] font-black text-amber-600">
-                      +{c.rewardXP} XP • +{c.rewardGem} 💎
+                      +{c.rewardXP} XP • +{c.rewardCoin ?? 0} 🪙 • +{c.rewardGem} 💎
                     </span>
                   </div>
                 </div>

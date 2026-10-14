@@ -163,7 +163,7 @@ export const ChallengesPage: React.FC = () => {
                   <div className="text-right">
                     <span className="text-[11px] font-bold text-slate-400 block">Phần thưởng</span>
                     <span className="text-xs font-black text-amber-600">
-                      +{challenge.rewardXP} XP • +{challenge.rewardGem} 💎
+                      +{challenge.rewardXP} XP • +{challenge.rewardCoin ?? 0} 🪙 • +{challenge.rewardGem} 💎
                     </span>
                   </div>
 
