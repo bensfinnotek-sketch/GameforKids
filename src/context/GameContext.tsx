@@ -495,11 +495,23 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const verifiedTotalQuestions = reward.totalQuestions ?? totalQuestions;
     const accuracy = reward.accuracy ?? Math.round((verifiedScore / verifiedTotalQuestions) * 100);
 
+    // Re-read the committed Firestore profile after the trusted transaction.
+    // Reward totals and completion history must reflect the database, not a
+    // client-side increment that can drift when multiple tabs/devices are used.
+    const authoritativeProfile = auth.currentUser
+      ? await fetchUserProfileFromFirestore(auth.currentUser.uid)
+      : null;
+
     setUser((prev) => {
-      const newCompleted = prev.completedLessons.includes(lessonId)
-        ? prev.completedLessons
-        : [...prev.completedLessons, lessonId];
-      const newLevel = Math.max(prev.level, reward.newLevel || prev.level);
+      const serverCompleted = Array.isArray(authoritativeProfile?.completedLessons)
+        ? authoritativeProfile.completedLessons
+        : prev.completedLessons;
+      const newCompleted = serverCompleted.includes(lessonId)
+        ? serverCompleted
+        : [...serverCompleted, lessonId];
+      const newLevel = typeof authoritativeProfile?.level === 'number'
+        ? authoritativeProfile.level
+        : Math.max(prev.level, reward.newLevel || prev.level);
       const historyItem: StudyHistoryItem = {
         id: 'hist-' + Date.now(),
         lessonId: lesson.id,
@@ -540,18 +552,22 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       return {
         ...prev,
-        xp: prev.xp + xpBonus,
+        xp: typeof authoritativeProfile?.xp === 'number' ? authoritativeProfile.xp : prev.xp + xpBonus,
         level: newLevel,
-        streak: reward.streak ?? prev.streak,
-        coin: prev.coin + coinBonus,
-        gem: prev.gem + gemBonus,
+        streak: typeof authoritativeProfile?.streak === 'number' ? authoritativeProfile.streak : (reward.streak ?? prev.streak),
+        coin: typeof authoritativeProfile?.coin === 'number' ? authoritativeProfile.coin : prev.coin + coinBonus,
+        gem: typeof authoritativeProfile?.gem === 'number' ? authoritativeProfile.gem : prev.gem + gemBonus,
         completedLessons: newCompleted,
-        lessonStars: {
-          ...prev.lessonStars,
-          [lessonId]: Math.max(prev.lessonStars[lessonId] || 0, stars),
-        },
+        lessonStars: authoritativeProfile?.lessonStars && typeof authoritativeProfile.lessonStars === 'object'
+          ? authoritativeProfile.lessonStars
+          : {
+              ...prev.lessonStars,
+              [lessonId]: Math.max(prev.lessonStars[lessonId] || 0, stars),
+            },
         unlockedBadges: newBadges,
-        history: [historyItem, ...prev.history],
+        history: Array.isArray(authoritativeProfile?.history)
+          ? authoritativeProfile.history
+          : [historyItem, ...prev.history],
       };
     });
 
