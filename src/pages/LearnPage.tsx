@@ -34,6 +34,7 @@ export const LearnPage: React.FC = () => {
   } = useGame();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [lessonStatus, setLessonStatus] = useState<'all' | 'todo' | 'done'>('all');
 
   // Category menu items for tabs
   const subjectTabs: { id: SubjectCategory | 'all'; label: string; icon: string }[] = [
@@ -60,7 +61,9 @@ export const LearnPage: React.FC = () => {
     const matchCategory = activeCategory === 'all' || l.category === activeCategory;
     const matchSearch = l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         l.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchAge && matchCategory && matchSearch;
+    const isCompleted = user.completedLessons.includes(l.id);
+    const matchStatus = lessonStatus === 'all' || (lessonStatus === 'done' ? isCompleted : !isCompleted);
+    return matchAge && matchCategory && matchSearch && matchStatus;
   });
 
   const handleStartLesson = (lesson: Lesson) => {
@@ -250,6 +253,56 @@ export const LearnPage: React.FC = () => {
 
       {/* DAILY MINI PRACTICE */}
       <LearningCoachCard key={activeAgeGroup} ageGroup={activeAgeGroup} />
+
+      {/* STUDY PLAN + STATUS FILTERS */}
+      <section aria-label="Kế hoạch và trạng thái bài học" className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-4">
+        <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-5 sm:p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm" aria-hidden="true">🧭</div>
+            <div>
+              <p className="text-[11px] font-black tracking-wider text-indigo-600">GỢI Ý HỌC HÔM NAY</p>
+              <h2 className="mt-1 text-lg font-black text-slate-800">Chia nhỏ hành trình, học vui mỗi ngày</h2>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">{learningFocus[activeAgeGroup]}</p>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {[
+              { icon: '📘', title: 'Bước 1', text: 'Chọn một bài phù hợp' },
+              { icon: '🧠', title: 'Bước 2', text: 'Tự làm câu hỏi, xem gợi ý' },
+              { icon: '⭐', title: 'Bước 3', text: 'Xem sao và ôn bài cần luyện' },
+            ].map((step) => (
+              <div key={step.title} className="rounded-2xl border border-white bg-white/80 p-3">
+                <span className="text-lg" aria-hidden="true">{step.icon}</span>
+                <p className="mt-1 text-xs font-black text-slate-800">{step.title}</p>
+                <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h2 className="font-heading text-base font-black text-slate-800">📚 Chọn danh sách bài</h2>
+          <p className="mt-1 text-sm text-slate-500">Lọc nhanh để tiếp tục học hoặc luyện lại bài cũ.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label="Lọc trạng thái bài học">
+            {[
+              { id: 'all' as const, label: 'Tất cả', count: lessons.filter((l) => l.ageGroup === activeAgeGroup && (activeCategory === 'all' || l.category === activeCategory)).length },
+              { id: 'todo' as const, label: 'Chưa học', count: lessons.filter((l) => l.ageGroup === activeAgeGroup && !user.completedLessons.includes(l.id) && (activeCategory === 'all' || l.category === activeCategory)).length },
+              { id: 'done' as const, label: 'Đã học', count: lessons.filter((l) => l.ageGroup === activeAgeGroup && user.completedLessons.includes(l.id) && (activeCategory === 'all' || l.category === activeCategory)).length },
+            ].map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={lessonStatus === filter.id}
+                onClick={() => setLessonStatus(filter.id)}
+                className={`rounded-2xl border px-2 py-3 text-center transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 ${lessonStatus === filter.id ? 'border-sky-500 bg-sky-50 text-sky-800' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+              >
+                <span className="block text-lg font-black">{filter.count}</span>
+                <span className="mt-1 block text-[11px] font-bold">{filter.label}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs font-medium text-slate-500">Tiến độ và số sao lấy từ hồ sơ tài khoản hiện tại.</p>
+        </div>
+      </section>
 
       {/* SUBJECT FILTER TABS */}
       <section aria-label="Bộ lọc chủ đề" className="learn-filters">
