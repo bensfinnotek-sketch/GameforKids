@@ -361,7 +361,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       addNotification(
         `🎉 Lên Cấp ${newInfo.level}!`,
-        `Bạn đã đạt danh hiệu "${newInfo.title}". Nhận ngay +100 Tiền Vàng & +20 Ngọc!`,
+        `Bạn đã đạt danh hiệu "${newInfo.title}". Tiếp tục học để mở khóa thêm thành tích nhé!`,
         '⭐',
         'level'
       );
