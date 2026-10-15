@@ -379,37 +379,20 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, 4500);
   }, []);
 
-  const addXP = useCallback((amount: number, reason?: string) => {
-    setUser((prev) => {
-      const newXp = prev.xp + amount;
-      const newLevel = checkLevelUp(prev.xp, newXp, prev.level);
-      showReward({
-        id: 'xp-' + Date.now(),
-        title: reason || 'Nhận điểm kinh nghiệm!',
-        message: `+${amount} XP thám hiểm`,
-        xp: amount,
-        icon: '⭐',
-      });
-      return {
-        ...prev,
-        xp: newXp,
-        level: newLevel,
-      };
-    });
-  }, [checkLevelUp, showReward]);
-
-  const addCoins = useCallback((amount: number) => {
-    setUser((prev) => ({
-      ...prev,
-      coin: prev.coin + amount,
-    }));
+  // Client-side reward minting is intentionally disabled. XP, coins and gems
+  // must only change after a trusted server transaction confirms the reward.
+  // Keep these legacy actions as no-ops so older mini-game components cannot
+  // fabricate balances or persist client-invented currency to the profile.
+  const addXP = useCallback((_amount: number, _reason?: string) => {
+    console.warn('XP was not granted: this activity has no server-verified reward flow.');
   }, []);
 
-  const addGems = useCallback((amount: number) => {
-    setUser((prev) => ({
-      ...prev,
-      gem: prev.gem + amount,
-    }));
+  const addCoins = useCallback((_amount: number) => {
+    console.warn('Coins were not granted: this activity has no server-verified reward flow.');
+  }, []);
+
+  const addGems = useCallback((_amount: number) => {
+    console.warn('Gems were not granted: this activity has no server-verified reward flow.');
   }, []);
 
   const completeLesson = useCallback(async (
